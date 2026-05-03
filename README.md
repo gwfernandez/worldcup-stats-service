@@ -140,8 +140,8 @@ go test ./...
 Para generar el reporte de cobertura y ver el porcentaje total:
 
 ```bash
-go test -coverprofile=coverage.out ./...
-go tool cover -func=coverage.out
+go test -coverprofile=.coverage/coverage.out ./...
+go tool cover -func=.coverage/coverage.out
 ```
 
 *Nota: Es habitual ignorar los paquetes `cmd` y `db/sqlc` (auto-generado) en el cálculo final de cobertura de la lógica de negocio.*

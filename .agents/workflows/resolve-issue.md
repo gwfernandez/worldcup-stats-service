@@ -59,8 +59,8 @@ description: Workflow que guía al agente en la resolución completa de un issue
    - Repository: white-box testing (`package repository`)
 2. Ejecutar todos los tests:
 ```bash
-   go test ./... -coverprofile=coverage.out
-   go tool cover -func=coverage.out
+   go test ./... -coverprofile=.coverage/coverage.out
+   go tool cover -func=.coverage/coverage.out
 ```
 3. Si algún test falla → corregir el código o el test hasta que todos pasen
 4. Si el coverage es menor al 90% → agregar los tests faltantes
