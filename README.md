@@ -125,6 +125,29 @@ El código generado se ubica en `/internal/repository`.
 
 ---
 
+## Cómo correr los tests
+
+El proyecto incluye pruebas unitarias para todas las capas (config, repository, service y handler) alcanzando un 100% de cobertura lógica, utilizando `testify` y `pgxmock`.
+
+### Ejecutar todos los tests
+
+```bash
+go test ./...
+```
+
+### Ver la cobertura (Coverage)
+
+Para generar el reporte de cobertura y ver el porcentaje total:
+
+```bash
+go test -coverprofile=coverage.out ./...
+go tool cover -func=coverage.out
+```
+
+*Nota: Es habitual ignorar los paquetes `cmd` y `db/sqlc` (auto-generado) en el cálculo final de cobertura de la lógica de negocio.*
+
+---
+
 ## Endpoints disponibles
 
 ### Health
