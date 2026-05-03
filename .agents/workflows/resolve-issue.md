@@ -1,8 +1,8 @@
 ---
-description: Workflow que guía al agente en la resolución completa de un issue de GitHub, desde la asignación y creación del branch hasta la apertura del PR, asegurando cobertura de tests del 90% y trazabilidad de cada paso como comentario en el issue
+description: Workflow que guía al agente en la resolución completa de un issue de GitHub, usando herramientas de integración para la asignación, comentarios y PRs, asegurando cobertura de tests del 90% y trazabilidad total en GitHub.
 ---
 
-# Workflow — Resolver Issue
+# Workflow — Resolver Issue de GitHub
 
 ## Contexto del proyecto
 - Repositorio: worldcups-api
@@ -10,32 +10,32 @@ description: Workflow que guía al agente en la resolución completa de un issue
 - Framework: Gin
 - Arquitectura: Clean Architecture (handler → service → repository)
 - Rama principal: main
-- Convención de branches: indicada en el campo "branch name:" del issue
+- Convención de branches: indicada en el campo "branch name:" del issue de GitHub
 
 ---
 
 ## Fase 1 — Preparación
 
-1. Leer el issue completo y entender el requerimiento
-2. Asignarme el issue
+1. Leer el issue de GitHub completo usando las herramientas de búsqueda/lectura y entender el requerimiento
+2. Asignarme el issue usando la herramienta de actualización de issues de GitHub
 3. Leer el campo "branch name:" del issue
    - Si existe → usar ese nombre
    - Si no existe → solicitarme el nombre antes de continuar
-4. Crear el branch con ese nombre desde `main`
+4. Crear el branch localmente con ese nombre desde `main`
 5. Hacer checkout al branch creado
-6. Cambiar el estado del issue a **En curso**
+6. Cambiar el estado del issue a **En curso** publicando un comentario en el issue de GitHub mediante la integración
 
 ---
 
 ## Fase 2 — Planificación
 
-1. Analizar el issue y elaborar un plan de acción detallado que incluya:
+1. Analizar el issue de GitHub y elaborar un plan de acción detallado que incluya:
    - Archivos a crear o modificar
    - Capas involucradas (handler / service / repository)
    - Queries SQL nuevas si aplica
    - Tests unitarios necesarios
-2. Presentarme el plan y **esperár mi confirmación antes de continuar**
-3. Una vez confirmado, agregar el plan como comentario en el issue
+2. Presentarme el plan (Implementation Plan) y **esperár mi confirmación antes de continuar**
+3. Una vez que apruebe el plan, **DEBES usar la herramienta de GitHub para publicar el "Implementation Plan" completo como un comentario en el issue original**.
 
 ---
 
@@ -47,7 +47,7 @@ description: Workflow que guía al agente en la resolución completa de un issue
    - Tests: `{entidad}_{capa}_test.go` en el mismo directorio
    - Errores HTTP con formato: `{"error": "mensaje"}`
    - Prefijo de rutas: `/api/v1/`
-3. No modificar archivos fuera del alcance del issue
+3. No modificar archivos fuera del alcance del issue de GitHub
 
 ---
 
@@ -64,17 +64,18 @@ description: Workflow que guía al agente en la resolución completa de un issue
 ```
 3. Si algún test falla → corregir el código o el test hasta que todos pasen
 4. Si el coverage es menor al 90% → agregar los tests faltantes
-5. Una vez que todos los tests pasen y el coverage sea ≥ 90%, agregar como comentario en el issue el reporte de ejecución como evidencia
+5. Una vez que todos los tests pasen y el coverage sea ≥ 90%, **usar la integración de GitHub para agregar como comentario en el issue original** el reporte de ejecución como evidencia
 
 ---
 
 ## Fase 5 — Pull Request
 
-1. Generar un PR desde el branch actual hacia `main` con:
+1. Usar la herramienta de creación de Pull Requests de GitHub para generar un PR desde el branch actual hacia `main` con:
    - **Título:** `[#numero_issue] descripcion_breve`
    - **Descripción:**
-     - Resumen del issue resuelto
+     - Resumen del issue de GitHub resuelto
      - Principales cambios realizados
      - Endpoints nuevos o modificados (si aplica)
      - Link al issue: `Closes #numero_issue`
-2. Asignarme como reviewer
+2. Asignarme como reviewer (si la API lo permite, si no, dejar documentado)
+3. **Usar la herramienta de comentarios de GitHub** para publicar el documento de resumen ("Walkthrough") como un comentario final en el issue original, indicando que el trabajo ha concluido.
