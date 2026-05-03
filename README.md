@@ -197,10 +197,13 @@ curl http://localhost:8080/api/v1/confederations
   /queries                      # archivos SQL para generación con sqlc
 /config
   config.go                     # lectura de variables de entorno
-/.ai
-  /prompts                      # prompts para el IDE
-  /instructions                 # documentación técnica interna
-  context.md                    # contexto general del proyecto para el IDE
+/.agents
+  /instructions                 # documentación técnica del proyecto
+  /prompts                      # prompts reutilizables para el IDE
+  /rules                        # reglas y restricciones del agente
+  /skills                       # habilidades específicas del agente
+  /workflows                    # flujos de trabajo automatizados
+/.coverage                      # reportes de cobertura de tests
 sqlc.yaml                       # configuración de sqlc
 .env.example                    # variables de entorno requeridas
 go.mod

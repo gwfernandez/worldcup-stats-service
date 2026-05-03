@@ -55,10 +55,13 @@ Esto permite testear el service de forma aislada sin levantar HTTP ni base de da
   /queries                         # archivos SQL para sqlc
 /config
   config.go                        # configuración desde variables de entorno
-/.ai
-  /prompts                         # prompts para el IDE
-  /instructions                    # documentación técnica del proyecto
-  context.md                       # este archivo
+/.agents
+  /instructions                    # documentación técnica del proyecto (stack, decisiones, etc.)
+  /prompts                         # prompts reutilizables para el IDE
+  /rules                           # reglas y restricciones del agente
+  /skills                          # habilidades específicas del agente
+  /workflows                       # flujos de trabajo automatizados (ej: resolve-issue)
+/.coverage                         # reportes de cobertura de tests
 sqlc.yaml                          # configuración de sqlc
 .env.example                       # variables de entorno requeridas
 go.mod
