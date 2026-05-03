@@ -139,4 +139,10 @@ GIN_MODE=debug   # usar "release" en producción
 
 ---
 
+## Equipo
+
+- **Lead Developer:** @gwfernandez (GitHub)
+
+---
+
 *Proyecto: World Cups API — Historia de los Mundiales de Fútbol*
