@@ -26,7 +26,7 @@ Asegurate de tener instalado lo siguiente antes de correr el proyecto:
 - [Go 1.23](https://go.dev/dl/)
 - [sqlc](https://docs.sqlc.dev/en/latest/overview/install.html)
 - [golang-migrate CLI](https://github.com/golang-migrate/migrate/tree/master/cmd/migrate)
-- Una base de datos PostgreSQL (se recomienda [Neon](https://neon.tech) free tier)
+- Base de datos PostgreSQL ([Neon](https://neon.tech) free tier)
 
 ---
 
@@ -68,7 +68,7 @@ cp .env.example .env
 # Editá .env con tu DATABASE_URL de Neon
 ```
 
-### 4. Correr las migraciones
+### 4. Correr las migraciones (si la base de datos esta vacía)
 
 ```bash
 migrate -path db/migrations -database "$DATABASE_URL" up
