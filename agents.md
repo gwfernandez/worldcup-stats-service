@@ -188,7 +188,7 @@ Una tarea se considera completada cuando cumple **todos** los siguientes criteri
 - [ ] El código compila sin errores ni warnings
 - [ ] Cobertura de tests ≥ 90% en los paquetes modificados
 - [ ] PR creado y vinculado al issue correspondiente
-- [ ] Documentación actualizada (godoc, `AGENTS.md`, o archivos en `.ai/instructions/` según corresponda)
+- [ ] Documentación actualizada (godoc, `AGENTS.md`, `README.md`)
 - [ ] El issue en GitHub está cerrado o en revisión
 
 ### Seguridad
