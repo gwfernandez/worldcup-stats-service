@@ -43,6 +43,8 @@ Eso es suficiente para comenzar el análisis.
 
 ## Paso 2 — Analizar y detectar vacíos
 
+**IMPORTANTE**: Antes de comenzar el análisis, el agente **DEBE leer `AGENTS.md` y `README.md`** en la raíz del proyecto para contextualizar el requerimiento con la arquitectura, el stack tecnológico y el estado actual del sistema.
+
 Extraer del texto todos los campos posibles del esquema SDD (ver `references/sdd-schema.md`).
 
 **Campos OBLIGATORIOS** — sin ellos no se puede generar el issue:
