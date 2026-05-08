@@ -40,9 +40,12 @@ jobs:
 
       - name: Check coverage threshold
         run: |
+          # Filtra archivos generados y el main para la métrica
+          grep -v -E "cmd/|db/sqlc" .coverage/coverage.out > .coverage/coverage_filtered.out
+          
           # Extrae el porcentaje total de cobertura
-          COVERAGE=$(go tool cover -func=.coverage/coverage.out | grep total | awk '{print $3}' | sed 's/%//')
-          echo "Total coverage: $COVERAGE%"
+          COVERAGE=$(go tool cover -func=.coverage/coverage_filtered.out | grep total | awk '{print $3}' | sed 's/%//')
+          echo "Total coverage (filtered): $COVERAGE%"
           
           # Umbral mínimo definido en AGENTS.md
           THRESHOLD=90.0
