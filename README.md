@@ -19,6 +19,22 @@ API REST que expone datos históricos de los Mundiales de Fútbol desde 1930 has
 
 ---
 
+## Versionado y Convenciones
+
+Este proyecto utiliza **[go-semantic-release](https://github.com/go-semantic-release/semantic-release)** para la gestión automática de versiones y changelogs.
+
+### Convención de Commits
+Para que el versionado automático funcione, todos los commits en `main` deben seguir la especificación de **[Conventional Commits](https://www.conventionalcommits.org/)**:
+
+- `feat:` Nuevas funcionalidades (genera versión MINOR)
+- `fix:` Corrección de errores (genera versión PATCH)
+- `perf:` Mejoras de rendimiento (genera versión PATCH)
+- `docs:`, `style:`, `refactor:`, `test:`, `chore:`, `ci:` (no generan release por defecto)
+
+Cualquier commit con `!` después del tipo (ej: `feat!:`) o con el texto `BREAKING CHANGE:` en el footer generará una versión **MAJOR**.
+
+---
+
 ## Requisitos previos
 
 Asegurate de tener instalado lo siguiente antes de correr el proyecto:
