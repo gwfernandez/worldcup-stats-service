@@ -60,10 +60,15 @@ Extraer del texto todos los campos posibles del esquema SDD (ver `references/sdd
 - `assumptions`, `out_of_scope`, `dependencies`, `mockups_refs`
 
 ### Reglas de inferencia
-- Si el texto menciona un rol de usuario → construir user story
-- Si hay una acción clara → proponer acceptance criteria básicos
-- Si el componente es obvio del contexto → no preguntar
-- Si el tipo es ambiguo → asumir Feature y aclarar al usuario
+- Si el texto menciona un rol de usuario → construir user story.
+- Si hay una acción clara → proponer acceptance criteria básicos.
+- Si el componente es obvio del contexto → no preguntar.
+- **Tipo y Labels**:
+  - Si menciona "error", "falla", "no funciona", "crash" → Asumir `type:Bug` y label `bug`.
+  - Si menciona "optimizar", "mejorar", "lento" → Asumir `type:Improvement` y label `enhancement`.
+- **Prioridad**:
+  - Si menciona "bloqueante", "producción", "urgente", "caído" → Asumir `priority:Critical` o `High`.
+- Si el tipo es ambiguo → asumir Feature y aclarar al usuario.
 
 ---
 
@@ -98,6 +103,7 @@ Una vez completa la información mínima, generar el documento usando la plantil
 El documento debe:
 - Estar en el idioma en que el usuario escribió el requerimiento
 - Incluir propuesta de tareas técnicas (ver sección Tasks)
+- Incluir una **sugerencia de nombre de rama** de Git basado en el título (ej: `feature/titulo-del-issue`)
 - Usar etiquetas/labels de GitHub apropiadas
 - Tener estimación de complejidad (XS / S / M / L / XL)
 
@@ -111,7 +117,7 @@ Generar una lista de subtareas técnicas desglosadas:
 - [ ] [BACKEND] Descripción de la tarea de backend
 - [ ] [FRONTEND] Descripción de la tarea de frontend  
 - [ ] [DB] Cambios de base de datos si aplica
-- [ ] [TEST] Casos de prueba unitarios
+- [ ] [TEST] Casos de prueba unitarios (Garantizar cobertura ≥ 90% según AGENTS.md)
 - [ ] [TEST] Casos de prueba de integración
 - [ ] [DOCS] Actualizar documentación técnica
 - [ ] [REVIEW] Code review y QA sign-off

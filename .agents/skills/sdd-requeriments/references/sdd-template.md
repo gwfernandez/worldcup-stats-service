@@ -15,6 +15,7 @@ Esta es la plantilla base. Completar todos los campos; usar `[POR DEFINIR]` solo
 | **Prioridad** | Critical / High / Medium / Low |
 | **Complejidad estimada** | XS / S / M / L / XL |
 | **Componentes afectados** | Módulo A, Servicio B, Pantalla C |
+| **Rama sugerida** | `type/descripcion-corta` |
 | **Sprint / Milestone** | [POR DEFINIR] |
 
 ---
@@ -69,7 +70,7 @@ Esta es la plantilla base. Completar todos los campos; usar `[POR DEFINIR]` solo
 - [ ] [DB] Descripción del cambio de esquema o migración (si aplica)
 
 ### Testing
-- [ ] [TEST] Pruebas unitarias para [componente]
+- [ ] [TEST] Pruebas unitarias (Garantizar cobertura ≥ 90% según AGENTS.md)
 - [ ] [TEST] Pruebas de integración para [flujo]
 - [ ] [TEST] Casos edge: [lista de casos borde]
 

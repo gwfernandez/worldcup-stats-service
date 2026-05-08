@@ -81,7 +81,16 @@ Referencia completa de todos los campos del documento SDD con descripciones, eje
 
 ---
 
-### `priority`
+---
++
++### `suggested_branch`
++**Qué es**: Nombre de la rama de Git recomendada para este trabajo.  
++**Formato**: `tipo/descripción-corta-con-guiones`  
++**Ejemplo**: `feature/exportar-pdf-reportes`
++
++---
++
++### `priority`
 **Valores**:
 | Valor | Descripción |
 |-------|-------------|
