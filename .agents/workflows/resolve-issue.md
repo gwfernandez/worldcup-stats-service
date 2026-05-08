@@ -48,7 +48,7 @@ description: Workflow que guía al agente en la resolución completa de un issue
    - Errores HTTP con formato: `{"error": "mensaje"}`
    - Prefijo de rutas: `/api/v1/`
 3. No modificar archivos fuera del alcance del issue de GitHub
-4. Realizar commits atómicos utilizando la skill `semantic-commit` tras completar cada hito lógico (ej: terminar el repository, terminar el service, etc.).
+4. Si el issue contiene una lista de tareas (tasks), realizar un commit independiente utilizando la skill `semantic-commit` por cada tarea completada. El mensaje del commit debe reflejar fielmente la tarea realizada. En caso de no haber una lista, realizar commits por cada hito lógico finalizado.
 
 ---
 
