@@ -123,6 +123,15 @@ GIN_MODE=debug   # usar "release" en producción
 - Prefijo de rutas: `/api/v1/`
 - Nombres de funciones en handlers: `List`, `GetByID`, `Create`, `Update`, `Delete`
 
+### Versionado y Commits (SemVer)
+
+El proyecto utiliza **go-semantic-release**. El agente debe redactar mensajes de commit siguiendo **Conventional Commits**:
+
+- **Formato**: `<tipo>(<scope>): <descripción>`
+- **Tipos**: `feat`, `fix`, `perf`, `refactor`, `docs`, `style`, `test`, `build`, `ci`, `chore`, `revert`.
+- **Breaking Changes**: Usar `!` después del tipo/scope o `BREAKING CHANGE:` en el footer para incrementos de versión MAJOR.
+- **Automatización**: Los tags y releases se generan automáticamente al mezclar en `main`.
+
 ---
 
 ## Endpoints implementados
