@@ -29,11 +29,11 @@ description: Workflow que guía al agente en la resolución completa de un issue
 
 ## Fase 2 — Planificación
 
-1. Analizar el issue de GitHub y elaborar un plan de acción detallado que incluya:
+1. Analizar el issue de GitHub, tomando como base la sección `📋 Tareas Técnicas` del SDD si existe, y elaborar un plan de acción detallado que incluya:
    - Archivos a crear o modificar
    - Capas involucradas (handler / service / repository)
    - Queries SQL nuevas si aplica
-   - Tests unitarios necesarios
+   - Tests unitarios necesarios que cubran los `✅ Criterios de Aceptación`
 2. Presentarme el plan (Implementation Plan) y **esperár mi confirmación antes de continuar**
 3. Una vez que apruebe el plan, **DEBES usar la herramienta de GitHub para publicar el "Implementation Plan" completo como un comentario en el issue original**.
 
@@ -49,6 +49,7 @@ description: Workflow que guía al agente en la resolución completa de un issue
    - Prefijo de rutas: `/api/v1/`
 3. No modificar archivos fuera del alcance del issue de GitHub
 4. Si el issue contiene una lista de tareas (tasks), realizar un commit independiente utilizando la skill `semantic-commit` por cada tarea completada. El mensaje del commit debe reflejar fielmente la tarea realizada. En caso de no haber una lista, realizar commits por cada hito lógico finalizado.
+5. Respetar estrictamente la sección `🚫 Fuera de Alcance` del issue para evitar cambios innecesarios y mantener el foco.
 
 ---
 
@@ -65,7 +66,8 @@ description: Workflow que guía al agente en la resolución completa de un issue
 ```
 3. Si algún test falla → corregir el código o el test hasta que todos pasen
 4. Si el coverage es menor al 90% → agregar los tests faltantes
-5. Una vez que todos los tests pasen y el coverage sea ≥ 90%, **usar la integración de GitHub para agregar como comentario en el issue original** el reporte de ejecución como evidencia
+5. Validar que los tests cubren todos los `✅ Criterios de Aceptación` definidos en el issue original.
+6. Una vez que todos los tests pasen y el coverage sea ≥ 90%, **usar la integración de GitHub para agregar como comentario en el issue original** el reporte de ejecución como evidencia
 
 ---
 
@@ -75,9 +77,10 @@ description: Workflow que guía al agente en la resolución completa de un issue
    - **Título:** `tipo(scope): descripción breve (#numero_issue)`
    - **Descripción:**
      - Resumen del issue de GitHub resuelto
-     - Principales cambios realizados
+      - Principales cambios realizados
       - Endpoints nuevos o modificados (si aplica)
       - Impacto SemVer estimado (MAJOR/MINOR/PATCH)
+      - Confirmación de cumplimiento de los `✅ Criterios de Aceptación`
       - Link al issue: `Closes #numero_issue`
 2. Asignarme como reviewer (si la API lo permite, si no, dejar documentado)
 3. **Usar la herramienta de comentarios de GitHub** para publicar el documento de resumen ("Walkthrough") como un comentario final en el issue original, indicando que el trabajo ha concluido.
