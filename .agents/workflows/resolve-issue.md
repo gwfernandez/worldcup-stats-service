@@ -10,7 +10,7 @@ description: Workflow que guía al agente en la resolución completa de un issue
 - Framework: Gin
 - Arquitectura: Clean Architecture (handler → service → repository)
 - Rama principal: main
-- Convención de branches: indicada en el campo "branch name:" del issue de GitHub
+- Convención de branches: indicada en el campo "Rama sugerida" del issue de GitHub
 
 ---
 
@@ -18,7 +18,7 @@ description: Workflow que guía al agente en la resolución completa de un issue
 
 1. Leer el issue de GitHub completo usando las herramientas de búsqueda/lectura y entender el requerimiento
 2. Asignarme el issue usando la herramienta de actualización de issues de GitHub
-3. Leer el campo "branch name:" del issue
+3. Leer el campo "Rama sugerida" del issue
    - Si existe → usar ese nombre
    - Si no existe → solicitarme el nombre antes de continuar
 4. Crear el branch localmente con ese nombre desde `main`
@@ -48,6 +48,7 @@ description: Workflow que guía al agente en la resolución completa de un issue
    - Errores HTTP con formato: `{"error": "mensaje"}`
    - Prefijo de rutas: `/api/v1/`
 3. No modificar archivos fuera del alcance del issue de GitHub
+4. Realizar commits atómicos utilizando la skill `semantic-commit` tras completar cada hito lógico (ej: terminar el repository, terminar el service, etc.).
 
 ---
 
@@ -71,11 +72,12 @@ description: Workflow que guía al agente en la resolución completa de un issue
 ## Fase 5 — Pull Request
 
 1. Usar la herramienta de creación de Pull Requests de GitHub para generar un PR desde el branch actual hacia `main` con:
-   - **Título:** `[#numero_issue] descripcion_breve`
+   - **Título:** `tipo(scope): descripción breve (#numero_issue)`
    - **Descripción:**
      - Resumen del issue de GitHub resuelto
      - Principales cambios realizados
-     - Endpoints nuevos o modificados (si aplica)
-     - Link al issue: `Closes #numero_issue`
+      - Endpoints nuevos o modificados (si aplica)
+      - Impacto SemVer estimado (MAJOR/MINOR/PATCH)
+      - Link al issue: `Closes #numero_issue`
 2. Asignarme como reviewer (si la API lo permite, si no, dejar documentado)
 3. **Usar la herramienta de comentarios de GitHub** para publicar el documento de resumen ("Walkthrough") como un comentario final en el issue original, indicando que el trabajo ha concluido.
