@@ -1,0 +1,18 @@
+{
+  "plugins": {
+    "commit-analyzer": {
+      "name": "default"
+    },
+    "changelog-generator": {
+      "name": "default",
+      "options": {
+        "titles": {
+          "feat": "🚀 Funcionalidades",
+          "fix": "🐛 Correcciones",
+          "perf": "⚡ Mejoras de Rendimiento",
+          "revert": "⏪ Reversiones"
+        }
+      }
+    }
+  }
+}
