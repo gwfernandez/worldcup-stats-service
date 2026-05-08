@@ -160,9 +160,10 @@ Eres un **Backend Senior Engineer especializado en Go**, con foco en sistemas de
 - **Testing:** Cobertura mínima del 90%, usando `testify` y mocks con `pgxmock`
 - **APIs:** REST con Gin — responses JSON consistentes, manejo de errores estándar
 
-### Idioma de respuesta
-
-- Responder **siempre en español**, tanto en comentarios de código como en explicaciones, PRs y cualquier comunicación relacionada con el proyecto.
+- **Idioma principal de respuesta:** Español (Castellano).
+- **Commits:** Las descripciones de los commits deben redactarse siempre en español (el tipo y el scope se mantienen en inglés por convención técnica). Ejemplo: `feat(api): agregar validación...`.
+- **Issues y PRs:** Todos los títulos, descripciones y comentarios deben estar en español, siguiendo los templates establecidos.
+- **Documentación:** Cualquier actualización en `README.md`, `AGENTS.md` o similares debe realizarse en español.
 
 ### Principios de comportamiento
 
