@@ -1,4 +1,4 @@
-package handler
+package v1
 
 import (
 	"net/http"
@@ -37,7 +37,7 @@ func (h *ConfederationHandler) RegisterRoutes(rg *gin.RouterGroup) {
 // @Summary List all confederations
 // @Produce json
 // @Success 200 {array} domain.Confederation
-// @Router /api/v1/confederations [get]
+// @Router /api/confederations [get]
 func (h *ConfederationHandler) List(c *gin.Context) {
 	confederations, err := h.service.List(c.Request.Context())
 	if err != nil {
@@ -52,7 +52,7 @@ func (h *ConfederationHandler) List(c *gin.Context) {
 // @Produce json
 // @Param id path int true "Confederation ID"
 // @Success 200 {object} domain.Confederation
-// @Router /api/v1/confederations/{id} [get]
+// @Router /api/confederations/{id} [get]
 func (h *ConfederationHandler) GetByID(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
@@ -79,7 +79,7 @@ func (h *ConfederationHandler) GetByID(c *gin.Context) {
 // @Produce json
 // @Param body body domain.CreateConfederationRequest true "Confederation data"
 // @Success 201 {object} domain.Confederation
-// @Router /api/v1/confederations [post]
+// @Router /api/confederations [post]
 func (h *ConfederationHandler) Create(c *gin.Context) {
 	var req domain.CreateConfederationRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -107,7 +107,7 @@ func (h *ConfederationHandler) Create(c *gin.Context) {
 // @Param id path int true "Confederation ID"
 // @Param body body domain.UpdateConfederationRequest true "Updated confederation data"
 // @Success 200 {object} domain.Confederation
-// @Router /api/v1/confederations/{id} [put]
+// @Router /api/confederations/{id} [put]
 func (h *ConfederationHandler) Update(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
@@ -142,7 +142,7 @@ func (h *ConfederationHandler) Update(c *gin.Context) {
 // @Summary Delete a confederation
 // @Param id path int true "Confederation ID"
 // @Success 204
-// @Router /api/v1/confederations/{id} [delete]
+// @Router /api/confederations/{id} [delete]
 func (h *ConfederationHandler) Delete(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {

@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/mock"
 
 	"github.com/jendrix/worldcup-stats-service/internal/domain"
-	"github.com/jendrix/worldcup-stats-service/internal/handler"
+	v1 "github.com/jendrix/worldcup-stats-service/internal/handler/v1"
 )
 
 // MockConfederationService mocks the ConfederationService interface
@@ -62,8 +62,8 @@ func (m *MockConfederationService) Delete(ctx context.Context, id int64) error {
 func setupRouter(svc *MockConfederationService) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	r := gin.Default()
-	h := handler.NewConfederationHandler(svc)
-	rg := r.Group("/api/v1")
+	h := v1.NewConfederationHandler(svc)
+	rg := r.Group("/api")
 	h.RegisterRoutes(rg)
 	return r
 }
@@ -79,7 +79,7 @@ func TestConfederationHandler_List(t *testing.T) {
 
 		svc.On("List", mock.Anything).Return(expected, nil)
 
-		req, _ := http.NewRequest(http.MethodGet, "/api/v1/confederations", nil)
+		req, _ := http.NewRequest(http.MethodGet, "/api/confederations", nil)
 		w := httptest.NewRecorder()
 		r.ServeHTTP(w, req)
 
@@ -92,7 +92,7 @@ func TestConfederationHandler_List(t *testing.T) {
 
 		svc.On("List", mock.Anything).Return(nil, errors.New("db error"))
 
-		req, _ := http.NewRequest(http.MethodGet, "/api/v1/confederations", nil)
+		req, _ := http.NewRequest(http.MethodGet, "/api/confederations", nil)
 		w := httptest.NewRecorder()
 		r.ServeHTTP(w, req)
 
@@ -108,7 +108,7 @@ func TestConfederationHandler_GetByID(t *testing.T) {
 		expected := &domain.Confederation{ID: 1, Code: "CONMEBOL"}
 		svc.On("GetByID", mock.Anything, int64(1)).Return(expected, nil)
 
-		req, _ := http.NewRequest(http.MethodGet, "/api/v1/confederations/1", nil)
+		req, _ := http.NewRequest(http.MethodGet, "/api/confederations/1", nil)
 		w := httptest.NewRecorder()
 		r.ServeHTTP(w, req)
 
@@ -119,7 +119,7 @@ func TestConfederationHandler_GetByID(t *testing.T) {
 		svc := new(MockConfederationService)
 		r := setupRouter(svc)
 
-		req, _ := http.NewRequest(http.MethodGet, "/api/v1/confederations/invalid", nil)
+		req, _ := http.NewRequest(http.MethodGet, "/api/confederations/invalid", nil)
 		w := httptest.NewRecorder()
 		r.ServeHTTP(w, req)
 
@@ -132,7 +132,7 @@ func TestConfederationHandler_GetByID(t *testing.T) {
 
 		svc.On("GetByID", mock.Anything, int64(99)).Return(nil, errors.New("not found"))
 
-		req, _ := http.NewRequest(http.MethodGet, "/api/v1/confederations/99", nil)
+		req, _ := http.NewRequest(http.MethodGet, "/api/confederations/99", nil)
 		w := httptest.NewRecorder()
 		r.ServeHTTP(w, req)
 
@@ -145,7 +145,7 @@ func TestConfederationHandler_GetByID(t *testing.T) {
 
 		svc.On("GetByID", mock.Anything, int64(99)).Return(nil, errors.New("db error"))
 
-		req, _ := http.NewRequest(http.MethodGet, "/api/v1/confederations/99", nil)
+		req, _ := http.NewRequest(http.MethodGet, "/api/confederations/99", nil)
 		w := httptest.NewRecorder()
 		r.ServeHTTP(w, req)
 
@@ -164,7 +164,7 @@ func TestConfederationHandler_Create(t *testing.T) {
 		svc.On("Create", mock.Anything, createReq).Return(expected, nil)
 
 		body, _ := json.Marshal(createReq)
-		req, _ := http.NewRequest(http.MethodPost, "/api/v1/confederations", bytes.NewBuffer(body))
+		req, _ := http.NewRequest(http.MethodPost, "/api/confederations", bytes.NewBuffer(body))
 		w := httptest.NewRecorder()
 		r.ServeHTTP(w, req)
 
@@ -175,7 +175,7 @@ func TestConfederationHandler_Create(t *testing.T) {
 		svc := new(MockConfederationService)
 		r := setupRouter(svc)
 
-		req, _ := http.NewRequest(http.MethodPost, "/api/v1/confederations", bytes.NewBufferString("invalid"))
+		req, _ := http.NewRequest(http.MethodPost, "/api/confederations", bytes.NewBufferString("invalid"))
 		w := httptest.NewRecorder()
 		r.ServeHTTP(w, req)
 
@@ -190,7 +190,7 @@ func TestConfederationHandler_Create(t *testing.T) {
 		svc.On("Create", mock.Anything, createReq).Return(nil, errors.New("duplicate key"))
 
 		body, _ := json.Marshal(createReq)
-		req, _ := http.NewRequest(http.MethodPost, "/api/v1/confederations", bytes.NewBuffer(body))
+		req, _ := http.NewRequest(http.MethodPost, "/api/confederations", bytes.NewBuffer(body))
 		w := httptest.NewRecorder()
 		r.ServeHTTP(w, req)
 
@@ -205,7 +205,7 @@ func TestConfederationHandler_Create(t *testing.T) {
 		svc.On("Create", mock.Anything, createReq).Return(nil, errors.New("db error"))
 
 		body, _ := json.Marshal(createReq)
-		req, _ := http.NewRequest(http.MethodPost, "/api/v1/confederations", bytes.NewBuffer(body))
+		req, _ := http.NewRequest(http.MethodPost, "/api/confederations", bytes.NewBuffer(body))
 		w := httptest.NewRecorder()
 		r.ServeHTTP(w, req)
 
@@ -224,7 +224,7 @@ func TestConfederationHandler_Update(t *testing.T) {
 		svc.On("Update", mock.Anything, int64(1), updateReq).Return(expected, nil)
 
 		body, _ := json.Marshal(updateReq)
-		req, _ := http.NewRequest(http.MethodPut, "/api/v1/confederations/1", bytes.NewBuffer(body))
+		req, _ := http.NewRequest(http.MethodPut, "/api/confederations/1", bytes.NewBuffer(body))
 		w := httptest.NewRecorder()
 		r.ServeHTTP(w, req)
 
@@ -235,7 +235,7 @@ func TestConfederationHandler_Update(t *testing.T) {
 		svc := new(MockConfederationService)
 		r := setupRouter(svc)
 
-		req, _ := http.NewRequest(http.MethodPut, "/api/v1/confederations/invalid", nil)
+		req, _ := http.NewRequest(http.MethodPut, "/api/confederations/invalid", nil)
 		w := httptest.NewRecorder()
 		r.ServeHTTP(w, req)
 
@@ -246,7 +246,7 @@ func TestConfederationHandler_Update(t *testing.T) {
 		svc := new(MockConfederationService)
 		r := setupRouter(svc)
 
-		req, _ := http.NewRequest(http.MethodPut, "/api/v1/confederations/1", bytes.NewBufferString("invalid"))
+		req, _ := http.NewRequest(http.MethodPut, "/api/confederations/1", bytes.NewBufferString("invalid"))
 		w := httptest.NewRecorder()
 		r.ServeHTTP(w, req)
 
@@ -261,7 +261,7 @@ func TestConfederationHandler_Update(t *testing.T) {
 		svc.On("Update", mock.Anything, int64(99), updateReq).Return(nil, errors.New("not found"))
 
 		body, _ := json.Marshal(updateReq)
-		req, _ := http.NewRequest(http.MethodPut, "/api/v1/confederations/99", bytes.NewBuffer(body))
+		req, _ := http.NewRequest(http.MethodPut, "/api/confederations/99", bytes.NewBuffer(body))
 		w := httptest.NewRecorder()
 		r.ServeHTTP(w, req)
 
@@ -276,7 +276,7 @@ func TestConfederationHandler_Update(t *testing.T) {
 		svc.On("Update", mock.Anything, int64(1), updateReq).Return(nil, errors.New("duplicate key"))
 
 		body, _ := json.Marshal(updateReq)
-		req, _ := http.NewRequest(http.MethodPut, "/api/v1/confederations/1", bytes.NewBuffer(body))
+		req, _ := http.NewRequest(http.MethodPut, "/api/confederations/1", bytes.NewBuffer(body))
 		w := httptest.NewRecorder()
 		r.ServeHTTP(w, req)
 
@@ -291,7 +291,7 @@ func TestConfederationHandler_Update(t *testing.T) {
 		svc.On("Update", mock.Anything, int64(1), updateReq).Return(nil, errors.New("db error"))
 
 		body, _ := json.Marshal(updateReq)
-		req, _ := http.NewRequest(http.MethodPut, "/api/v1/confederations/1", bytes.NewBuffer(body))
+		req, _ := http.NewRequest(http.MethodPut, "/api/confederations/1", bytes.NewBuffer(body))
 		w := httptest.NewRecorder()
 		r.ServeHTTP(w, req)
 
@@ -306,7 +306,7 @@ func TestConfederationHandler_Delete(t *testing.T) {
 
 		svc.On("Delete", mock.Anything, int64(1)).Return(nil)
 
-		req, _ := http.NewRequest(http.MethodDelete, "/api/v1/confederations/1", nil)
+		req, _ := http.NewRequest(http.MethodDelete, "/api/confederations/1", nil)
 		w := httptest.NewRecorder()
 		r.ServeHTTP(w, req)
 
@@ -317,7 +317,7 @@ func TestConfederationHandler_Delete(t *testing.T) {
 		svc := new(MockConfederationService)
 		r := setupRouter(svc)
 
-		req, _ := http.NewRequest(http.MethodDelete, "/api/v1/confederations/invalid", nil)
+		req, _ := http.NewRequest(http.MethodDelete, "/api/confederations/invalid", nil)
 		w := httptest.NewRecorder()
 		r.ServeHTTP(w, req)
 
@@ -330,7 +330,7 @@ func TestConfederationHandler_Delete(t *testing.T) {
 
 		svc.On("Delete", mock.Anything, int64(99)).Return(errors.New("not found"))
 
-		req, _ := http.NewRequest(http.MethodDelete, "/api/v1/confederations/99", nil)
+		req, _ := http.NewRequest(http.MethodDelete, "/api/confederations/99", nil)
 		w := httptest.NewRecorder()
 		r.ServeHTTP(w, req)
 
@@ -343,7 +343,7 @@ func TestConfederationHandler_Delete(t *testing.T) {
 
 		svc.On("Delete", mock.Anything, int64(1)).Return(errors.New("db error"))
 
-		req, _ := http.NewRequest(http.MethodDelete, "/api/v1/confederations/1", nil)
+		req, _ := http.NewRequest(http.MethodDelete, "/api/confederations/1", nil)
 		w := httptest.NewRecorder()
 		r.ServeHTTP(w, req)
 
