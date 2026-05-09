@@ -14,7 +14,8 @@ import (
 	"github.com/joho/godotenv"
 
 	"github.com/jendrix/worldcup-stats-service/config"
-	"github.com/jendrix/worldcup-stats-service/internal/handler"
+	v1 "github.com/jendrix/worldcup-stats-service/internal/handler/v1"
+	"github.com/jendrix/worldcup-stats-service/internal/middleware"
 	"github.com/jendrix/worldcup-stats-service/internal/repository"
 	"github.com/jendrix/worldcup-stats-service/internal/service"
 )
@@ -46,7 +47,7 @@ func main() {
 	// Wire up dependencies: repository → service → handler
 	confederationRepo := repository.NewConfederationRepository(pool)
 	confederationSvc := service.NewConfederationService(confederationRepo)
-	confederationHandler := handler.NewConfederationHandler(confederationSvc)
+	confederationHandlerV1 := v1.NewConfederationHandler(confederationSvc)
 
 	// Set up Gin router
 	router := gin.Default()
@@ -56,9 +57,13 @@ func main() {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
 
-	// API v1 routes
-	v1 := router.Group("/api/v1")
-	confederationHandler.RegisterRoutes(v1)
+	// API routes with header-based versioning
+	api := router.Group("/api", middleware.Versioning())
+	{
+		// v1 routes
+		v1Group := api.Group("", middleware.RequireVersion(1))
+		confederationHandlerV1.RegisterRoutes(v1Group)
+	}
 
 	// Create HTTP server
 	srv := &http.Server{
