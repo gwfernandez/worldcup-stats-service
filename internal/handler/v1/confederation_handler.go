@@ -1,9 +1,9 @@
 package v1
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 
@@ -164,11 +164,10 @@ func (h *ConfederationHandler) Delete(c *gin.Context) {
 
 // isNotFoundError checks if the error is a not-found error from the service layer.
 func isNotFoundError(err error) bool {
-	return strings.Contains(err.Error(), "not found")
+	return errors.Is(err, domain.ErrNotFound)
 }
 
 // isDuplicateKeyError checks if the error is a unique constraint violation from PostgreSQL.
 func isDuplicateKeyError(err error) bool {
-	return strings.Contains(err.Error(), "duplicate key") ||
-		strings.Contains(err.Error(), "23505")
+	return errors.Is(err, domain.ErrDuplicateKey)
 }

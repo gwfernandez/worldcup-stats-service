@@ -130,7 +130,7 @@ func TestConfederationHandler_GetByID(t *testing.T) {
 		svc := new(MockConfederationService)
 		r := setupRouter(svc)
 
-		svc.On("GetByID", mock.Anything, int64(99)).Return(nil, errors.New("not found"))
+		svc.On("GetByID", mock.Anything, int64(99)).Return(nil, domain.ErrNotFound)
 
 		req, _ := http.NewRequest(http.MethodGet, "/api/confederations/99", nil)
 		w := httptest.NewRecorder()
@@ -187,7 +187,7 @@ func TestConfederationHandler_Create(t *testing.T) {
 		r := setupRouter(svc)
 
 		createReq := domain.CreateConfederationRequest{Code: "C", Name: "S"}
-		svc.On("Create", mock.Anything, createReq).Return(nil, errors.New("duplicate key"))
+		svc.On("Create", mock.Anything, createReq).Return(nil, domain.ErrDuplicateKey)
 
 		body, _ := json.Marshal(createReq)
 		req, _ := http.NewRequest(http.MethodPost, "/api/confederations", bytes.NewBuffer(body))
@@ -258,7 +258,7 @@ func TestConfederationHandler_Update(t *testing.T) {
 		r := setupRouter(svc)
 
 		updateReq := domain.UpdateConfederationRequest{Code: "C", Name: "S"}
-		svc.On("Update", mock.Anything, int64(99), updateReq).Return(nil, errors.New("not found"))
+		svc.On("Update", mock.Anything, int64(99), updateReq).Return(nil, domain.ErrNotFound)
 
 		body, _ := json.Marshal(updateReq)
 		req, _ := http.NewRequest(http.MethodPut, "/api/confederations/99", bytes.NewBuffer(body))
@@ -273,7 +273,7 @@ func TestConfederationHandler_Update(t *testing.T) {
 		r := setupRouter(svc)
 
 		updateReq := domain.UpdateConfederationRequest{Code: "C", Name: "S"}
-		svc.On("Update", mock.Anything, int64(1), updateReq).Return(nil, errors.New("duplicate key"))
+		svc.On("Update", mock.Anything, int64(1), updateReq).Return(nil, domain.ErrDuplicateKey)
 
 		body, _ := json.Marshal(updateReq)
 		req, _ := http.NewRequest(http.MethodPut, "/api/confederations/1", bytes.NewBuffer(body))
@@ -328,7 +328,7 @@ func TestConfederationHandler_Delete(t *testing.T) {
 		svc := new(MockConfederationService)
 		r := setupRouter(svc)
 
-		svc.On("Delete", mock.Anything, int64(99)).Return(errors.New("not found"))
+		svc.On("Delete", mock.Anything, int64(99)).Return(domain.ErrNotFound)
 
 		req, _ := http.NewRequest(http.MethodDelete, "/api/confederations/99", nil)
 		w := httptest.NewRecorder()
