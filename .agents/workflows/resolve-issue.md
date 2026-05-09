@@ -53,6 +53,18 @@ description: Workflow que guía al agente en la resolución completa de un issue
 
 ---
 
+## Fase 3.5 — Auditoría de calidad
+
+1. Ejecutar la skill `code-quality-go` en **modo Git Diff** para auditar todos los archivos `.go` modificados en el branch actual
+2. Revisar los hallazgos reportados y aplicar las correcciones aprobadas
+3. Si hay hallazgos 🔴 Críticos → **corregir obligatoriamente** antes de continuar
+4. Si hay hallazgos 🟠 Importantes → corregir salvo decisión explícita del usuario de postergarlos
+5. Registrar las correcciones con la skill `semantic-commit` si corresponde
+
+> Esta fase es obligatoria. No avanzar a Testing sin haber ejecutado la auditoría de calidad.
+
+---
+
 ## Fase 4 — Testing
 
 1. Crear los tests unitarios necesarios para alcanzar un **coverage mínimo del 90%**
