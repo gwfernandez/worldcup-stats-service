@@ -46,7 +46,7 @@ description: Workflow que guía al agente en la resolución completa de un issue
    - Nombres de archivos: `{entidad}_{capa}.go`
    - Tests: `{entidad}_{capa}_test.go` en el mismo directorio
    - Errores HTTP con formato: `{"error": "mensaje"}`
-   - Prefijo de rutas: `/api/v1/`
+   - Prefijo de rutas: `/api/`
 3. No modificar archivos fuera del alcance del issue de GitHub
 4. Si el issue contiene una lista de tareas (tasks), realizar un commit independiente utilizando la skill `semantic-commit` por cada tarea completada. El mensaje del commit debe reflejar fielmente la tarea realizada. En caso de no haber una lista, realizar commits por cada hito lógico finalizado.
 5. Respetar estrictamente la sección `🚫 Fuera de Alcance` del issue para evitar cambios innecesarios y mantener el foco.

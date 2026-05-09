@@ -120,7 +120,7 @@ GIN_MODE=debug   # usar "release" en producción
 - Los handlers retornan siempre JSON
 - Errores con formato consistente: `{"error": "mensaje"}`
 - Endpoint de salud: `GET /health` → `{"status": "ok"}`
-- Prefijo de rutas: `/api/v1/`
+- Prefijo de rutas: `/api/`
 - Nombres de funciones en handlers: `List`, `GetByID`, `Create`, `Update`, `Delete`
 
 ### Versionado y Commits (SemVer)
@@ -136,15 +136,15 @@ El proyecto utiliza **go-semantic-release**. El agente debe redactar mensajes de
 
 ## Endpoints implementados
 
-### Confederaciones `/api/v1/confederations`
+### Confederaciones `/api/confederations`
 
 | Método | Ruta | Descripción |
 |--------|------|-------------|
-| `GET` | `/api/v1/confederations` | Listar todas las confederaciones |
-| `GET` | `/api/v1/confederations/:id` | Obtener confederación por id |
-| `POST` | `/api/v1/confederations` | Crear nueva confederación |
-| `PUT` | `/api/v1/confederations/:id` | Actualizar confederación |
-| `DELETE` | `/api/v1/confederations/:id` | Eliminar confederación |
+| `GET` | `/api/confederations` | Listar todas las confederaciones |
+| `GET` | `/api/confederations/:id` | Obtener confederación por id |
+| `POST` | `/api/confederations` | Crear nueva confederación |
+| `PUT` | `/api/confederations/:id` | Actualizar confederación |
+| `DELETE` | `/api/confederations/:id` | Eliminar confederación |
 
 ---
 

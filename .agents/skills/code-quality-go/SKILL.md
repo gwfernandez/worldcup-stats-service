@@ -202,7 +202,7 @@ Total: 3 archivos
 | Sección | Uso en la auditoría |
 |---------|---------------------|
 | Arquitectura (Clean Architecture) | Validar flujo handler → service → repository |
-| Convenciones de código | Verificar formato de errores `{"error": "..."}`, prefijo `/api/v1/`, nombres de funciones |
+| Convenciones de código | Verificar formato de errores `{"error": "..."}`, prefijo `/api/`, nombres de funciones |
 | Criterios de "Done" | Validar que el código cumple los requisitos de completitud |
 | Principios de comportamiento | Verificar claridad, godoc, manejo explícito de errores |
 | Restricciones | No ORMs, no deps sin justificación, interfaces consistentes |
