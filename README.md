@@ -166,6 +166,16 @@ go tool cover -func=.coverage/coverage.out
 
 ## Endpoints disponibles
 
+### Versionado de API
+
+La API utiliza versionado por Header en lugar de versionado en la URL. 
+Para acceder a una versión específica, se debe incluir el header HTTP `X-API-Version`.
+Si no se envía el header, la API utilizará la versión `1` por defecto.
+
+**Ejemplo:** `X-API-Version: 1`
+
+Para más detalles, consultar [Estrategia de Versionado](docs/API_VERSIONING.md).
+
 ### Health
 
 | Método | Ruta | Descripción |
@@ -176,24 +186,25 @@ go tool cover -func=.coverage/coverage.out
 
 | Método | Ruta | Descripción |
 |--------|------|-------------|
-| `GET` | `/api/v1/confederations` | Listar todas las confederaciones |
-| `GET` | `/api/v1/confederations/:id` | Obtener confederación por id |
-| `POST` | `/api/v1/confederations` | Crear nueva confederación |
-| `PUT` | `/api/v1/confederations/:id` | Actualizar confederación |
-| `DELETE` | `/api/v1/confederations/:id` | Eliminar confederación |
+| `GET` | `/api/confederations` | Listar todas las confederaciones |
+| `GET` | `/api/confederations/:id` | Obtener confederación por id |
+| `POST` | `/api/confederations` | Crear nueva confederación |
+| `PUT` | `/api/confederations/:id` | Actualizar confederación |
+| `DELETE` | `/api/confederations/:id` | Eliminar confederación |
 
 ### Ejemplos de request
 
 **Crear confederación**
 ```bash
-curl -X POST http://localhost:8080/api/v1/confederations \
+curl -X POST http://localhost:8080/api/confederations \
   -H "Content-Type: application/json" \
+  -H "X-API-Version: 1" \
   -d '{"code": "UEFA", "name": "Union of European Football Associations"}'
 ```
 
 **Listar confederaciones**
 ```bash
-curl http://localhost:8080/api/v1/confederations
+curl -H "X-API-Version: 1" http://localhost:8080/api/confederations
 ```
 
 ---
