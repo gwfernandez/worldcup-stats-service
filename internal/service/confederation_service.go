@@ -32,30 +32,3 @@ func (s *confederationService) GetByID(ctx context.Context, id int64) (*domain.C
 	}
 	return confederation, nil
 }
-
-func (s *confederationService) Create(ctx context.Context, req domain.CreateConfederationRequest) (*domain.Confederation, error) {
-	return s.repo.Create(ctx, req.Code, req.Name)
-}
-
-func (s *confederationService) Update(ctx context.Context, id int64, req domain.UpdateConfederationRequest) (*domain.Confederation, error) {
-	confederation, err := s.repo.Update(ctx, id, req.Code, req.Name)
-	if err != nil {
-		return nil, err
-	}
-	if confederation == nil {
-		return nil, fmt.Errorf("confederation with id %d not found", id)
-	}
-	return confederation, nil
-}
-
-func (s *confederationService) Delete(ctx context.Context, id int64) error {
-	// Verify existence before deleting
-	existing, err := s.repo.GetByID(ctx, id)
-	if err != nil {
-		return err
-	}
-	if existing == nil {
-		return fmt.Errorf("confederation with id %d not found", id)
-	}
-	return s.repo.Delete(ctx, id)
-}

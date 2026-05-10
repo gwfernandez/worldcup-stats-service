@@ -183,26 +183,15 @@ Para más detalles, consultar [Estrategia de Versionado](docs/API_VERSIONING.md)
 | `GET` | `/health` | Estado de la API |
 
 ### Confederaciones
-
-| Método | Ruta | Descripción |
-|--------|------|-------------|
-| `GET` | `/api/confederations` | Listar todas las confederaciones |
-| `GET` | `/api/confederations/:id` | Obtener confederación por id |
-| `POST` | `/api/confederations` | Crear nueva confederación |
-| `PUT` | `/api/confederations/:id` | Actualizar confederación |
-| `DELETE` | `/api/confederations/:id` | Eliminar confederación |
+ 
+ | Método | Ruta | Descripción |
+ |--------|------|-------------|
+ | `GET` | `/api/confederations` | Listar todas las confederaciones |
+ | `GET` | `/api/confederations/:id` | Obtener confederación por id |
 
 ### Ejemplos de request
-
-**Crear confederación**
-```bash
-curl -X POST http://localhost:8080/api/confederations \
-  -H "Content-Type: application/json" \
-  -H "X-API-Version: 1" \
-  -d '{"code": "UEFA", "name": "Union of European Football Associations"}'
-```
-
-**Listar confederaciones**
+ 
+ **Listar confederaciones**
 ```bash
 curl -H "X-API-Version: 1" http://localhost:8080/api/confederations
 ```

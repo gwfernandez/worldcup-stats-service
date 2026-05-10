@@ -27,9 +27,6 @@ func (h *ConfederationHandler) RegisterRoutes(rg *gin.RouterGroup) {
 	{
 		confederations.GET("", h.List)
 		confederations.GET("/:id", h.GetByID)
-		confederations.POST("", h.Create)
-		confederations.PUT("/:id", h.Update)
-		confederations.DELETE("/:id", h.Delete)
 	}
 }
 
@@ -71,95 +68,6 @@ func (h *ConfederationHandler) GetByID(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, confederation)
-}
-
-// Create godoc
-// @Summary Create a new confederation
-// @Accept json
-// @Produce json
-// @Param body body domain.CreateConfederationRequest true "Confederation data"
-// @Success 201 {object} domain.Confederation
-// @Router /api/confederations [post]
-func (h *ConfederationHandler) Create(c *gin.Context) {
-	var req domain.CreateConfederationRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	confederation, err := h.service.Create(c.Request.Context(), req)
-	if err != nil {
-		if isDuplicateKeyError(err) {
-			c.JSON(http.StatusConflict, gin.H{"error": "a confederation with this code already exists"})
-			return
-		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create confederation"})
-		return
-	}
-
-	c.JSON(http.StatusCreated, confederation)
-}
-
-// Update godoc
-// @Summary Update a confederation
-// @Accept json
-// @Produce json
-// @Param id path int true "Confederation ID"
-// @Param body body domain.UpdateConfederationRequest true "Updated confederation data"
-// @Success 200 {object} domain.Confederation
-// @Router /api/confederations/{id} [put]
-func (h *ConfederationHandler) Update(c *gin.Context) {
-	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id parameter"})
-		return
-	}
-
-	var req domain.UpdateConfederationRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	confederation, err := h.service.Update(c.Request.Context(), id, req)
-	if err != nil {
-		if isNotFoundError(err) {
-			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
-			return
-		}
-		if isDuplicateKeyError(err) {
-			c.JSON(http.StatusConflict, gin.H{"error": "a confederation with this code already exists"})
-			return
-		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update confederation"})
-		return
-	}
-
-	c.JSON(http.StatusOK, confederation)
-}
-
-// Delete godoc
-// @Summary Delete a confederation
-// @Param id path int true "Confederation ID"
-// @Success 204
-// @Router /api/confederations/{id} [delete]
-func (h *ConfederationHandler) Delete(c *gin.Context) {
-	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id parameter"})
-		return
-	}
-
-	if err := h.service.Delete(c.Request.Context(), id); err != nil {
-		if isNotFoundError(err) {
-			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
-			return
-		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete confederation"})
-		return
-	}
-
-	c.Status(http.StatusNoContent)
 }
 
 // isNotFoundError checks if the error is a not-found error from the service layer.
