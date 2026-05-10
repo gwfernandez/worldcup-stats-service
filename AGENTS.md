@@ -142,9 +142,16 @@ El proyecto utiliza **go-semantic-release**. El agente debe redactar mensajes de
 |--------|------|-------------|
 | `GET` | `/api/confederations` | Listar todas las confederaciones |
 | `GET` | `/api/confederations/:id` | Obtener confederación por id |
-| `POST` | `/api/confederations` | Crear nueva confederación |
-| `PUT` | `/api/confederations/:id` | Actualizar confederación |
-| `DELETE` | `/api/confederations/:id` | Eliminar confederación |
+
+---
+
+## Decisiones de diseño
+
+### API de solo lectura
+El proyecto está diseñado como una fuente de consulta de datos históricos. Por lo tanto:
+- Todas las entidades (confederaciones, selecciones, etc.) son de **solo lectura** a través de la API REST.
+- Las modificaciones de datos se realizan exclusivamente mediante **migraciones de base de datos** (catálogos estáticos).
+- No se deben implementar ni exponer endpoints `POST`, `PUT`, `PATCH` o `DELETE` para las entidades del dominio, salvo excepciones justificadas.
 
 ---
 
