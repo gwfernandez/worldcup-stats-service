@@ -77,7 +77,8 @@ func TestConfederationService_GetByID(t *testing.T) {
 		result, err := svc.GetByID(ctx, 99)
 
 		assert.Error(t, err)
-		assert.Equal(t, "confederation with id 99 not found", err.Error())
+		assert.Equal(t, "resource not found: confederation with id 99 not found", err.Error())
+		assert.True(t, errors.Is(err, domain.ErrNotFound))
 		assert.Nil(t, result)
 		mockRepo.AssertExpectations(t)
 	})

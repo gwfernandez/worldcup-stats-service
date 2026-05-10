@@ -74,8 +74,3 @@ func (h *ConfederationHandler) GetByID(c *gin.Context) {
 func isNotFoundError(err error) bool {
 	return errors.Is(err, domain.ErrNotFound)
 }
-
-// isDuplicateKeyError checks if the error is a unique constraint violation from PostgreSQL.
-func isDuplicateKeyError(err error) bool {
-	return errors.Is(err, domain.ErrDuplicateKey)
-}

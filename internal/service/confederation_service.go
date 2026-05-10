@@ -28,7 +28,7 @@ func (s *confederationService) GetByID(ctx context.Context, id int64) (*domain.C
 		return nil, err
 	}
 	if confederation == nil {
-		return nil, fmt.Errorf("confederation with id %d not found", id)
+		return nil, fmt.Errorf("%w: confederation with id %d not found", domain.ErrNotFound, id)
 	}
 	return confederation, nil
 }
