@@ -189,11 +189,55 @@ Para más detalles, consultar [Estrategia de Versionado](docs/API_VERSIONING.md)
  | `GET` | `/api/confederations` | Listar todas las confederaciones |
  | `GET` | `/api/confederations/:id` | Obtener confederación por id |
 
+### Selecciones Nacionales
+
+ | Método | Ruta | Descripción |
+ |--------|------|-------------|
+ | `GET` | `/api/national-teams` | Listar selecciones nacionales con filtros y paginación |
+ | `GET` | `/api/national-teams/:id` | Obtener selección por id |
+ | `GET` | `/api/national-teams/code/:code` | Obtener selección por código FIFA |
+
+Parámetros soportados para `/api/national-teams`:
+
+- `name`: búsqueda por contiene, case-insensitive.
+- `confederation_id`: filtro por igualdad exacta.
+- `federation_name`: búsqueda por contiene, case-insensitive.
+- `federation_code`: filtro por igualdad exacta, case-insensitive.
+- `include_dissolved`: `true|false` (por defecto `false`).
+- `page`: número de página (base 1, por defecto `1`).
+- `size`: tamaño de página (por defecto `20`, máximo `100`).
+
+Notas de respuesta:
+
+- `dissolution_date` se expone en formato `YYYY-MM-DD` cuando aplica.
+- `code` y `federation_code` se normalizan a mayúsculas.
+- Se incluye el campo calculado `is_dissolved`.
+
 ### Ejemplos de request
  
  **Listar confederaciones**
 ```bash
 curl -H "X-API-Version: 1" http://localhost:8080/api/confederations
+```
+
+**Listar selecciones activas (paginado por defecto)**
+```bash
+curl -H "X-API-Version: 1" "http://localhost:8080/api/national-teams"
+```
+
+**Filtrar por nombre y confederación (combinado)**
+```bash
+curl -H "X-API-Version: 1" "http://localhost:8080/api/national-teams?name=argen&confederation_id=1&page=1&size=20"
+```
+
+**Filtrar por federación e incluir disueltas**
+```bash
+curl -H "X-API-Version: 1" "http://localhost:8080/api/national-teams?federation_name=futbol&federation_code=afa&include_dissolved=true"
+```
+
+**Obtener por código FIFA**
+```bash
+curl -H "X-API-Version: 1" "http://localhost:8080/api/national-teams/code/urs"
 ```
 
 ---

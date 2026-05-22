@@ -4,8 +4,22 @@
 
 package sqlc
 
+import (
+	"github.com/jackc/pgx/v5/pgtype"
+)
+
 type Confederation struct {
 	ID   int64
 	Code string
 	Name string
+}
+
+type NationalTeam struct {
+	ID              int64
+	Name            string
+	Code            string
+	DissolutionDate pgtype.Date
+	ConfederationID int64
+	FederationName  string
+	FederationCode  string
 }
