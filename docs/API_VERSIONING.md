@@ -24,6 +24,13 @@ Host: api.example.com
 X-API-Version: 1
 ```
 
+Otro ejemplo válido para recursos nuevos de v1:
+```http
+GET /api/national-teams?name=argen&page=1&size=20 HTTP/1.1
+Host: api.example.com
+X-API-Version: 1
+```
+
 ### Comportamiento por Defecto
 
 Si no se provee el header `X-API-Version`, el sistema asumirá automáticamente la versión por defecto de la API. 
@@ -54,3 +61,5 @@ La estrategia se apoya en dos middlewares de Gin:
 
 Los handlers deben agruparse en subpaquetes según la versión a la que corresponden.
 Ejemplo: `internal/handler/v1/confederation_handler.go`
+
+Ejemplo adicional: `internal/handler/v1/national_team_handler.go`
