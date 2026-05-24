@@ -200,7 +200,7 @@ Para más detalles, consultar [Estrategia de Versionado](docs/API_VERSIONING.md)
 Parámetros soportados para `/api/national-teams`:
 
 - `name`: búsqueda por contiene, case-insensitive.
-- `confederation_id`: filtro por igualdad exacta.
+- `confederation_code`: filtro por igualdad exacta, case-insensitive.
 - `federation_name`: búsqueda por contiene, case-insensitive.
 - `federation_code`: filtro por igualdad exacta, case-insensitive.
 - `include_dissolved`: `true|false` (por defecto `false`).
@@ -227,7 +227,7 @@ curl -H "X-API-Version: 1" "http://localhost:8080/api/national-teams"
 
 **Filtrar por nombre y confederación (combinado)**
 ```bash
-curl -H "X-API-Version: 1" "http://localhost:8080/api/national-teams?name=argen&confederation_id=1&page=1&size=20"
+curl -H "X-API-Version: 1" "http://localhost:8080/api/national-teams?name=argen&confederation_code=CONMEBOL&page=1&size=20"
 ```
 
 **Filtrar por federación e incluir disueltas**

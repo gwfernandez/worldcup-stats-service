@@ -15,11 +15,11 @@ type Confederation struct {
 }
 
 type NationalTeam struct {
-	ID              int64
-	Name            string
-	Code            string
-	DissolutionDate pgtype.Date
-	ConfederationID int64
-	FederationName  string
-	FederationCode  string
+	ID                int64
+	Name              string
+	Code              string
+	DissolutionDate   pgtype.Date
+	ConfederationCode string
+	FederationName    string
+	FederationCode    string
 }

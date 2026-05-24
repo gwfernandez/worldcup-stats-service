@@ -135,12 +135,8 @@ func parseNationalTeamFilter(c *gin.Context) (domain.NationalTeamFilter, error) 
 		return domain.NationalTeamFilter{}, errors.New("invalid size parameter")
 	}
 
-	if rawConfederationID := c.Query("confederation_id"); rawConfederationID != "" {
-		id, err := strconv.ParseInt(rawConfederationID, 10, 64)
-		if err != nil {
-			return domain.NationalTeamFilter{}, errors.New("invalid confederation_id parameter")
-		}
-		filter.ConfederationID = &id
+	if rawConfederationCode := c.Query("confederation_code"); rawConfederationCode != "" {
+		filter.ConfederationCode = &rawConfederationCode
 	}
 
 	if rawIncludeDissolved := c.Query("include_dissolved"); rawIncludeDissolved != "" {

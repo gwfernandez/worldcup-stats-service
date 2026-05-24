@@ -22,28 +22,28 @@ func TestNationalTeamRepository_List(t *testing.T) {
 		defer mock.Close()
 
 		repo := repository.NewNationalTeamRepository(mock)
-		confederationID := int64(1)
+		confederationCode := "CONMEBOL"
 		filter := domain.NationalTeamFilter{
-			Name:             "argen",
-			ConfederationID:  &confederationID,
-			FederationName:   "futbol",
-			FederationCode:   "afa",
-			IncludeDissolved: true,
-			Page:             1,
-			Size:             20,
+			Name:              "argen",
+			ConfederationCode: &confederationCode,
+			FederationName:    "futbol",
+			FederationCode:    "afa",
+			IncludeDissolved:  true,
+			Page:              1,
+			Size:              20,
 		}
 
 		countRows := mock.NewRows([]string{"count"}).AddRow(int64(2))
 		mock.ExpectQuery(`^-- name: CountNationalTeams :one.*`).
-			WithArgs("argen", int64(1), "futbol", "afa", true).
+			WithArgs("argen", "CONMEBOL", "futbol", "afa", true).
 			WillReturnRows(countRows)
 
-		rows := mock.NewRows([]string{"id", "name", "code", "dissolution_date", "confederation_id", "federation_name", "federation_code"}).
-			AddRow(int64(1), "Argentina", "arg", nil, int64(1), "Asociación del Fútbol Argentino", "afa").
-			AddRow(int64(5), "Soviet Union", "urs", time.Date(1991, 12, 26, 0, 0, 0, 0, time.UTC), int64(2), "Football Federation of the Soviet Union", "ffsu")
+		rows := mock.NewRows([]string{"id", "name", "code", "dissolution_date", "confederation_code", "federation_name", "federation_code"}).
+			AddRow(int64(1), "Argentina", "arg", nil, "CONMEBOL", "Asociación del Fútbol Argentino", "afa").
+			AddRow(int64(5), "Soviet Union", "urs", time.Date(1991, 12, 26, 0, 0, 0, 0, time.UTC), "UEFA", "Football Federation of the Soviet Union", "ffsu")
 
 		mock.ExpectQuery(`^-- name: ListNationalTeams :many.*`).
-			WithArgs("argen", int64(1), "futbol", "afa", true, int32(20), int32(0)).
+			WithArgs("argen", "CONMEBOL", "futbol", "afa", true, int32(20), int32(0)).
 			WillReturnRows(rows)
 
 		result, total, err := repo.List(context.Background(), filter)
@@ -52,6 +52,7 @@ func TestNationalTeamRepository_List(t *testing.T) {
 		require.Len(t, result, 2)
 		assert.Equal(t, "ARG", result[0].Code)
 		assert.Equal(t, "AFA", result[0].FederationCode)
+		assert.Equal(t, "CONMEBOL", result[0].ConfederationCode)
 		assert.False(t, result[0].IsDissolved)
 		assert.True(t, result[1].IsDissolved)
 		require.NotNil(t, result[1].DissolutionDate)
@@ -69,7 +70,7 @@ func TestNationalTeamRepository_List(t *testing.T) {
 		filter := domain.NationalTeamFilter{Page: 1, Size: 20}
 
 		mock.ExpectQuery(`^-- name: CountNationalTeams :one.*`).
-			WithArgs("", int64(0), "", "", false).
+			WithArgs("", "", "", "", false).
 			WillReturnError(errors.New("db error"))
 
 		result, total, err := repo.List(context.Background(), filter)
@@ -87,8 +88,8 @@ func TestNationalTeamRepository_GetByID(t *testing.T) {
 		defer mock.Close()
 
 		repo := repository.NewNationalTeamRepository(mock)
-		rows := mock.NewRows([]string{"id", "name", "code", "dissolution_date", "confederation_id", "federation_name", "federation_code"}).
-			AddRow(int64(1), "Argentina", "arg", nil, int64(1), "Asociación del Fútbol Argentino", "afa")
+		rows := mock.NewRows([]string{"id", "name", "code", "dissolution_date", "confederation_code", "federation_name", "federation_code"}).
+			AddRow(int64(1), "Argentina", "arg", nil, "CONMEBOL", "Asociación del Fútbol Argentino", "afa")
 		mock.ExpectQuery(`^-- name: GetNationalTeamByID :one.*`).WithArgs(int64(1)).WillReturnRows(rows)
 
 		result, err := repo.GetByID(context.Background(), 1)
@@ -122,8 +123,8 @@ func TestNationalTeamRepository_GetByCode(t *testing.T) {
 		defer mock.Close()
 
 		repo := repository.NewNationalTeamRepository(mock)
-		rows := mock.NewRows([]string{"id", "name", "code", "dissolution_date", "confederation_id", "federation_name", "federation_code"}).
-			AddRow(int64(5), "Soviet Union", "urs", time.Date(1991, 12, 26, 0, 0, 0, 0, time.UTC), int64(2), "Football Federation of the Soviet Union", "ffsu")
+		rows := mock.NewRows([]string{"id", "name", "code", "dissolution_date", "confederation_code", "federation_name", "federation_code"}).
+			AddRow(int64(5), "Soviet Union", "urs", time.Date(1991, 12, 26, 0, 0, 0, 0, time.UTC), "UEFA", "Football Federation of the Soviet Union", "ffsu")
 		mock.ExpectQuery(`^-- name: GetNationalTeamByCode :one.*`).WithArgs("urs").WillReturnRows(rows)
 
 		result, err := repo.GetByCode(context.Background(), "urs")

@@ -4,13 +4,13 @@ SELECT
     name,
     code,
     dissolution_date,
-    confederation_id,
+    confederation_code,
     federation_name,
     federation_code
 FROM national_teams
 WHERE
     ($1::text = '' OR LOWER(name) LIKE '%' || LOWER($1) || '%')
-    AND ($2::bigint = 0 OR confederation_id = $2)
+    AND ($2::text = '' OR LOWER(confederation_code) = LOWER($2))
     AND ($3::text = '' OR LOWER(federation_name) LIKE '%' || LOWER($3) || '%')
     AND ($4::text = '' OR LOWER(federation_code) = LOWER($4))
     AND ($5::boolean OR dissolution_date IS NULL)
@@ -22,7 +22,7 @@ SELECT COUNT(*)
 FROM national_teams
 WHERE
     ($1::text = '' OR LOWER(name) LIKE '%' || LOWER($1) || '%')
-    AND ($2::bigint = 0 OR confederation_id = $2)
+    AND ($2::text = '' OR LOWER(confederation_code) = LOWER($2))
     AND ($3::text = '' OR LOWER(federation_name) LIKE '%' || LOWER($3) || '%')
     AND ($4::text = '' OR LOWER(federation_code) = LOWER($4))
     AND ($5::boolean OR dissolution_date IS NULL);
@@ -33,7 +33,7 @@ SELECT
     name,
     code,
     dissolution_date,
-    confederation_id,
+    confederation_code,
     federation_name,
     federation_code
 FROM national_teams
@@ -45,7 +45,7 @@ SELECT
     name,
     code,
     dissolution_date,
-    confederation_id,
+    confederation_code,
     federation_name,
     federation_code
 FROM national_teams

@@ -14,7 +14,7 @@ SELECT COUNT(*)
 FROM national_teams
 WHERE
     ($1::text = '' OR LOWER(name) LIKE '%' || LOWER($1) || '%')
-    AND ($2::bigint = 0 OR confederation_id = $2)
+    AND ($2::text = '' OR LOWER(confederation_code) = LOWER($2))
     AND ($3::text = '' OR LOWER(federation_name) LIKE '%' || LOWER($3) || '%')
     AND ($4::text = '' OR LOWER(federation_code) = LOWER($4))
     AND ($5::boolean OR dissolution_date IS NULL)
@@ -22,7 +22,7 @@ WHERE
 
 type CountNationalTeamsParams struct {
 	Column1 string
-	Column2 int64
+	Column2 string
 	Column3 string
 	Column4 string
 	Column5 bool
@@ -47,7 +47,7 @@ SELECT
     name,
     code,
     dissolution_date,
-    confederation_id,
+    confederation_code,
     federation_name,
     federation_code
 FROM national_teams
@@ -62,7 +62,7 @@ func (q *Queries) GetNationalTeamByCode(ctx context.Context, lower string) (Nati
 		&i.Name,
 		&i.Code,
 		&i.DissolutionDate,
-		&i.ConfederationID,
+		&i.ConfederationCode,
 		&i.FederationName,
 		&i.FederationCode,
 	)
@@ -75,7 +75,7 @@ SELECT
     name,
     code,
     dissolution_date,
-    confederation_id,
+    confederation_code,
     federation_name,
     federation_code
 FROM national_teams
@@ -90,7 +90,7 @@ func (q *Queries) GetNationalTeamByID(ctx context.Context, id int64) (NationalTe
 		&i.Name,
 		&i.Code,
 		&i.DissolutionDate,
-		&i.ConfederationID,
+		&i.ConfederationCode,
 		&i.FederationName,
 		&i.FederationCode,
 	)
@@ -103,13 +103,13 @@ SELECT
     name,
     code,
     dissolution_date,
-    confederation_id,
+    confederation_code,
     federation_name,
     federation_code
 FROM national_teams
 WHERE
     ($1::text = '' OR LOWER(name) LIKE '%' || LOWER($1) || '%')
-    AND ($2::bigint = 0 OR confederation_id = $2)
+    AND ($2::text = '' OR LOWER(confederation_code) = LOWER($2))
     AND ($3::text = '' OR LOWER(federation_name) LIKE '%' || LOWER($3) || '%')
     AND ($4::text = '' OR LOWER(federation_code) = LOWER($4))
     AND ($5::boolean OR dissolution_date IS NULL)
@@ -119,7 +119,7 @@ LIMIT $6 OFFSET $7
 
 type ListNationalTeamsParams struct {
 	Column1 string
-	Column2 int64
+	Column2 string
 	Column3 string
 	Column4 string
 	Column5 bool
@@ -149,7 +149,7 @@ func (q *Queries) ListNationalTeams(ctx context.Context, arg ListNationalTeamsPa
 			&i.Name,
 			&i.Code,
 			&i.DissolutionDate,
-			&i.ConfederationID,
+			&i.ConfederationCode,
 			&i.FederationName,
 			&i.FederationCode,
 		); err != nil {

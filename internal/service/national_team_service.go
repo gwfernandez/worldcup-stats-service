@@ -51,6 +51,7 @@ func (s *nationalTeamService) GetByID(ctx context.Context, id int64) (*domain.Na
 		return nil, fmt.Errorf("%w: national team with id %d not found", domain.ErrNotFound, id)
 	}
 	team.Code = strings.ToUpper(team.Code)
+	team.ConfederationCode = strings.ToUpper(team.ConfederationCode)
 	team.FederationCode = strings.ToUpper(team.FederationCode)
 	return team, nil
 }
@@ -64,6 +65,7 @@ func (s *nationalTeamService) GetByCode(ctx context.Context, code string) (*doma
 		return nil, fmt.Errorf("%w: national team with code %s not found", domain.ErrNotFound, strings.ToUpper(code))
 	}
 	team.Code = strings.ToUpper(team.Code)
+	team.ConfederationCode = strings.ToUpper(team.ConfederationCode)
 	team.FederationCode = strings.ToUpper(team.FederationCode)
 	return team, nil
 }

@@ -96,15 +96,26 @@ func TestNationalTeamHandler_List(t *testing.T) {
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
 
-	t.Run("bad request invalid confederation", func(t *testing.T) {
+	t.Run("success with confederation filter", func(t *testing.T) {
 		svc := new(MockNationalTeamService)
 		r := setupNationalTeamRouter(svc)
 
-		req, _ := http.NewRequest(http.MethodGet, "/api/national-teams?confederation_id=abc", nil)
+		confederationCode := "CONMEBOL"
+		expected := &domain.PaginatedNationalTeams{Page: 1, Size: 20, TotalElements: 1, TotalPages: 1}
+		svc.On("List", mock.Anything, domain.NationalTeamFilter{
+			Name:              "",
+			ConfederationCode: &confederationCode,
+			FederationName:    "",
+			FederationCode:    "",
+			Page:              1,
+			Size:              20,
+		}).Return(expected, nil)
+
+		req, _ := http.NewRequest(http.MethodGet, "/api/national-teams?confederation_code=CONMEBOL", nil)
 		w := httptest.NewRecorder()
 		r.ServeHTTP(w, req)
 
-		assert.Equal(t, http.StatusBadRequest, w.Code)
+		assert.Equal(t, http.StatusOK, w.Code)
 	})
 
 	t.Run("bad request invalid include_dissolved", func(t *testing.T) {

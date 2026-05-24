@@ -23,14 +23,14 @@ func NewNationalTeamRepository(db sqlc.DBTX) NationalTeamRepository {
 }
 
 func (r *nationalTeamRepository) List(ctx context.Context, filter domain.NationalTeamFilter) ([]domain.NationalTeam, int64, error) {
-	confederationID := int64(0)
-	if filter.ConfederationID != nil {
-		confederationID = *filter.ConfederationID
+	confederationCode := ""
+	if filter.ConfederationCode != nil {
+		confederationCode = *filter.ConfederationCode
 	}
 
 	total, err := r.queries.CountNationalTeams(ctx, sqlc.CountNationalTeamsParams{
 		Column1: filter.Name,
-		Column2: confederationID,
+		Column2: confederationCode,
 		Column3: filter.FederationName,
 		Column4: filter.FederationCode,
 		Column5: filter.IncludeDissolved,
@@ -43,7 +43,7 @@ func (r *nationalTeamRepository) List(ctx context.Context, filter domain.Nationa
 	offset := int32((filter.Page - 1) * filter.Size)
 	rows, err := r.queries.ListNationalTeams(ctx, sqlc.ListNationalTeamsParams{
 		Column1: filter.Name,
-		Column2: confederationID,
+		Column2: confederationCode,
 		Column3: filter.FederationName,
 		Column4: filter.FederationCode,
 		Column5: filter.IncludeDissolved,
@@ -95,7 +95,7 @@ func toNationalTeamDomain(row sqlc.NationalTeam) domain.NationalTeam {
 		Code:            strings.ToUpper(row.Code),
 		DissolutionDate: dissolutionDate,
 		IsDissolved:     dissolutionDate != nil,
-		ConfederationID: row.ConfederationID,
+		ConfederationCode: strings.ToUpper(row.ConfederationCode),
 		FederationName:  row.FederationName,
 		FederationCode:  strings.ToUpper(row.FederationCode),
 	}
