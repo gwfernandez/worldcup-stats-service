@@ -20,7 +20,7 @@ func NewNationalTeamService(repo repository.NationalTeamRepository) NationalTeam
 	return &nationalTeamService{repo: repo}
 }
 
-func (s *nationalTeamService) List(ctx context.Context, filter domain.NationalTeamFilter) (*domain.PaginatedNationalTeams, error) {
+func (s *nationalTeamService) List(ctx context.Context, filter domain.NationalTeamFilter) (*domain.NationalTeamListResponse, error) {
 	teams, totalElements, err := s.repo.List(ctx, filter)
 	if err != nil {
 		return nil, err
@@ -31,14 +31,16 @@ func (s *nationalTeamService) List(ctx context.Context, filter domain.NationalTe
 		totalPages = 0
 	}
 
-	return &domain.PaginatedNationalTeams{
-		Content:       teams,
-		Page:          filter.Page,
-		Size:          filter.Size,
-		TotalElements: totalElements,
-		TotalPages:    totalPages,
-		HasNext:       filter.Page < totalPages,
-		HasPrevious:   filter.Page > 1,
+	return &domain.NationalTeamListResponse{
+		Data: teams,
+		Pagination: domain.PaginationInfo{
+			Page:          filter.Page,
+			Size:          filter.Size,
+			TotalElements: totalElements,
+			TotalPages:    totalPages,
+			HasNext:       filter.Page < totalPages,
+			HasPrevious:   filter.Page > 1,
+		},
 	}, nil
 }
 

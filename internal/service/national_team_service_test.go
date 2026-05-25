@@ -54,13 +54,13 @@ func TestNationalTeamService_List(t *testing.T) {
 
 		result, err := svc.List(ctx, filter)
 		assert.NoError(t, err)
-		assert.Equal(t, 1, result.Page)
-		assert.Equal(t, 20, result.Size)
-		assert.Equal(t, int64(35), result.TotalElements)
-		assert.Equal(t, 2, result.TotalPages)
-		assert.True(t, result.HasNext)
-		assert.False(t, result.HasPrevious)
-		assert.Len(t, result.Content, 2)
+		assert.Equal(t, 1, result.Pagination.Page)
+		assert.Equal(t, 20, result.Pagination.Size)
+		assert.Equal(t, int64(35), result.Pagination.TotalElements)
+		assert.Equal(t, 2, result.Pagination.TotalPages)
+		assert.True(t, result.Pagination.HasNext)
+		assert.False(t, result.Pagination.HasPrevious)
+		assert.Len(t, result.Data, 2)
 		mockRepo.AssertExpectations(t)
 	})
 
@@ -73,9 +73,9 @@ func TestNationalTeamService_List(t *testing.T) {
 
 		result, err := svc.List(ctx, filter)
 		assert.NoError(t, err)
-		assert.Equal(t, 0, result.TotalPages)
-		assert.False(t, result.HasNext)
-		assert.False(t, result.HasPrevious)
+		assert.Equal(t, 0, result.Pagination.TotalPages)
+		assert.False(t, result.Pagination.HasNext)
+		assert.False(t, result.Pagination.HasPrevious)
 		mockRepo.AssertExpectations(t)
 	})
 

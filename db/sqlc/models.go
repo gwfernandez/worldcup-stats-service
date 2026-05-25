@@ -8,6 +8,30 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type Championship struct {
+	ID              int64
+	Year            int32
+	StartDate       pgtype.Date
+	EndDate         pgtype.Date
+	HostNationCodes []string
+	ChampionCode    pgtype.Text
+}
+
+type ChampionshipStat struct {
+	ID              int64
+	TotalTeams      int32
+	TotalMatches    int32
+	TotalStadiums   int32
+	TotalPlayers    int32
+	TotalGoals      int32
+	ChampionCode    pgtype.Text
+	RunnerUpCode    pgtype.Text
+	ThirdPlaceCode  pgtype.Text
+	FourthPlaceCode pgtype.Text
+	TopScorerIds    []int64
+	TopScorerGoals  int32
+}
+
 type Confederation struct {
 	ID   int64
 	Code string

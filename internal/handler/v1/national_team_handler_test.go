@@ -20,12 +20,12 @@ type MockNationalTeamService struct {
 	mock.Mock
 }
 
-func (m *MockNationalTeamService) List(ctx context.Context, filter domain.NationalTeamFilter) (*domain.PaginatedNationalTeams, error) {
+func (m *MockNationalTeamService) List(ctx context.Context, filter domain.NationalTeamFilter) (*domain.NationalTeamListResponse, error) {
 	args := m.Called(ctx, filter)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*domain.PaginatedNationalTeams), args.Error(1)
+	return args.Get(0).(*domain.NationalTeamListResponse), args.Error(1)
 }
 
 func (m *MockNationalTeamService) GetByID(ctx context.Context, id int64) (*domain.NationalTeam, error) {
@@ -58,7 +58,7 @@ func TestNationalTeamHandler_List(t *testing.T) {
 		svc := new(MockNationalTeamService)
 		r := setupNationalTeamRouter(svc)
 
-		expected := &domain.PaginatedNationalTeams{Page: 1, Size: 20, TotalElements: 1, TotalPages: 1}
+		expected := &domain.NationalTeamListResponse{Pagination: domain.PaginationInfo{Page: 1, Size: 20, TotalElements: 1, TotalPages: 1, HasNext: false, HasPrevious: false}}
 		svc.On("List", mock.Anything, domain.NationalTeamFilter{
 			Name:           "argen",
 			FederationName: "",
@@ -101,7 +101,7 @@ func TestNationalTeamHandler_List(t *testing.T) {
 		r := setupNationalTeamRouter(svc)
 
 		confederationCode := "CONMEBOL"
-		expected := &domain.PaginatedNationalTeams{Page: 1, Size: 20, TotalElements: 1, TotalPages: 1}
+		expected := &domain.NationalTeamListResponse{Pagination: domain.PaginationInfo{Page: 1, Size: 20, TotalElements: 1, TotalPages: 1, HasNext: false, HasPrevious: false}}
 		svc.On("List", mock.Anything, domain.NationalTeamFilter{
 			Name:              "",
 			ConfederationCode: &confederationCode,
