@@ -213,6 +213,26 @@ Notas de respuesta:
 - `code` y `federation_code` se normalizan a mayúsculas.
 - Se incluye el campo calculado `is_dissolved`.
 
+### Campeonatos Mundiales
+
+ | Método | Ruta | Descripción |
+ |--------|------|-------------|
+ | `GET` | `/api/championships` | Listar ediciones de campeonatos mundiales con filtros y paginación |
+ | `GET` | `/api/championships/:year` | Obtener detalle de una edición por año con estadísticas |
+
+Parámetros soportados para `/api/championships`:
+
+- `year`: filtro exacto por año del campeonato.
+- `host`: búsqueda por nombre del país anfitrión (contiene, case-insensitive, sobre el nombre de la selección en `national_teams`).
+- `confederation_code`: filtro por código de la confederación de los países anfitriones.
+- `page`: número de página (base 1, por defecto `1`).
+- `size`: tamaño de página (por defecto `20`, máximo `100`).
+
+Notas de respuesta:
+
+- `host_nation_codes` y `champion_code` se normalizan a mayúsculas.
+- Si no hay estadísticas cargadas para una edición, `stats` devuelve valores predeterminados (enteros en `0`, strings vacíos `""` y arrays vacíos `[]`).
+
 ### Ejemplos de request
  
  **Listar confederaciones**
@@ -225,17 +245,27 @@ curl -H "X-API-Version: 1" http://localhost:8080/api/confederations
 curl -H "X-API-Version: 1" "http://localhost:8080/api/national-teams"
 ```
 
-**Filtrar por nombre y confederación (combinado)**
+**Filtrar selecciones por nombre y confederación**
 ```bash
 curl -H "X-API-Version: 1" "http://localhost:8080/api/national-teams?name=argen&confederation_code=CONMEBOL&page=1&size=20"
 ```
 
-**Filtrar por federación e incluir disueltas**
+**Listar campeonatos mundiales (orden cronológico ascendente)**
 ```bash
-curl -H "X-API-Version: 1" "http://localhost:8080/api/national-teams?federation_name=futbol&federation_code=afa&include_dissolved=true"
+curl -H "X-API-Version: 1" "http://localhost:8080/api/championships"
 ```
 
-**Obtener por código FIFA**
+**Filtrar mundiales por confederación del anfitrión**
+```bash
+curl -H "X-API-Version: 1" "http://localhost:8080/api/championships?confederation_code=CONMEBOL"
+```
+
+**Obtener detalle completo de un mundial por año**
+```bash
+curl -H "X-API-Version: 1" "http://localhost:8080/api/championships/1986"
+```
+
+**Obtener selección por código FIFA**
 ```bash
 curl -H "X-API-Version: 1" "http://localhost:8080/api/national-teams/code/urs"
 ```

@@ -99,15 +99,16 @@ GIN_MODE=debug   # usar "release" en producción
 ### Implementadas
 
 | Entidad | Tabla | Descripción |
-|---------|-------|-------------|
+|---|---|---|
 | Confederación | `confederations` | Agrupa selecciones por región geográfica |
+| Mundial (Campeonato) | `championships` | Edición del mundial (año, fechas, anfitrión y campeón) |
+| Estadísticas de Mundial | `championship_stats` | Datos estadísticos de la edición (goles, partidos, podio) |
 
 ### Planificadas
 
 | Entidad | Tabla | Descripción |
 |---------|-------|-------------|
 | Selección | `teams` | Selecciones nacionales participantes |
-| Mundial | `world_cups` | Ediciones del mundial (año, sede, campeón) |
 | Fase | `stages` | Grupos, octavos, cuartos, semifinal, final |
 | Partido | `matches` | Encuentros entre dos selecciones |
 | Jugador | `players` | Jugadores participantes |
@@ -142,6 +143,13 @@ El proyecto utiliza **go-semantic-release**. El agente debe redactar mensajes de
 |--------|------|-------------|
 | `GET` | `/api/confederations` | Listar todas las confederaciones |
 | `GET` | `/api/confederations/:id` | Obtener confederación por id |
+
+### Campeonatos `/api/championships`
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| `GET` | `/api/championships` | Listar todas las ediciones de los mundiales con filtros |
+| `GET` | `/api/championships/:year` | Obtener detalle de una edición por año con estadísticas |
 
 ---
 

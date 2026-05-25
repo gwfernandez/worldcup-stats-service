@@ -51,6 +51,9 @@ func main() {
 	nationalTeamRepo := repository.NewNationalTeamRepository(pool)
 	nationalTeamSvc := service.NewNationalTeamService(nationalTeamRepo)
 	nationalTeamHandlerV1 := v1.NewNationalTeamHandler(nationalTeamSvc)
+	championshipRepo := repository.NewChampionshipRepository(pool)
+	championshipSvc := service.NewChampionshipService(championshipRepo)
+	championshipHandlerV1 := v1.NewChampionshipHandler(championshipSvc)
 
 	// Set up Gin router
 	router := gin.Default()
@@ -67,6 +70,7 @@ func main() {
 		v1Group := api.Group("", middleware.RequireVersion(1))
 		confederationHandlerV1.RegisterRoutes(v1Group)
 		nationalTeamHandlerV1.RegisterRoutes(v1Group)
+		championshipHandlerV1.RegisterRoutes(v1Group)
 	}
 
 	// Create HTTP server
