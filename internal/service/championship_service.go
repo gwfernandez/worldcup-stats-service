@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"math"
 
 	"github.com/jendrix/worldcup-stats-service/internal/domain"
 	"github.com/jendrix/worldcup-stats-service/internal/repository"
@@ -27,9 +28,13 @@ func (s *championshipService) List(ctx context.Context, filter domain.Championsh
 		return nil, fmt.Errorf("%w: size must be between 1 and 100", domain.ErrInvalidInput)
 	}
 
-	data, total, err := s.repo.List(ctx, filter)
+	data, totalElements, err := s.repo.List(ctx, filter)
 	if err != nil {
 		return nil, err
+	}
+	totalPages := int(math.Ceil(float64(totalElements) / float64(filter.Size)))
+	if totalElements == 0 {
+		totalPages = 0
 	}
 
 	if data == nil {
@@ -39,9 +44,12 @@ func (s *championshipService) List(ctx context.Context, filter domain.Championsh
 	return &domain.ChampionshipListResponse{
 		Data: data,
 		Pagination: domain.PaginationInfo{
-			Page:  filter.Page,
-			Size:  filter.Size,
-			Total: total,
+			Page:          filter.Page,
+			Size:          filter.Size,
+			TotalElements: totalElements,
+			TotalPages:    totalPages,
+			HasNext:       filter.Page < totalPages,
+			HasPrevious:   filter.Page > 1,
 		},
 	}, nil
 }

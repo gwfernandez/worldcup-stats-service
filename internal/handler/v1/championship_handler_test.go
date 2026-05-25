@@ -53,9 +53,12 @@ func TestChampionshipHandler_List(t *testing.T) {
 		expected := &domain.ChampionshipListResponse{
 			Data: []domain.Championship{{ID: 1, Year: 1930}},
 			Pagination: domain.PaginationInfo{
-				Page:  1,
-				Size:  20,
-				Total: 1,
+				Page:          1,
+				Size:          20,
+				TotalElements: 1,
+				TotalPages:    1,
+				HasNext:       false,
+				HasPrevious:   false,
 			},
 		}
 

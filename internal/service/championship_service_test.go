@@ -50,7 +50,7 @@ func TestChampionshipService_List(t *testing.T) {
 		require.NotNil(t, res)
 		assert.Equal(t, 1, res.Pagination.Page)
 		assert.Equal(t, 20, res.Pagination.Size)
-		assert.Equal(t, int64(22), res.Pagination.Total)
+		assert.Equal(t, int64(22), res.Pagination.TotalElements)
 		assert.Len(t, res.Data, 2)
 		mockRepo.AssertExpectations(t)
 	})

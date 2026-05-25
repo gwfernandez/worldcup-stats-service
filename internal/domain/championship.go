@@ -41,13 +41,6 @@ type ChampionshipFilter struct {
 	Size              int
 }
 
-// PaginationInfo represents metadata about a paginated response.
-type PaginationInfo struct {
-	Page  int   `json:"page"`
-	Size  int   `json:"size"`
-	Total int64 `json:"total"`
-}
-
 // ChampionshipListResponse represents the JSON response for listing championships.
 type ChampionshipListResponse struct {
 	Data       []Championship `json:"data"`
