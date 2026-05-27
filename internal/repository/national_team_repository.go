@@ -62,18 +62,6 @@ func (r *nationalTeamRepository) List(ctx context.Context, filter domain.Nationa
 	return teams, total, nil
 }
 
-func (r *nationalTeamRepository) GetByID(ctx context.Context, id int64) (*domain.NationalTeam, error) {
-	row, err := r.queries.GetNationalTeamByID(ctx, id)
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, nil
-		}
-		return nil, err
-	}
-	team := toNationalTeamDomain(row)
-	return &team, nil
-}
-
 func (r *nationalTeamRepository) GetByCode(ctx context.Context, code string) (*domain.NationalTeam, error) {
 	row, err := r.queries.GetNationalTeamByCode(ctx, code)
 	if err != nil {
@@ -90,7 +78,6 @@ func toNationalTeamDomain(row sqlc.NationalTeam) domain.NationalTeam {
 	dissolutionDate := dateToStringPtr(row.DissolutionDate)
 
 	return domain.NationalTeam{
-		ID:              row.ID,
 		Name:            row.Name,
 		Code:            strings.ToUpper(row.Code),
 		DissolutionDate: dissolutionDate,

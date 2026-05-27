@@ -3,7 +3,6 @@ package v1
 import (
 	"errors"
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 
@@ -26,7 +25,7 @@ func (h *ConfederationHandler) RegisterRoutes(rg *gin.RouterGroup) {
 	confederations := rg.Group("/confederations")
 	{
 		confederations.GET("", h.List)
-		confederations.GET("/:id", h.GetByID)
+		confederations.GET("/:code", h.GetByCode)
 	}
 }
 
@@ -44,20 +43,15 @@ func (h *ConfederationHandler) List(c *gin.Context) {
 	c.JSON(http.StatusOK, confederations)
 }
 
-// GetByID godoc
-// @Summary Get a confederation by ID
+// GetByCode godoc
+// @Summary Get a confederation by code
 // @Produce json
-// @Param id path int true "Confederation ID"
+// @Param code path string true "Confederation code"
 // @Success 200 {object} domain.Confederation
-// @Router /api/confederations/{id} [get]
-func (h *ConfederationHandler) GetByID(c *gin.Context) {
-	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id parameter"})
-		return
-	}
-
-	confederation, err := h.service.GetByID(c.Request.Context(), id)
+// @Router /api/confederations/{code} [get]
+func (h *ConfederationHandler) GetByCode(c *gin.Context) {
+	code := c.Param("code")
+	confederation, err := h.service.GetByCode(c.Request.Context(), code)
 	if err != nil {
 		if isNotFoundError(err) {
 			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})

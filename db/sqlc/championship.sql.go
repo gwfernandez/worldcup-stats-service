@@ -45,7 +45,6 @@ func (q *Queries) CountChampionships(ctx context.Context, arg CountChampionships
 
 const getChampionshipByYear = `-- name: GetChampionshipByYear :one
 SELECT 
-    c.id,
     c.year,
     c.start_date,
     c.end_date,
@@ -63,12 +62,11 @@ SELECT
     s.top_scorer_ids,
     s.top_scorer_goals
 FROM championships c
-LEFT JOIN championship_stats s ON s.id = c.id
+LEFT JOIN championship_stats s ON s.year = c.year
 WHERE c.year = $1
 `
 
 type GetChampionshipByYearRow struct {
-	ID                   int64
 	Year                 int32
 	StartDate            pgtype.Date
 	EndDate              pgtype.Date
@@ -91,7 +89,6 @@ func (q *Queries) GetChampionshipByYear(ctx context.Context, year int32) (GetCha
 	row := q.db.QueryRow(ctx, getChampionshipByYear, year)
 	var i GetChampionshipByYearRow
 	err := row.Scan(
-		&i.ID,
 		&i.Year,
 		&i.StartDate,
 		&i.EndDate,
@@ -114,7 +111,6 @@ func (q *Queries) GetChampionshipByYear(ctx context.Context, year int32) (GetCha
 
 const listChampionships = `-- name: ListChampionships :many
 SELECT
-    id,
     year,
     start_date,
     end_date,
@@ -163,7 +159,6 @@ func (q *Queries) ListChampionships(ctx context.Context, arg ListChampionshipsPa
 	for rows.Next() {
 		var i Championship
 		if err := rows.Scan(
-			&i.ID,
 			&i.Year,
 			&i.StartDate,
 			&i.EndDate,

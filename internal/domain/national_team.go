@@ -2,9 +2,8 @@ package domain
 
 // NationalTeam represents a national team entity.
 type NationalTeam struct {
-	ID                int64   `json:"id"`
-	Name              string  `json:"name"`
 	Code              string  `json:"code"`
+	Name              string  `json:"name"`
 	DissolutionDate   *string `json:"dissolution_date"`
 	IsDissolved       bool    `json:"is_dissolved"`
 	ConfederationCode string  `json:"confederation_code"`

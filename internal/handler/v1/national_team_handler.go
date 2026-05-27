@@ -32,8 +32,7 @@ func (h *NationalTeamHandler) RegisterRoutes(rg *gin.RouterGroup) {
 	nationalTeams := rg.Group("/national-teams")
 	{
 		nationalTeams.GET("", h.List)
-		nationalTeams.GET("/:id", h.GetByID)
-		nationalTeams.GET("/code/:code", h.GetByCode)
+		nationalTeams.GET("/:code", h.GetByCode)
 	}
 }
 
@@ -57,40 +56,14 @@ func (h *NationalTeamHandler) List(c *gin.Context) {
 	c.JSON(http.StatusOK, teams)
 }
 
-// GetByID godoc
-// @Summary Get a national team by ID
-// @Produce json
-// @Param id path int true "National Team ID"
-// @Router /api/national-teams/{id} [get]
-func (h *NationalTeamHandler) GetByID(c *gin.Context) {
-	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id parameter"})
-		return
-	}
-
-	team, err := h.service.GetByID(c.Request.Context(), id)
-	if err != nil {
-		if isNationalTeamNotFoundError(err) {
-			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
-			return
-		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to retrieve national team"})
-		return
-	}
-
-	c.JSON(http.StatusOK, team)
-}
-
 // GetByCode godoc
-// @Summary Get a national team by FIFA code
+// @Summary Get a national team by code
 // @Produce json
-// @Param code path string true "National Team FIFA code"
-// @Router /api/national-teams/code/{code} [get]
+// @Param code path string true "National Team code"
+// @Router /api/national-teams/{code} [get]
 func (h *NationalTeamHandler) GetByCode(c *gin.Context) {
 	code := c.Param("code")
-
-	team, err := h.service.GetByCode(c.Request.Context(), code)
+	team, err := h.service.GetByCode(c.Request.Context(), code)	
 	if err != nil {
 		if isNationalTeamNotFoundError(err) {
 			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})

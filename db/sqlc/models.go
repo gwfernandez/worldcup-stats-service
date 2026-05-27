@@ -9,7 +9,6 @@ import (
 )
 
 type Championship struct {
-	ID              int64
 	Year            int32
 	StartDate       pgtype.Date
 	EndDate         pgtype.Date
@@ -18,7 +17,7 @@ type Championship struct {
 }
 
 type ChampionshipStat struct {
-	ID              int64
+	Year            int32
 	TotalTeams      int32
 	TotalMatches    int32
 	TotalStadiums   int32
@@ -33,15 +32,13 @@ type ChampionshipStat struct {
 }
 
 type Confederation struct {
-	ID   int64
 	Code string
 	Name string
 }
 
 type NationalTeam struct {
-	ID                int64
-	Name              string
 	Code              string
+	Name              string
 	DissolutionDate   pgtype.Date
 	ConfederationCode string
 	FederationName    string

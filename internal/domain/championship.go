@@ -23,7 +23,6 @@ type ChampionshipStats struct {
 
 // Championship represents a football world cup championship edition.
 type Championship struct {
-	ID              int64              `json:"id"`
 	Year            int                `json:"year"`
 	StartDate       string             `json:"start_date"`
 	EndDate         string             `json:"end_date"`

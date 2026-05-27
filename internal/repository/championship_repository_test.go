@@ -38,8 +38,8 @@ func TestChampionshipRepository_List(t *testing.T) {
 
 		startDate := time.Date(1978, 6, 1, 0, 0, 0, 0, time.UTC)
 		endDate := time.Date(1978, 6, 25, 0, 0, 0, 0, time.UTC)
-		rows := mock.NewRows([]string{"id", "year", "start_date", "end_date", "host_nation_codes", "champion_code"}).
-			AddRow(int64(11), int32(1978), startDate, endDate, []string{"arg"}, pgtype.Text{String: "ARG", Valid: true})
+		rows := mock.NewRows([]string{"year", "start_date", "end_date", "host_nation_codes", "champion_code"}).
+			AddRow(int32(1978), startDate, endDate, []string{"arg"}, pgtype.Text{String: "ARG", Valid: true})
 
 		mock.ExpectQuery(`^-- name: ListChampionships :many.*`).
 			WithArgs(int32(1978), "arg", "CONMEBOL", int32(10), int32(0)).
@@ -114,12 +114,12 @@ func TestChampionshipRepository_GetByYear(t *testing.T) {
 		endDate := time.Date(1930, 7, 30, 0, 0, 0, 0, time.UTC)
 
 		rows := mock.NewRows([]string{
-			"id", "year", "start_date", "end_date", "host_nation_codes", "champion_code",
+			"year", "start_date", "end_date", "host_nation_codes", "champion_code",
 			"total_teams", "total_matches", "total_stadiums", "total_players", "total_goals",
 			"stats_champion_code", "stats_runner_up_code", "stats_third_place_code", "stats_fourth_place_code",
 			"top_scorer_ids", "top_scorer_goals",
 		}).AddRow(
-			int64(1), int32(1930), startDate, endDate, []string{"uru"}, pgtype.Text{String: "uru", Valid: true},
+			int32(1930), startDate, endDate, []string{"uru"}, pgtype.Text{String: "uru", Valid: true},
 			pgtype.Int4{Int32: 13, Valid: true}, pgtype.Int4{Int32: 18, Valid: true}, pgtype.Int4{Int32: 3, Valid: true},
 			pgtype.Int4{Int32: 189, Valid: true}, pgtype.Int4{Int32: 70, Valid: true},
 			pgtype.Text{String: "uru", Valid: true}, pgtype.Text{String: "arg", Valid: true},
@@ -165,12 +165,12 @@ func TestChampionshipRepository_GetByYear(t *testing.T) {
 		endDate := time.Date(2026, 7, 19, 0, 0, 0, 0, time.UTC)
 
 		rows := mock.NewRows([]string{
-			"id", "year", "start_date", "end_date", "host_nation_codes", "champion_code",
+			"year", "start_date", "end_date", "host_nation_codes", "champion_code",
 			"total_teams", "total_matches", "total_stadiums", "total_players", "total_goals",
 			"stats_champion_code", "stats_runner_up_code", "stats_third_place_code", "stats_fourth_place_code",
 			"top_scorer_ids", "top_scorer_goals",
 		}).AddRow(
-			int64(23), int32(2026), startDate, endDate, []string{"usa", "can", "mex"}, pgtype.Text{Valid: false},
+			int32(2026), startDate, endDate, []string{"usa", "can", "mex"}, pgtype.Text{Valid: false},
 			pgtype.Int4{Valid: false}, pgtype.Int4{Valid: false}, pgtype.Int4{Valid: false},
 			pgtype.Int4{Valid: false}, pgtype.Int4{Valid: false},
 			pgtype.Text{Valid: false}, pgtype.Text{Valid: false},

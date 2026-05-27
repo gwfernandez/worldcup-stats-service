@@ -43,9 +43,8 @@ func (q *Queries) CountNationalTeams(ctx context.Context, arg CountNationalTeams
 
 const getNationalTeamByCode = `-- name: GetNationalTeamByCode :one
 SELECT
-    id,
-    name,
     code,
+    name,
     dissolution_date,
     confederation_code,
     federation_name,
@@ -58,37 +57,8 @@ func (q *Queries) GetNationalTeamByCode(ctx context.Context, lower string) (Nati
 	row := q.db.QueryRow(ctx, getNationalTeamByCode, lower)
 	var i NationalTeam
 	err := row.Scan(
-		&i.ID,
-		&i.Name,
 		&i.Code,
-		&i.DissolutionDate,
-		&i.ConfederationCode,
-		&i.FederationName,
-		&i.FederationCode,
-	)
-	return i, err
-}
-
-const getNationalTeamByID = `-- name: GetNationalTeamByID :one
-SELECT
-    id,
-    name,
-    code,
-    dissolution_date,
-    confederation_code,
-    federation_name,
-    federation_code
-FROM national_teams
-WHERE id = $1
-`
-
-func (q *Queries) GetNationalTeamByID(ctx context.Context, id int64) (NationalTeam, error) {
-	row := q.db.QueryRow(ctx, getNationalTeamByID, id)
-	var i NationalTeam
-	err := row.Scan(
-		&i.ID,
 		&i.Name,
-		&i.Code,
 		&i.DissolutionDate,
 		&i.ConfederationCode,
 		&i.FederationName,
@@ -99,9 +69,8 @@ func (q *Queries) GetNationalTeamByID(ctx context.Context, id int64) (NationalTe
 
 const listNationalTeams = `-- name: ListNationalTeams :many
 SELECT
-    id,
-    name,
     code,
+    name,
     dissolution_date,
     confederation_code,
     federation_name,
@@ -145,9 +114,8 @@ func (q *Queries) ListNationalTeams(ctx context.Context, arg ListNationalTeamsPa
 	for rows.Next() {
 		var i NationalTeam
 		if err := rows.Scan(
-			&i.ID,
-			&i.Name,
 			&i.Code,
+			&i.Name,
 			&i.DissolutionDate,
 			&i.ConfederationCode,
 			&i.FederationName,

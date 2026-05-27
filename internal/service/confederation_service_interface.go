@@ -9,5 +9,5 @@ import (
 // ConfederationService defines the contract for confederation business logic.
 type ConfederationService interface {
 	List(ctx context.Context) ([]domain.Confederation, error)
-	GetByID(ctx context.Context, id int64) (*domain.Confederation, error)
+	GetByCode(ctx context.Context, code string) (*domain.Confederation, error)
 }

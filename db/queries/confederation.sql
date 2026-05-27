@@ -1,5 +1,5 @@
 -- name: ListConfederations :many
-SELECT id, code, name FROM confederations ORDER BY id;
+SELECT code, name FROM confederations ORDER BY code;
 
--- name: GetConfederation :one
-SELECT id, code, name FROM confederations WHERE id = $1;
+-- name: GetConfederationByCode :one
+SELECT code, name FROM confederations WHERE lower(code) = lower($1);

@@ -28,8 +28,8 @@ func (m *MockConfederationService) List(ctx context.Context) ([]domain.Confedera
 	return args.Get(0).([]domain.Confederation), args.Error(1)
 }
 
-func (m *MockConfederationService) GetByID(ctx context.Context, id int64) (*domain.Confederation, error) {
-	args := m.Called(ctx, id)
+func (m *MockConfederationService) GetByCode(ctx context.Context, code string) (*domain.Confederation, error) {
+	args := m.Called(ctx, code)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
@@ -51,7 +51,7 @@ func TestConfederationHandler_List(t *testing.T) {
 		r := setupRouter(svc)
 
 		expected := []domain.Confederation{
-			{ID: 1, Code: "CONMEBOL", Name: "South America"},
+			{Code: "CONMEBOL", Name: "South America"},
 		}
 
 		svc.On("List", mock.Anything).Return(expected, nil)
@@ -77,39 +77,28 @@ func TestConfederationHandler_List(t *testing.T) {
 	})
 }
 
-func TestConfederationHandler_GetByID(t *testing.T) {
+func TestConfederationHandler_GetByCode(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		svc := new(MockConfederationService)
 		r := setupRouter(svc)
 
-		expected := &domain.Confederation{ID: 1, Code: "CONMEBOL"}
-		svc.On("GetByID", mock.Anything, int64(1)).Return(expected, nil)
+		expected := &domain.Confederation{Name: "South America", Code: "CONMEBOL"}
+		svc.On("GetByCode", mock.Anything, "CONMEBOL").Return(expected, nil)
 
-		req, _ := http.NewRequest(http.MethodGet, "/api/confederations/1", nil)
+		req, _ := http.NewRequest(http.MethodGet, "/api/confederations/CONMEBOL", nil)
 		w := httptest.NewRecorder()
 		r.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
 	})
 
-	t.Run("invalid id", func(t *testing.T) {
-		svc := new(MockConfederationService)
-		r := setupRouter(svc)
-
-		req, _ := http.NewRequest(http.MethodGet, "/api/confederations/invalid", nil)
-		w := httptest.NewRecorder()
-		r.ServeHTTP(w, req)
-
-		assert.Equal(t, http.StatusBadRequest, w.Code)
-	})
-
 	t.Run("not found", func(t *testing.T) {
 		svc := new(MockConfederationService)
 		r := setupRouter(svc)
 
-		svc.On("GetByID", mock.Anything, int64(99)).Return(nil, domain.ErrNotFound)
+		svc.On("GetByCode", mock.Anything, "ANTARCTICA").Return(nil, domain.ErrNotFound)
 
-		req, _ := http.NewRequest(http.MethodGet, "/api/confederations/99", nil)
+		req, _ := http.NewRequest(http.MethodGet, "/api/confederations/ANTARCTICA", nil)
 		w := httptest.NewRecorder()
 		r.ServeHTTP(w, req)
 
@@ -120,9 +109,9 @@ func TestConfederationHandler_GetByID(t *testing.T) {
 		svc := new(MockConfederationService)
 		r := setupRouter(svc)
 
-		svc.On("GetByID", mock.Anything, int64(99)).Return(nil, errors.New("db error"))
+		svc.On("GetByCode", mock.Anything, "ANTARCTICA").Return(nil, errors.New("db error"))
 
-		req, _ := http.NewRequest(http.MethodGet, "/api/confederations/99", nil)
+		req, _ := http.NewRequest(http.MethodGet, "/api/confederations/ANTARCTICA", nil)
 		w := httptest.NewRecorder()
 		r.ServeHTTP(w, req)
 
