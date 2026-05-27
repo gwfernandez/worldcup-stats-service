@@ -35,8 +35,8 @@ func (r *confederationRepository) List(ctx context.Context) ([]domain.Confederat
 	return confederations, nil
 }
 
-func (r *confederationRepository) GetByID(ctx context.Context, id int64) (*domain.Confederation, error) {
-	row, err := r.queries.GetConfederation(ctx, id)
+func (r *confederationRepository) GetByCode(ctx context.Context, code string) (*domain.Confederation, error) {
+	row, err := r.queries.GetConfederationByCode(ctx, code)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, nil
@@ -51,7 +51,6 @@ func (r *confederationRepository) GetByID(ctx context.Context, id int64) (*domai
 // toDomain converts a sqlc model to a domain entity.
 func toDomain(row sqlc.Confederation) domain.Confederation {
 	return domain.Confederation{
-		ID:   row.ID,
 		Code: row.Code,
 		Name: row.Name,
 	}

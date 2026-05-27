@@ -67,8 +67,8 @@ cp .env.example .env
 ### 1. Clonar el repositorio
 
 ```bash
-git clone https://github.com/tu-usuario/worldcups-api.git
-cd worldcups-api
+git clone https://github.com/gwfernandez/worldcup-stats-service
+cd worldcup-stats-service
 ```
 
 ### 2. Instalar dependencias
@@ -187,14 +187,13 @@ Para más detalles, consultar [Estrategia de Versionado](docs/API_VERSIONING.md)
  | Método | Ruta | Descripción |
  |--------|------|-------------|
  | `GET` | `/api/confederations` | Listar todas las confederaciones |
- | `GET` | `/api/confederations/:id` | Obtener confederación por id |
+ | `GET` | `/api/confederations/:code` | Obtener confederación por code |
 
 ### Selecciones Nacionales
 
  | Método | Ruta | Descripción |
  |--------|------|-------------|
  | `GET` | `/api/national-teams` | Listar selecciones nacionales con filtros y paginación |
- | `GET` | `/api/national-teams/:id` | Obtener selección por id |
  | `GET` | `/api/national-teams/code/:code` | Obtener selección por código FIFA |
 
 Parámetros soportados para `/api/national-teams`:

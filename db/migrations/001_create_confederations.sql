@@ -1,5 +1,4 @@
 CREATE TABLE confederations (
-    id      BIGSERIAL    PRIMARY KEY,
-    code    VARCHAR(20)  NOT NULL UNIQUE,
+    code    VARCHAR(20)  PRIMARY KEY,
     name    VARCHAR(100) NOT NULL
 );

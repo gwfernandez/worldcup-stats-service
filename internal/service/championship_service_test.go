@@ -42,7 +42,7 @@ func TestChampionshipService_List(t *testing.T) {
 		svc := service.NewChampionshipService(mockRepo)
 		filter := domain.ChampionshipFilter{Page: 1, Size: 20}
 
-		expected := []domain.Championship{{ID: 1, Year: 1930}, {ID: 2, Year: 1934}}
+		expected := []domain.Championship{{Year: 1930, HostNationCodes: []string{"URU"}}, {Year: 1934, HostNationCodes: []string{"ITA"}}}
 		mockRepo.On("List", ctx, filter).Return(expected, int64(22), nil)
 
 		res, err := svc.List(ctx, filter)
@@ -113,7 +113,7 @@ func TestChampionshipService_GetByYear(t *testing.T) {
 			TotalTeams: 13,
 			TotalGoals: 70,
 		}
-		expected := &domain.Championship{ID: 1, Year: 1930, Stats: expectedStats}
+		expected := &domain.Championship{Year: 1930, Stats: expectedStats}
 		mockRepo.On("GetByYear", ctx, 1930).Return(expected, nil)
 
 		res, err := svc.GetByYear(ctx, 1930)
@@ -130,7 +130,7 @@ func TestChampionshipService_GetByYear(t *testing.T) {
 		mockRepo := new(MockChampionshipRepository)
 		svc := service.NewChampionshipService(mockRepo)
 
-		expected := &domain.Championship{ID: 23, Year: 2026, Stats: nil}
+		expected := &domain.Championship{Year: 2026, Stats: nil}
 		mockRepo.On("GetByYear", ctx, 2026).Return(expected, nil)
 
 		res, err := svc.GetByYear(ctx, 2026)

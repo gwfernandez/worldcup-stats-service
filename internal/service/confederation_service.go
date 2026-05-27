@@ -22,13 +22,13 @@ func (s *confederationService) List(ctx context.Context) ([]domain.Confederation
 	return s.repo.List(ctx)
 }
 
-func (s *confederationService) GetByID(ctx context.Context, id int64) (*domain.Confederation, error) {
-	confederation, err := s.repo.GetByID(ctx, id)
+func (s *confederationService) GetByCode(ctx context.Context, code string) (*domain.Confederation, error) {
+	confederation, err := s.repo.GetByCode(ctx, code)
 	if err != nil {
 		return nil, err
 	}
 	if confederation == nil {
-		return nil, fmt.Errorf("%w: confederation with id %d not found", domain.ErrNotFound, id)
+		return nil, fmt.Errorf("%w: confederation with code %s not found", domain.ErrNotFound, code)
 	}
 	return confederation, nil
 }

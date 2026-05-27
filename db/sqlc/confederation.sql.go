@@ -9,19 +9,19 @@ import (
 	"context"
 )
 
-const getConfederation = `-- name: GetConfederation :one
-SELECT id, code, name FROM confederations WHERE id = $1
+const getConfederationByCode = `-- name: GetConfederationByCode :one
+SELECT code, name FROM confederations WHERE lower(code) = lower($1)
 `
 
-func (q *Queries) GetConfederation(ctx context.Context, id int64) (Confederation, error) {
-	row := q.db.QueryRow(ctx, getConfederation, id)
+func (q *Queries) GetConfederationByCode(ctx context.Context, lower string) (Confederation, error) {
+	row := q.db.QueryRow(ctx, getConfederationByCode, lower)
 	var i Confederation
-	err := row.Scan(&i.ID, &i.Code, &i.Name)
+	err := row.Scan(&i.Code, &i.Name)
 	return i, err
 }
 
 const listConfederations = `-- name: ListConfederations :many
-SELECT id, code, name FROM confederations ORDER BY id
+SELECT code, name FROM confederations ORDER BY code
 `
 
 func (q *Queries) ListConfederations(ctx context.Context) ([]Confederation, error) {
@@ -33,7 +33,7 @@ func (q *Queries) ListConfederations(ctx context.Context) ([]Confederation, erro
 	var items []Confederation
 	for rows.Next() {
 		var i Confederation
-		if err := rows.Scan(&i.ID, &i.Code, &i.Name); err != nil {
+		if err := rows.Scan(&i.Code, &i.Name); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

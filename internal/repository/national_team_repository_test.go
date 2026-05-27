@@ -38,9 +38,9 @@ func TestNationalTeamRepository_List(t *testing.T) {
 			WithArgs("argen", "CONMEBOL", "futbol", "afa", true).
 			WillReturnRows(countRows)
 
-		rows := mock.NewRows([]string{"id", "name", "code", "dissolution_date", "confederation_code", "federation_name", "federation_code"}).
-			AddRow(int64(1), "Argentina", "arg", nil, "CONMEBOL", "Asociación del Fútbol Argentino", "afa").
-			AddRow(int64(5), "Soviet Union", "urs", time.Date(1991, 12, 26, 0, 0, 0, 0, time.UTC), "UEFA", "Football Federation of the Soviet Union", "ffsu")
+		rows := mock.NewRows([]string{"code", "name", "dissolution_date", "confederation_code", "federation_name", "federation_code"}).
+			AddRow("arg", "Argentina", nil, "CONMEBOL", "Asociación del Fútbol Argentino", "afa").
+			AddRow("urs", "Soviet Union", time.Date(1991, 12, 26, 0, 0, 0, 0, time.UTC), "UEFA", "Football Federation of the Soviet Union", "ffsu")
 
 		mock.ExpectQuery(`^-- name: ListNationalTeams :many.*`).
 			WithArgs("argen", "CONMEBOL", "futbol", "afa", true, int32(20), int32(0)).
@@ -81,41 +81,6 @@ func TestNationalTeamRepository_List(t *testing.T) {
 	})
 }
 
-func TestNationalTeamRepository_GetByID(t *testing.T) {
-	t.Run("success", func(t *testing.T) {
-		mock, err := pgxmock.NewPool()
-		require.NoError(t, err)
-		defer mock.Close()
-
-		repo := repository.NewNationalTeamRepository(mock)
-		rows := mock.NewRows([]string{"id", "name", "code", "dissolution_date", "confederation_code", "federation_name", "federation_code"}).
-			AddRow(int64(1), "Argentina", "arg", nil, "CONMEBOL", "Asociación del Fútbol Argentino", "afa")
-		mock.ExpectQuery(`^-- name: GetNationalTeamByID :one.*`).WithArgs(int64(1)).WillReturnRows(rows)
-
-		result, err := repo.GetByID(context.Background(), 1)
-		assert.NoError(t, err)
-		require.NotNil(t, result)
-		assert.Equal(t, int64(1), result.ID)
-		assert.Equal(t, "ARG", result.Code)
-		assert.Equal(t, "AFA", result.FederationCode)
-		assert.NoError(t, mock.ExpectationsWereMet())
-	})
-
-	t.Run("not found", func(t *testing.T) {
-		mock, err := pgxmock.NewPool()
-		require.NoError(t, err)
-		defer mock.Close()
-
-		repo := repository.NewNationalTeamRepository(mock)
-		mock.ExpectQuery(`^-- name: GetNationalTeamByID :one.*`).WithArgs(int64(999)).WillReturnError(pgx.ErrNoRows)
-
-		result, err := repo.GetByID(context.Background(), 999)
-		assert.NoError(t, err)
-		assert.Nil(t, result)
-		assert.NoError(t, mock.ExpectationsWereMet())
-	})
-}
-
 func TestNationalTeamRepository_GetByCode(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		mock, err := pgxmock.NewPool()
@@ -123,8 +88,8 @@ func TestNationalTeamRepository_GetByCode(t *testing.T) {
 		defer mock.Close()
 
 		repo := repository.NewNationalTeamRepository(mock)
-		rows := mock.NewRows([]string{"id", "name", "code", "dissolution_date", "confederation_code", "federation_name", "federation_code"}).
-			AddRow(int64(5), "Soviet Union", "urs", time.Date(1991, 12, 26, 0, 0, 0, 0, time.UTC), "UEFA", "Football Federation of the Soviet Union", "ffsu")
+		rows := mock.NewRows([]string{"code", "name", "dissolution_date", "confederation_code", "federation_name", "federation_code"}).
+			AddRow("urs", "Soviet Union", time.Date(1991, 12, 26, 0, 0, 0, 0, time.UTC), "UEFA", "Football Federation of the Soviet Union", "ffsu")
 		mock.ExpectQuery(`^-- name: GetNationalTeamByCode :one.*`).WithArgs("urs").WillReturnRows(rows)
 
 		result, err := repo.GetByCode(context.Background(), "urs")

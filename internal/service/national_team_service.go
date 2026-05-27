@@ -44,20 +44,6 @@ func (s *nationalTeamService) List(ctx context.Context, filter domain.NationalTe
 	}, nil
 }
 
-func (s *nationalTeamService) GetByID(ctx context.Context, id int64) (*domain.NationalTeam, error) {
-	team, err := s.repo.GetByID(ctx, id)
-	if err != nil {
-		return nil, err
-	}
-	if team == nil {
-		return nil, fmt.Errorf("%w: national team with id %d not found", domain.ErrNotFound, id)
-	}
-	team.Code = strings.ToUpper(team.Code)
-	team.ConfederationCode = strings.ToUpper(team.ConfederationCode)
-	team.FederationCode = strings.ToUpper(team.FederationCode)
-	return team, nil
-}
-
 func (s *nationalTeamService) GetByCode(ctx context.Context, code string) (*domain.NationalTeam, error) {
 	team, err := s.repo.GetByCode(ctx, code)
 	if err != nil {

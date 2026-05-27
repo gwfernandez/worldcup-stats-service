@@ -1,6 +1,5 @@
 -- name: ListChampionships :many
 SELECT
-    id,
     year,
     start_date,
     end_date,
@@ -44,7 +43,6 @@ WHERE
 
 -- name: GetChampionshipByYear :one
 SELECT 
-    c.id,
     c.year,
     c.start_date,
     c.end_date,
@@ -62,5 +60,5 @@ SELECT
     s.top_scorer_ids,
     s.top_scorer_goals
 FROM championships c
-LEFT JOIN championship_stats s ON s.id = c.id
+LEFT JOIN championship_stats s ON s.year = c.year
 WHERE c.year = $1;

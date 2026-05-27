@@ -1,8 +1,7 @@
 -- name: ListNationalTeams :many
 SELECT
-    id,
-    name,
     code,
+    name,
     dissolution_date,
     confederation_code,
     federation_name,
@@ -27,23 +26,10 @@ WHERE
     AND ($4::text = '' OR LOWER(federation_code) = LOWER($4))
     AND ($5::boolean OR dissolution_date IS NULL);
 
--- name: GetNationalTeamByID :one
-SELECT
-    id,
-    name,
-    code,
-    dissolution_date,
-    confederation_code,
-    federation_name,
-    federation_code
-FROM national_teams
-WHERE id = $1;
-
 -- name: GetNationalTeamByCode :one
 SELECT
-    id,
-    name,
     code,
+    name,
     dissolution_date,
     confederation_code,
     federation_name,

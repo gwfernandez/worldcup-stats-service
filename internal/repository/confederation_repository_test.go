@@ -21,9 +21,9 @@ func TestConfederationRepository_List(t *testing.T) {
 
 		repo := repository.NewConfederationRepository(mock)
 
-		rows := mock.NewRows([]string{"id", "code", "name"}).
-			AddRow(int64(1), "CONMEBOL", "Confederación Sudamericana de Fútbol").
-			AddRow(int64(2), "UEFA", "Union of European Football Associations")
+		rows := mock.NewRows([]string{"code", "name"}).
+			AddRow("CONMEBOL", "Confederación Sudamericana de Fútbol").
+			AddRow("UEFA", "Union of European Football Associations")
 
 		mock.ExpectQuery(`^-- name: ListConfederations :many.*`).WillReturnRows(rows)
 
@@ -55,7 +55,7 @@ func TestConfederationRepository_List(t *testing.T) {
 	})
 }
 
-func TestConfederationRepository_GetByID(t *testing.T) {
+func TestConfederationRepository_GetByCode(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		mock, err := pgxmock.NewPool()
 		require.NoError(t, err)
@@ -63,17 +63,17 @@ func TestConfederationRepository_GetByID(t *testing.T) {
 
 		repo := repository.NewConfederationRepository(mock)
 
-		rows := mock.NewRows([]string{"id", "code", "name"}).
-			AddRow(int64(1), "CONMEBOL", "Confederación Sudamericana de Fútbol")
+		rows := mock.NewRows([]string{"code", "name"}).
+			AddRow( "CONMEBOL", "Confederación Sudamericana de Fútbol")
 
-		mock.ExpectQuery(`^-- name: GetConfederation :one.*`).WithArgs(int64(1)).WillReturnRows(rows)
+		mock.ExpectQuery(`^-- name: GetConfederationByCode :one.*`).WithArgs("CONMEBOL").WillReturnRows(rows)
 
 		ctx := context.Background()
-		result, err := repo.GetByID(ctx, 1)
+		result, err := repo.GetByCode(ctx, "CONMEBOL")
 
 		assert.NoError(t, err)
 		require.NotNil(t, result)
-		assert.Equal(t, int64(1), result.ID)
+		assert.Equal(t, "CONMEBOL", result.Code)
 
 		assert.NoError(t, mock.ExpectationsWereMet())
 	})
@@ -85,10 +85,10 @@ func TestConfederationRepository_GetByID(t *testing.T) {
 
 		repo := repository.NewConfederationRepository(mock)
 
-		mock.ExpectQuery(`^-- name: GetConfederation :one.*`).WithArgs(int64(99)).WillReturnError(pgx.ErrNoRows)
+		mock.ExpectQuery(`^-- name: GetConfederationByCode :one.*`).WithArgs("ANTARCTICA").WillReturnError(pgx.ErrNoRows)
 
 		ctx := context.Background()
-		result, err := repo.GetByID(ctx, 99)
+		result, err := repo.GetByCode(ctx, "ANTARCTICA")
 
 		assert.NoError(t, err)
 		assert.Nil(t, result)
@@ -103,10 +103,10 @@ func TestConfederationRepository_GetByID(t *testing.T) {
 
 		repo := repository.NewConfederationRepository(mock)
 
-		mock.ExpectQuery(`^-- name: GetConfederation :one.*`).WithArgs(int64(99)).WillReturnError(errors.New("db error"))
+		mock.ExpectQuery(`^-- name: GetConfederationByCode :one.*`).WithArgs("ANTARCTICA").WillReturnError(errors.New("db error"))
 
 		ctx := context.Background()
-		result, err := repo.GetByID(ctx, 99)
+		result, err := repo.GetByCode(ctx, "ANTARCTICA")
 
 		assert.Error(t, err)
 		assert.Nil(t, result)

@@ -28,14 +28,6 @@ func (m *MockNationalTeamService) List(ctx context.Context, filter domain.Nation
 	return args.Get(0).(*domain.NationalTeamListResponse), args.Error(1)
 }
 
-func (m *MockNationalTeamService) GetByID(ctx context.Context, id int64) (*domain.NationalTeam, error) {
-	args := m.Called(ctx, id)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*domain.NationalTeam), args.Error(1)
-}
-
 func (m *MockNationalTeamService) GetByCode(ctx context.Context, code string) (*domain.NationalTeam, error) {
 	args := m.Called(ctx, code)
 	if args.Get(0) == nil {
@@ -149,68 +141,15 @@ func TestNationalTeamHandler_List(t *testing.T) {
 	})
 }
 
-func TestNationalTeamHandler_GetByID(t *testing.T) {
-	t.Run("success", func(t *testing.T) {
-		svc := new(MockNationalTeamService)
-		r := setupNationalTeamRouter(svc)
-
-		expected := &domain.NationalTeam{ID: 1, Code: "ARG"}
-		svc.On("GetByID", mock.Anything, int64(1)).Return(expected, nil)
-
-		req, _ := http.NewRequest(http.MethodGet, "/api/national-teams/1", nil)
-		w := httptest.NewRecorder()
-		r.ServeHTTP(w, req)
-
-		assert.Equal(t, http.StatusOK, w.Code)
-	})
-
-	t.Run("invalid id", func(t *testing.T) {
-		svc := new(MockNationalTeamService)
-		r := setupNationalTeamRouter(svc)
-
-		req, _ := http.NewRequest(http.MethodGet, "/api/national-teams/invalid", nil)
-		w := httptest.NewRecorder()
-		r.ServeHTTP(w, req)
-
-		assert.Equal(t, http.StatusBadRequest, w.Code)
-	})
-
-	t.Run("not found", func(t *testing.T) {
-		svc := new(MockNationalTeamService)
-		r := setupNationalTeamRouter(svc)
-
-		svc.On("GetByID", mock.Anything, int64(99)).Return(nil, domain.ErrNotFound)
-
-		req, _ := http.NewRequest(http.MethodGet, "/api/national-teams/99", nil)
-		w := httptest.NewRecorder()
-		r.ServeHTTP(w, req)
-
-		assert.Equal(t, http.StatusNotFound, w.Code)
-	})
-
-	t.Run("internal error", func(t *testing.T) {
-		svc := new(MockNationalTeamService)
-		r := setupNationalTeamRouter(svc)
-
-		svc.On("GetByID", mock.Anything, int64(99)).Return(nil, errors.New("db error"))
-
-		req, _ := http.NewRequest(http.MethodGet, "/api/national-teams/99", nil)
-		w := httptest.NewRecorder()
-		r.ServeHTTP(w, req)
-
-		assert.Equal(t, http.StatusInternalServerError, w.Code)
-	})
-}
-
 func TestNationalTeamHandler_GetByCode(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		svc := new(MockNationalTeamService)
 		r := setupNationalTeamRouter(svc)
 
-		expected := &domain.NationalTeam{ID: 5, Code: "URS"}
+		expected := &domain.NationalTeam{Code: "URS", Name: "Soviet Union"}
 		svc.On("GetByCode", mock.Anything, "urs").Return(expected, nil)
 
-		req, _ := http.NewRequest(http.MethodGet, "/api/national-teams/code/urs", nil)
+		req, _ := http.NewRequest(http.MethodGet, "/api/national-teams/urs", nil)
 		w := httptest.NewRecorder()
 		r.ServeHTTP(w, req)
 
@@ -223,7 +162,7 @@ func TestNationalTeamHandler_GetByCode(t *testing.T) {
 
 		svc.On("GetByCode", mock.Anything, "zzz").Return(nil, domain.ErrNotFound)
 
-		req, _ := http.NewRequest(http.MethodGet, "/api/national-teams/code/zzz", nil)
+		req, _ := http.NewRequest(http.MethodGet, "/api/national-teams/zzz", nil)
 		w := httptest.NewRecorder()
 		r.ServeHTTP(w, req)
 
@@ -236,7 +175,7 @@ func TestNationalTeamHandler_GetByCode(t *testing.T) {
 
 		svc.On("GetByCode", mock.Anything, "zzz").Return(nil, errors.New("db error"))
 
-		req, _ := http.NewRequest(http.MethodGet, "/api/national-teams/code/zzz", nil)
+		req, _ := http.NewRequest(http.MethodGet, "/api/national-teams/zzz", nil)
 		w := httptest.NewRecorder()
 		r.ServeHTTP(w, req)
 

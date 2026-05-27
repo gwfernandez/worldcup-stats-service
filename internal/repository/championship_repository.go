@@ -77,7 +77,6 @@ func toChampionshipDomain(row sqlc.Championship) domain.Championship {
 	}
 
 	return domain.Championship{
-		ID:              row.ID,
 		Year:            int(row.Year),
 		StartDate:       dateToString(row.StartDate),
 		EndDate:         dateToString(row.EndDate),
@@ -94,7 +93,6 @@ func toChampionshipDetailDomain(row sqlc.GetChampionshipByYearRow) domain.Champi
 	}
 
 	c := domain.Championship{
-		ID:              row.ID,
 		Year:            int(row.Year),
 		StartDate:       dateToString(row.StartDate),
 		EndDate:         dateToString(row.EndDate),

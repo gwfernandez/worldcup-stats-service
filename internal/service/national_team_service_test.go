@@ -25,14 +25,6 @@ func (m *MockNationalTeamRepository) List(ctx context.Context, filter domain.Nat
 	return args.Get(0).([]domain.NationalTeam), args.Get(1).(int64), args.Error(2)
 }
 
-func (m *MockNationalTeamRepository) GetByID(ctx context.Context, id int64) (*domain.NationalTeam, error) {
-	args := m.Called(ctx, id)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*domain.NationalTeam), args.Error(1)
-}
-
 func (m *MockNationalTeamRepository) GetByCode(ctx context.Context, code string) (*domain.NationalTeam, error) {
 	args := m.Called(ctx, code)
 	if args.Get(0) == nil {
@@ -49,7 +41,7 @@ func TestNationalTeamService_List(t *testing.T) {
 		svc := service.NewNationalTeamService(mockRepo)
 		filter := domain.NationalTeamFilter{Page: 1, Size: 20}
 
-		expectedTeams := []domain.NationalTeam{{ID: 1, Name: "Argentina"}, {ID: 2, Name: "Brazil"}}
+		expectedTeams := []domain.NationalTeam{{Code: "ARG", Name: "Argentina"}, {Code: "BRA", Name: "Brazil"}}
 		mockRepo.On("List", ctx, filter).Return(expectedTeams, int64(35), nil)
 
 		result, err := svc.List(ctx, filter)
@@ -93,55 +85,13 @@ func TestNationalTeamService_List(t *testing.T) {
 	})
 }
 
-func TestNationalTeamService_GetByID(t *testing.T) {
-	ctx := context.Background()
-
-	t.Run("success", func(t *testing.T) {
-		mockRepo := new(MockNationalTeamRepository)
-		svc := service.NewNationalTeamService(mockRepo)
-		expected := &domain.NationalTeam{ID: 1, Code: "arg", FederationCode: "afa"}
-		mockRepo.On("GetByID", ctx, int64(1)).Return(expected, nil)
-
-		result, err := svc.GetByID(ctx, 1)
-		assert.NoError(t, err)
-		require := assert.New(t)
-		require.NotNil(result)
-		assert.Equal(t, "ARG", result.Code)
-		assert.Equal(t, "AFA", result.FederationCode)
-		mockRepo.AssertExpectations(t)
-	})
-
-	t.Run("not found", func(t *testing.T) {
-		mockRepo := new(MockNationalTeamRepository)
-		svc := service.NewNationalTeamService(mockRepo)
-		mockRepo.On("GetByID", ctx, int64(99)).Return(nil, nil)
-
-		result, err := svc.GetByID(ctx, 99)
-		assert.Error(t, err)
-		assert.True(t, errors.Is(err, domain.ErrNotFound))
-		assert.Nil(t, result)
-		mockRepo.AssertExpectations(t)
-	})
-
-	t.Run("repository error", func(t *testing.T) {
-		mockRepo := new(MockNationalTeamRepository)
-		svc := service.NewNationalTeamService(mockRepo)
-		mockRepo.On("GetByID", ctx, int64(1)).Return(nil, errors.New("db error"))
-
-		result, err := svc.GetByID(ctx, 1)
-		assert.Error(t, err)
-		assert.Nil(t, result)
-		mockRepo.AssertExpectations(t)
-	})
-}
-
 func TestNationalTeamService_GetByCode(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("success", func(t *testing.T) {
 		mockRepo := new(MockNationalTeamRepository)
 		svc := service.NewNationalTeamService(mockRepo)
-		expected := &domain.NationalTeam{ID: 5, Code: "urs", FederationCode: "ffsu"}
+		expected := &domain.NationalTeam{Code: "urs", FederationCode: "ffsu"}
 		mockRepo.On("GetByCode", ctx, "urs").Return(expected, nil)
 
 		result, err := svc.GetByCode(ctx, "urs")

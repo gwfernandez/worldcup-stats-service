@@ -25,8 +25,8 @@ func (m *MockConfederationRepository) List(ctx context.Context) ([]domain.Confed
 	return args.Get(0).([]domain.Confederation), args.Error(1)
 }
 
-func (m *MockConfederationRepository) GetByID(ctx context.Context, id int64) (*domain.Confederation, error) {
-	args := m.Called(ctx, id)
+func (m *MockConfederationRepository) GetByCode(ctx context.Context, code string) (*domain.Confederation, error) {
+	args := m.Called(ctx, code)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
@@ -39,7 +39,7 @@ func TestConfederationService_List(t *testing.T) {
 	ctx := context.Background()
 
 	expected := []domain.Confederation{
-		{ID: 1, Code: "CONMEBOL", Name: "South America"},
+		{Code: "CONMEBOL", Name: "South America"},
 	}
 
 	mockRepo.On("List", ctx).Return(expected, nil)
@@ -51,17 +51,17 @@ func TestConfederationService_List(t *testing.T) {
 	mockRepo.AssertExpectations(t)
 }
 
-func TestConfederationService_GetByID(t *testing.T) {
+func TestConfederationService_GetByCode(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("success", func(t *testing.T) {
 		mockRepo := new(MockConfederationRepository)
 		svc := service.NewConfederationService(mockRepo)
 
-		expected := &domain.Confederation{ID: 1, Code: "CONMEBOL"}
-		mockRepo.On("GetByID", ctx, int64(1)).Return(expected, nil)
+		expected := &domain.Confederation{Name: "South America", Code: "CONMEBOL"}
+		mockRepo.On("GetByCode", ctx, "CONMEBOL").Return(expected, nil)
 
-		result, err := svc.GetByID(ctx, 1)
+		result, err := svc.GetByCode(ctx, "CONMEBOL")
 
 		assert.NoError(t, err)
 		assert.Equal(t, expected, result)
@@ -72,12 +72,12 @@ func TestConfederationService_GetByID(t *testing.T) {
 		mockRepo := new(MockConfederationRepository)
 		svc := service.NewConfederationService(mockRepo)
 
-		mockRepo.On("GetByID", ctx, int64(99)).Return(nil, nil)
+		mockRepo.On("GetByCode", ctx, "ZZZ").Return(nil, nil)
 
-		result, err := svc.GetByID(ctx, 99)
+		result, err := svc.GetByCode(ctx, "ZZZ")
 
 		assert.Error(t, err)
-		assert.Equal(t, "resource not found: confederation with id 99 not found", err.Error())
+		assert.Equal(t, "resource not found: confederation with code ZZZ not found", err.Error())
 		assert.True(t, errors.Is(err, domain.ErrNotFound))
 		assert.Nil(t, result)
 		mockRepo.AssertExpectations(t)
@@ -87,9 +87,9 @@ func TestConfederationService_GetByID(t *testing.T) {
 		mockRepo := new(MockConfederationRepository)
 		svc := service.NewConfederationService(mockRepo)
 
-		mockRepo.On("GetByID", ctx, int64(1)).Return(nil, errors.New("db error"))
+		mockRepo.On("GetByCode", ctx, "ZZZ").Return(nil, errors.New("db error"))
 
-		result, err := svc.GetByID(ctx, 1)
+		result, err := svc.GetByCode(ctx, "ZZZ")
 
 		assert.Error(t, err)
 		assert.Equal(t, "db error", err.Error())
