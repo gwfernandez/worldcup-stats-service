@@ -77,11 +77,11 @@ func toChampionshipDomain(row sqlc.Championship) domain.Championship {
 	}
 
 	return domain.Championship{
-		Year:            int(row.Year),
-		StartDate:       dateToString(row.StartDate),
-		EndDate:         dateToString(row.EndDate),
-		HostNationCodes: uppercaseSlice(row.HostNationCodes),
-		ChampionCode:    championCode,
+		Year:         int(row.Year),
+		StartDate:    dateToString(row.StartDate),
+		EndDate:      dateToString(row.EndDate),
+		HostCodes:    uppercaseSlice(row.HostCodes),
+		ChampionCode: championCode,
 	}
 }
 
@@ -93,11 +93,11 @@ func toChampionshipDetailDomain(row sqlc.GetChampionshipByYearRow) domain.Champi
 	}
 
 	c := domain.Championship{
-		Year:            int(row.Year),
-		StartDate:       dateToString(row.StartDate),
-		EndDate:         dateToString(row.EndDate),
-		HostNationCodes: uppercaseSlice(row.HostNationCodes),
-		ChampionCode:    championCode,
+		Year:         int(row.Year),
+		StartDate:    dateToString(row.StartDate),
+		EndDate:      dateToString(row.EndDate),
+		HostCodes:    uppercaseSlice(row.HostCodes),
+		ChampionCode: championCode,
 	}
 
 	// If TotalTeams is valid, it means we have stats in the DB
@@ -117,7 +117,7 @@ func toChampionshipDetailDomain(row sqlc.GetChampionshipByYearRow) domain.Champi
 			fourthPlaceCode = strings.ToUpper(row.StatsFourthPlaceCode.String)
 		}
 
-		c.Stats = &domain.ChampionshipStats{
+		c.Stats = &domain.ChampionshipsStats{
 			TotalTeams:      row.TotalTeams.Int32,
 			TotalMatches:    row.TotalMatches.Int32,
 			TotalStadiums:   row.TotalStadiums.Int32,

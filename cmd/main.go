@@ -48,9 +48,9 @@ func main() {
 	confederationRepo := repository.NewConfederationRepository(pool)
 	confederationSvc := service.NewConfederationService(confederationRepo)
 	confederationHandlerV1 := v1.NewConfederationHandler(confederationSvc)
-	nationalTeamRepo := repository.NewNationalTeamRepository(pool)
-	nationalTeamSvc := service.NewNationalTeamService(nationalTeamRepo)
-	nationalTeamHandlerV1 := v1.NewNationalTeamHandler(nationalTeamSvc)
+	teamRepo := repository.NewTeamRepository(pool)
+	teamSvc := service.NewTeamService(teamRepo)
+	teamHandlerV1 := v1.NewTeamHandler(teamSvc)
 	championshipRepo := repository.NewChampionshipRepository(pool)
 	championshipSvc := service.NewChampionshipService(championshipRepo)
 	championshipHandlerV1 := v1.NewChampionshipHandler(championshipSvc)
@@ -69,7 +69,7 @@ func main() {
 		// v1 routes
 		v1Group := api.Group("", middleware.RequireVersion(1))
 		confederationHandlerV1.RegisterRoutes(v1Group)
-		nationalTeamHandlerV1.RegisterRoutes(v1Group)
+		teamHandlerV1.RegisterRoutes(v1Group)
 		championshipHandlerV1.RegisterRoutes(v1Group)
 	}
 

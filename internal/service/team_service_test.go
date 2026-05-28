@@ -12,36 +12,36 @@ import (
 	"github.com/jendrix/worldcup-stats-service/internal/service"
 )
 
-// MockNationalTeamRepository is a mock implementation of NationalTeamRepository.
-type MockNationalTeamRepository struct {
+// MockTeamRepository is a mock implementation of TeamRepository.
+type MockTeamRepository struct {
 	mock.Mock
 }
 
-func (m *MockNationalTeamRepository) List(ctx context.Context, filter domain.NationalTeamFilter) ([]domain.NationalTeam, int64, error) {
+func (m *MockTeamRepository) List(ctx context.Context, filter domain.TeamFilter) ([]domain.Team, int64, error) {
 	args := m.Called(ctx, filter)
 	if args.Get(0) == nil {
 		return nil, args.Get(1).(int64), args.Error(2)
 	}
-	return args.Get(0).([]domain.NationalTeam), args.Get(1).(int64), args.Error(2)
+	return args.Get(0).([]domain.Team), args.Get(1).(int64), args.Error(2)
 }
 
-func (m *MockNationalTeamRepository) GetByCode(ctx context.Context, code string) (*domain.NationalTeam, error) {
+func (m *MockTeamRepository) GetByCode(ctx context.Context, code string) (*domain.Team, error) {
 	args := m.Called(ctx, code)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*domain.NationalTeam), args.Error(1)
+	return args.Get(0).(*domain.Team), args.Error(1)
 }
 
-func TestNationalTeamService_List(t *testing.T) {
+func TestTeamService_List(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("success", func(t *testing.T) {
-		mockRepo := new(MockNationalTeamRepository)
-		svc := service.NewNationalTeamService(mockRepo)
-		filter := domain.NationalTeamFilter{Page: 1, Size: 20}
+		mockRepo := new(MockTeamRepository)
+		svc := service.NewTeamService(mockRepo)
+		filter := domain.TeamFilter{Page: 1, Size: 20}
 
-		expectedTeams := []domain.NationalTeam{{Code: "ARG", Name: "Argentina"}, {Code: "BRA", Name: "Brazil"}}
+		expectedTeams := []domain.Team{{Code: "ARG", Name: "Argentina"}, {Code: "BRA", Name: "Brazil"}}
 		mockRepo.On("List", ctx, filter).Return(expectedTeams, int64(35), nil)
 
 		result, err := svc.List(ctx, filter)
@@ -57,11 +57,11 @@ func TestNationalTeamService_List(t *testing.T) {
 	})
 
 	t.Run("empty results", func(t *testing.T) {
-		mockRepo := new(MockNationalTeamRepository)
-		svc := service.NewNationalTeamService(mockRepo)
-		filter := domain.NationalTeamFilter{Page: 1, Size: 20}
+		mockRepo := new(MockTeamRepository)
+		svc := service.NewTeamService(mockRepo)
+		filter := domain.TeamFilter{Page: 1, Size: 20}
 
-		mockRepo.On("List", ctx, filter).Return([]domain.NationalTeam{}, int64(0), nil)
+		mockRepo.On("List", ctx, filter).Return([]domain.Team{}, int64(0), nil)
 
 		result, err := svc.List(ctx, filter)
 		assert.NoError(t, err)
@@ -72,9 +72,9 @@ func TestNationalTeamService_List(t *testing.T) {
 	})
 
 	t.Run("repository error", func(t *testing.T) {
-		mockRepo := new(MockNationalTeamRepository)
-		svc := service.NewNationalTeamService(mockRepo)
-		filter := domain.NationalTeamFilter{Page: 1, Size: 20}
+		mockRepo := new(MockTeamRepository)
+		svc := service.NewTeamService(mockRepo)
+		filter := domain.TeamFilter{Page: 1, Size: 20}
 
 		mockRepo.On("List", ctx, filter).Return(nil, int64(0), errors.New("db error"))
 
@@ -85,13 +85,13 @@ func TestNationalTeamService_List(t *testing.T) {
 	})
 }
 
-func TestNationalTeamService_GetByCode(t *testing.T) {
+func TestTeamService_GetByCode(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("success", func(t *testing.T) {
-		mockRepo := new(MockNationalTeamRepository)
-		svc := service.NewNationalTeamService(mockRepo)
-		expected := &domain.NationalTeam{Code: "urs", FederationCode: "ffsu"}
+		mockRepo := new(MockTeamRepository)
+		svc := service.NewTeamService(mockRepo)
+		expected := &domain.Team{Code: "urs", FederationCode: "ffsu"}
 		mockRepo.On("GetByCode", ctx, "urs").Return(expected, nil)
 
 		result, err := svc.GetByCode(ctx, "urs")
@@ -103,8 +103,8 @@ func TestNationalTeamService_GetByCode(t *testing.T) {
 	})
 
 	t.Run("not found", func(t *testing.T) {
-		mockRepo := new(MockNationalTeamRepository)
-		svc := service.NewNationalTeamService(mockRepo)
+		mockRepo := new(MockTeamRepository)
+		svc := service.NewTeamService(mockRepo)
 		mockRepo.On("GetByCode", ctx, "zzz").Return(nil, nil)
 
 		result, err := svc.GetByCode(ctx, "zzz")
@@ -115,8 +115,8 @@ func TestNationalTeamService_GetByCode(t *testing.T) {
 	})
 
 	t.Run("repository error", func(t *testing.T) {
-		mockRepo := new(MockNationalTeamRepository)
-		svc := service.NewNationalTeamService(mockRepo)
+		mockRepo := new(MockTeamRepository)
+		svc := service.NewTeamService(mockRepo)
 		mockRepo.On("GetByCode", ctx, "urs").Return(nil, errors.New("db error"))
 
 		result, err := svc.GetByCode(ctx, "urs")

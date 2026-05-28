@@ -193,10 +193,10 @@ Para más detalles, consultar [Estrategia de Versionado](docs/API_VERSIONING.md)
 
  | Método | Ruta | Descripción |
  |--------|------|-------------|
- | `GET` | `/api/national-teams` | Listar selecciones nacionales con filtros y paginación |
- | `GET` | `/api/national-teams/code/:code` | Obtener selección por código FIFA |
+ | `GET` | `/api/teams` | Listar selecciones nacionales con filtros y paginación |
+ | `GET` | `/api/teams/:code` | Obtener selección por código FIFA |
 
-Parámetros soportados para `/api/national-teams`:
+Parámetros soportados para `/api/teams`:
 
 - `name`: búsqueda por contiene, case-insensitive.
 - `confederation_code`: filtro por igualdad exacta, case-insensitive.
@@ -222,14 +222,14 @@ Notas de respuesta:
 Parámetros soportados para `/api/championships`:
 
 - `year`: filtro exacto por año del campeonato.
-- `host`: búsqueda por nombre del país anfitrión (contiene, case-insensitive, sobre el nombre de la selección en `national_teams`).
+- `host`: búsqueda por nombre del país anfitrión (contiene, case-insensitive, sobre el nombre de la selección en `teams`).
 - `confederation_code`: filtro por código de la confederación de los países anfitriones.
 - `page`: número de página (base 1, por defecto `1`).
 - `size`: tamaño de página (por defecto `20`, máximo `100`).
 
 Notas de respuesta:
 
-- `host_nation_codes` y `champion_code` se normalizan a mayúsculas.
+- `host_codes` y `champion_code` se normalizan a mayúsculas.
 - Si no hay estadísticas cargadas para una edición, `stats` devuelve valores predeterminados (enteros en `0`, strings vacíos `""` y arrays vacíos `[]`).
 
 ### Ejemplos de request
@@ -241,12 +241,12 @@ curl -H "X-API-Version: 1" http://localhost:8080/api/confederations
 
 **Listar selecciones activas (paginado por defecto)**
 ```bash
-curl -H "X-API-Version: 1" "http://localhost:8080/api/national-teams"
+curl -H "X-API-Version: 1" "http://localhost:8080/api/teams"
 ```
 
 **Filtrar selecciones por nombre y confederación**
 ```bash
-curl -H "X-API-Version: 1" "http://localhost:8080/api/national-teams?name=argen&confederation_code=CONMEBOL&page=1&size=20"
+curl -H "X-API-Version: 1" "http://localhost:8080/api/teams?name=argen&confederation_code=CONMEBOL&page=1&size=20"
 ```
 
 **Listar campeonatos mundiales (orden cronológico ascendente)**
@@ -266,7 +266,7 @@ curl -H "X-API-Version: 1" "http://localhost:8080/api/championships/1986"
 
 **Obtener selección por código FIFA**
 ```bash
-curl -H "X-API-Version: 1" "http://localhost:8080/api/national-teams/code/urs"
+curl -H "X-API-Version: 1" "http://localhost:8080/api/teams/code/urs"
 ```
 
 ---

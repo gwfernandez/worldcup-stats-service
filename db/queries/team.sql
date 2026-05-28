@@ -1,4 +1,4 @@
--- name: ListNationalTeams :many
+-- name: ListTeams :many
 SELECT
     code,
     name,
@@ -6,7 +6,7 @@ SELECT
     confederation_code,
     federation_name,
     federation_code
-FROM national_teams
+FROM teams
 WHERE
     ($1::text = '' OR LOWER(name) LIKE '%' || LOWER($1) || '%')
     AND ($2::text = '' OR LOWER(confederation_code) = LOWER($2))
@@ -16,9 +16,9 @@ WHERE
 ORDER BY name ASC
 LIMIT $6 OFFSET $7;
 
--- name: CountNationalTeams :one
+-- name: CountTeams :one
 SELECT COUNT(*)
-FROM national_teams
+FROM teams
 WHERE
     ($1::text = '' OR LOWER(name) LIKE '%' || LOWER($1) || '%')
     AND ($2::text = '' OR LOWER(confederation_code) = LOWER($2))
@@ -26,7 +26,7 @@ WHERE
     AND ($4::text = '' OR LOWER(federation_code) = LOWER($4))
     AND ($5::boolean OR dissolution_date IS NULL);
 
--- name: GetNationalTeamByCode :one
+-- name: GetTeamByCode :one
 SELECT
     code,
     name,
@@ -34,5 +34,5 @@ SELECT
     confederation_code,
     federation_name,
     federation_code
-FROM national_teams
+FROM teams
 WHERE LOWER(code) = LOWER($1);
