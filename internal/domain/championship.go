@@ -7,8 +7,8 @@ type TopScorer struct {
 	NationCode string `json:"nation_code"`
 }
 
-// ChampionshipStats represents statistics for a specific championship edition.
-type ChampionshipStats struct {
+// ChampionshipsStats represents statistics for a specific championship edition.
+type ChampionshipsStats struct {
 	TotalTeams      int32       `json:"total_teams"`
 	TotalMatches    int32       `json:"total_matches"`
 	TotalStadiums   int32       `json:"total_stadiums"`
@@ -23,12 +23,12 @@ type ChampionshipStats struct {
 
 // Championship represents a football world cup championship edition.
 type Championship struct {
-	Year            int                `json:"year"`
-	StartDate       string             `json:"start_date"`
-	EndDate         string             `json:"end_date"`
-	HostNationCodes []string           `json:"host_nation_codes"`
-	ChampionCode    *string            `json:"champion_code"`
-	Stats           *ChampionshipStats `json:"stats,omitempty"`
+	Year            int                 `json:"year"`
+	StartDate       string              `json:"start_date"`
+	EndDate         string              `json:"end_date"`
+	HostNationCodes []string            `json:"host_nation_codes"`
+	ChampionCode    *string             `json:"champion_code"`
+	Stats           *ChampionshipsStats `json:"stats,omitempty"`
 }
 
 // ChampionshipFilter represents filters for listing championships.

@@ -117,7 +117,7 @@ func toChampionshipDetailDomain(row sqlc.GetChampionshipByYearRow) domain.Champi
 			fourthPlaceCode = strings.ToUpper(row.StatsFourthPlaceCode.String)
 		}
 
-		c.Stats = &domain.ChampionshipStats{
+		c.Stats = &domain.ChampionshipsStats{
 			TotalTeams:      row.TotalTeams.Int32,
 			TotalMatches:    row.TotalMatches.Int32,
 			TotalStadiums:   row.TotalStadiums.Int32,

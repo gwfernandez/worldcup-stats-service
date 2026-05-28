@@ -102,7 +102,7 @@ GIN_MODE=debug   # usar "release" en producción
 |---|---|---|
 | Confederación | `confederations` | Agrupa selecciones por región geográfica |
 | Mundial (Campeonato) | `championships` | Edición del mundial (año, fechas, anfitrión y campeón) |
-| Estadísticas de Mundial | `championship_stats` | Datos estadísticos de la edición (goles, partidos, podio) |
+| Estadísticas de Mundial | `championships_stats` | Datos estadísticos de la edición (goles, partidos, podio) |
 
 ### Planificadas
 

@@ -145,7 +145,7 @@ func TestChampionshipHandler_GetByYear(t *testing.T) {
 
 		expected := &domain.Championship{
 			Year: 1930,
-			Stats: &domain.ChampionshipStats{
+			Stats: &domain.ChampionshipsStats{
 				TotalTeams: 13,
 			},
 		}

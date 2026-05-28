@@ -16,7 +16,7 @@ type Championship struct {
 	ChampionCode    pgtype.Text
 }
 
-type ChampionshipStat struct {
+type ChampionshipsStat struct {
 	Year            int32
 	TotalTeams      int32
 	TotalMatches    int32

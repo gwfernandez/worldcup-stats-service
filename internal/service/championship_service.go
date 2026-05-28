@@ -66,7 +66,7 @@ func (s *championshipService) GetByYear(ctx context.Context, year int) (*domain.
 
 	// Apply business logic fallback: if stats don't exist, use default values
 	if championship.Stats == nil {
-		championship.Stats = &domain.ChampionshipStats{
+		championship.Stats = &domain.ChampionshipsStats{
 			TotalTeams:      0,
 			TotalMatches:    0,
 			TotalStadiums:   0,

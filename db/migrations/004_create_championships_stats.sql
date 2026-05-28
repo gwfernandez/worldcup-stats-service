@@ -1,4 +1,4 @@
-CREATE TABLE championship_stats (
+CREATE TABLE championships_stats (
     year              INTEGER    PRIMARY KEY REFERENCES championships(year),
     total_teams       INTEGER    NOT NULL DEFAULT 0,
     total_matches     INTEGER    NOT NULL DEFAULT 0,

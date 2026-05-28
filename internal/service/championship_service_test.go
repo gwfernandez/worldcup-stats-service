@@ -109,7 +109,7 @@ func TestChampionshipService_GetByYear(t *testing.T) {
 		mockRepo := new(MockChampionshipRepository)
 		svc := service.NewChampionshipService(mockRepo)
 
-		expectedStats := &domain.ChampionshipStats{
+		expectedStats := &domain.ChampionshipsStats{
 			TotalTeams: 13,
 			TotalGoals: 70,
 		}

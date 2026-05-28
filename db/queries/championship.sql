@@ -60,5 +60,5 @@ SELECT
     s.top_scorer_ids,
     s.top_scorer_goals
 FROM championships c
-LEFT JOIN championship_stats s ON s.year = c.year
+LEFT JOIN championships_stats s ON s.year = c.year
 WHERE c.year = $1;
