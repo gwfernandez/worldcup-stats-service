@@ -23,12 +23,12 @@ type ChampionshipsStats struct {
 
 // Championship represents a football world cup championship edition.
 type Championship struct {
-	Year            int                 `json:"year"`
-	StartDate       string              `json:"start_date"`
-	EndDate         string              `json:"end_date"`
-	HostNationCodes []string            `json:"host_nation_codes"`
-	ChampionCode    *string             `json:"champion_code"`
-	Stats           *ChampionshipsStats `json:"stats,omitempty"`
+	Year         int                 `json:"year"`
+	StartDate    string              `json:"start_date"`
+	EndDate      string              `json:"end_date"`
+	HostCodes    []string            `json:"host_codes"`
+	ChampionCode *string             `json:"champion_code"`
+	Stats        *ChampionshipsStats `json:"stats,omitempty"`
 }
 
 // ChampionshipFilter represents filters for listing championships.

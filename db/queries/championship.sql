@@ -3,21 +3,21 @@ SELECT
     year,
     start_date,
     end_date,
-    host_nation_codes,
+    host_codes,
     champion_code
 FROM championships c
 WHERE
     ($1::integer = 0 OR c.year = $1)
     AND ($2::text = '' OR EXISTS (
         SELECT 1
-        FROM national_teams t
-        WHERE t.code = ANY(c.host_nation_codes)
+        FROM teams t
+        WHERE t.code = ANY(c.host_codes)
           AND LOWER(t.name) LIKE '%' || LOWER($2) || '%'
     ))
     AND ($3::text = '' OR EXISTS (
         SELECT 1
-        FROM national_teams t
-        WHERE t.code = ANY(c.host_nation_codes)
+        FROM teams t
+        WHERE t.code = ANY(c.host_codes)
           AND LOWER(t.confederation_code) = LOWER($3)
     ))
 ORDER BY c.year ASC
@@ -30,14 +30,14 @@ WHERE
     ($1::integer = 0 OR c.year = $1)
     AND ($2::text = '' OR EXISTS (
         SELECT 1
-        FROM national_teams t
-        WHERE t.code = ANY(c.host_nation_codes)
+        FROM teams t
+        WHERE t.code = ANY(c.host_codes)
           AND LOWER(t.name) LIKE '%' || LOWER($2) || '%'
     ))
     AND ($3::text = '' OR EXISTS (
         SELECT 1
-        FROM national_teams t
-        WHERE t.code = ANY(c.host_nation_codes)
+        FROM teams t
+        WHERE t.code = ANY(c.host_codes)
           AND LOWER(t.confederation_code) = LOWER($3)
     ));
 
@@ -46,7 +46,7 @@ SELECT
     c.year,
     c.start_date,
     c.end_date,
-    c.host_nation_codes,
+    c.host_codes,
     c.champion_code,
     s.total_teams,
     s.total_matches,

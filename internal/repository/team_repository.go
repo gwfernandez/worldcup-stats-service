@@ -12,23 +12,23 @@ import (
 	"github.com/jendrix/worldcup-stats-service/internal/domain"
 )
 
-// nationalTeamRepository implements NationalTeamRepository using sqlc-generated queries.
-type nationalTeamRepository struct {
+// teamRepository implements TeamRepository using sqlc-generated queries.
+type teamRepository struct {
 	queries *sqlc.Queries
 }
 
-// NewNationalTeamRepository creates a new repository backed by sqlc.
-func NewNationalTeamRepository(db sqlc.DBTX) NationalTeamRepository {
-	return &nationalTeamRepository{queries: sqlc.New(db)}
+// NewTeamRepository creates a new repository backed by sqlc.
+func NewTeamRepository(db sqlc.DBTX) TeamRepository {
+	return &teamRepository{queries: sqlc.New(db)}
 }
 
-func (r *nationalTeamRepository) List(ctx context.Context, filter domain.NationalTeamFilter) ([]domain.NationalTeam, int64, error) {
+func (r *teamRepository) List(ctx context.Context, filter domain.TeamFilter) ([]domain.Team, int64, error) {
 	confederationCode := ""
 	if filter.ConfederationCode != nil {
 		confederationCode = *filter.ConfederationCode
 	}
 
-	total, err := r.queries.CountNationalTeams(ctx, sqlc.CountNationalTeamsParams{
+	total, err := r.queries.CountTeams(ctx, sqlc.CountTeamsParams{
 		Column1: filter.Name,
 		Column2: confederationCode,
 		Column3: filter.FederationName,
@@ -41,7 +41,7 @@ func (r *nationalTeamRepository) List(ctx context.Context, filter domain.Nationa
 
 	limit := int32(filter.Size)
 	offset := int32((filter.Page - 1) * filter.Size)
-	rows, err := r.queries.ListNationalTeams(ctx, sqlc.ListNationalTeamsParams{
+	rows, err := r.queries.ListTeams(ctx, sqlc.ListTeamsParams{
 		Column1: filter.Name,
 		Column2: confederationCode,
 		Column3: filter.FederationName,
@@ -54,37 +54,37 @@ func (r *nationalTeamRepository) List(ctx context.Context, filter domain.Nationa
 		return nil, 0, err
 	}
 
-	teams := make([]domain.NationalTeam, len(rows))
+	teams := make([]domain.Team, len(rows))
 	for i, row := range rows {
-		teams[i] = toNationalTeamDomain(row)
+		teams[i] = toTeamDomain(row)
 	}
 
 	return teams, total, nil
 }
 
-func (r *nationalTeamRepository) GetByCode(ctx context.Context, code string) (*domain.NationalTeam, error) {
-	row, err := r.queries.GetNationalTeamByCode(ctx, code)
+func (r *teamRepository) GetByCode(ctx context.Context, code string) (*domain.Team, error) {
+	row, err := r.queries.GetTeamByCode(ctx, code)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, nil
 		}
 		return nil, err
 	}
-	team := toNationalTeamDomain(row)
+	team := toTeamDomain(row)
 	return &team, nil
 }
 
-func toNationalTeamDomain(row sqlc.NationalTeam) domain.NationalTeam {
+func toTeamDomain(row sqlc.Team) domain.Team {
 	dissolutionDate := dateToStringPtr(row.DissolutionDate)
 
-	return domain.NationalTeam{
-		Name:            row.Name,
-		Code:            strings.ToUpper(row.Code),
-		DissolutionDate: dissolutionDate,
-		IsDissolved:     dissolutionDate != nil,
+	return domain.Team{
+		Name:              row.Name,
+		Code:              strings.ToUpper(row.Code),
+		DissolutionDate:   dissolutionDate,
+		IsDissolved:       dissolutionDate != nil,
 		ConfederationCode: strings.ToUpper(row.ConfederationCode),
-		FederationName:  row.FederationName,
-		FederationCode:  strings.ToUpper(row.FederationCode),
+		FederationName:    row.FederationName,
+		FederationCode:    strings.ToUpper(row.FederationCode),
 	}
 }
 

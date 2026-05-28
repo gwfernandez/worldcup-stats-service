@@ -10,17 +10,17 @@ import (
 	"github.com/jendrix/worldcup-stats-service/internal/repository"
 )
 
-// nationalTeamService implements NationalTeamService with business logic.
-type nationalTeamService struct {
-	repo repository.NationalTeamRepository
+// TeamService implements TeamService with business logic.
+type teamService struct {
+	repo repository.TeamRepository
 }
 
-// NewNationalTeamService creates a new service that depends on the repository interface.
-func NewNationalTeamService(repo repository.NationalTeamRepository) NationalTeamService {
-	return &nationalTeamService{repo: repo}
+// NewTeamService creates a new service that depends on the repository interface.
+func NewTeamService(repo repository.TeamRepository) TeamService {
+	return &teamService{repo: repo}
 }
 
-func (s *nationalTeamService) List(ctx context.Context, filter domain.NationalTeamFilter) (*domain.NationalTeamListResponse, error) {
+func (s *teamService) List(ctx context.Context, filter domain.TeamFilter) (*domain.TeamListResponse, error) {
 	teams, totalElements, err := s.repo.List(ctx, filter)
 	if err != nil {
 		return nil, err
@@ -31,7 +31,7 @@ func (s *nationalTeamService) List(ctx context.Context, filter domain.NationalTe
 		totalPages = 0
 	}
 
-	return &domain.NationalTeamListResponse{
+	return &domain.TeamListResponse{
 		Data: teams,
 		Pagination: domain.PaginationInfo{
 			Page:          filter.Page,
@@ -44,13 +44,13 @@ func (s *nationalTeamService) List(ctx context.Context, filter domain.NationalTe
 	}, nil
 }
 
-func (s *nationalTeamService) GetByCode(ctx context.Context, code string) (*domain.NationalTeam, error) {
+func (s *teamService) GetByCode(ctx context.Context, code string) (*domain.Team, error) {
 	team, err := s.repo.GetByCode(ctx, code)
 	if err != nil {
 		return nil, err
 	}
 	if team == nil {
-		return nil, fmt.Errorf("%w: national team with code %s not found", domain.ErrNotFound, strings.ToUpper(code))
+		return nil, fmt.Errorf("%w: team with code %s not found", domain.ErrNotFound, strings.ToUpper(code))
 	}
 	team.Code = strings.ToUpper(team.Code)
 	team.ConfederationCode = strings.ToUpper(team.ConfederationCode)

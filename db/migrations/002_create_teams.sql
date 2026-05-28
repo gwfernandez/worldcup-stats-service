@@ -1,4 +1,4 @@
-CREATE TABLE national_teams (
+CREATE TABLE teams (
     code VARCHAR(3) PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     dissolution_date DATE,

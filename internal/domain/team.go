@@ -1,18 +1,18 @@
 package domain
 
-// NationalTeam represents a national team entity.
-type NationalTeam struct {
+// Team represents a team entity.
+type Team struct {
 	Code              string  `json:"code"`
 	Name              string  `json:"name"`
-	DissolutionDate   *string `json:"dissolution_date"`
 	IsDissolved       bool    `json:"is_dissolved"`
 	ConfederationCode string  `json:"confederation_code"`
 	FederationName    string  `json:"federation_name"`
 	FederationCode    string  `json:"federation_code"`
+	DissolutionDate   *string `json:"dissolution_date"`
 }
 
-// NationalTeamFilter defines supported filters for listing national teams.
-type NationalTeamFilter struct {
+// TeamFilter defines supported filters for listing teams.
+type TeamFilter struct {
 	Name              string
 	ConfederationCode *string
 	FederationName    string
@@ -22,8 +22,8 @@ type NationalTeamFilter struct {
 	Size              int
 }
 
-// NationalTeamListResponse represents paginated national teams response.
-type NationalTeamListResponse struct {
-	Data       []NationalTeam `json:"data"`
+// TeamListResponse represents paginated teams response.
+type TeamListResponse struct {
+	Data       []Team         `json:"data"`
 	Pagination PaginationInfo `json:"pagination"`
 }

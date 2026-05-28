@@ -9,11 +9,11 @@ import (
 )
 
 type Championship struct {
-	Year            int32
-	StartDate       pgtype.Date
-	EndDate         pgtype.Date
-	HostNationCodes []string
-	ChampionCode    pgtype.Text
+	Year         int32
+	StartDate    pgtype.Date
+	EndDate      pgtype.Date
+	HostCodes    []string
+	ChampionCode pgtype.Text
 }
 
 type ChampionshipsStat struct {
@@ -36,7 +36,7 @@ type Confederation struct {
 	Name string
 }
 
-type NationalTeam struct {
+type Team struct {
 	Code              string
 	Name              string
 	DissolutionDate   pgtype.Date

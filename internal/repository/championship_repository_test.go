@@ -38,7 +38,7 @@ func TestChampionshipRepository_List(t *testing.T) {
 
 		startDate := time.Date(1978, 6, 1, 0, 0, 0, 0, time.UTC)
 		endDate := time.Date(1978, 6, 25, 0, 0, 0, 0, time.UTC)
-		rows := mock.NewRows([]string{"year", "start_date", "end_date", "host_nation_codes", "champion_code"}).
+		rows := mock.NewRows([]string{"year", "start_date", "end_date", "host_codes", "champion_code"}).
 			AddRow(int32(1978), startDate, endDate, []string{"arg"}, pgtype.Text{String: "ARG", Valid: true})
 
 		mock.ExpectQuery(`^-- name: ListChampionships :many.*`).
@@ -52,7 +52,7 @@ func TestChampionshipRepository_List(t *testing.T) {
 		assert.Equal(t, 1978, result[0].Year)
 		assert.Equal(t, "1978-06-01", result[0].StartDate)
 		assert.Equal(t, "1978-06-25", result[0].EndDate)
-		assert.Equal(t, []string{"ARG"}, result[0].HostNationCodes)
+		assert.Equal(t, []string{"ARG"}, result[0].HostCodes)
 		require.NotNil(t, result[0].ChampionCode)
 		assert.Equal(t, "ARG", *result[0].ChampionCode)
 
@@ -114,7 +114,7 @@ func TestChampionshipRepository_GetByYear(t *testing.T) {
 		endDate := time.Date(1930, 7, 30, 0, 0, 0, 0, time.UTC)
 
 		rows := mock.NewRows([]string{
-			"year", "start_date", "end_date", "host_nation_codes", "champion_code",
+			"year", "start_date", "end_date", "host_codes", "champion_code",
 			"total_teams", "total_matches", "total_stadiums", "total_players", "total_goals",
 			"stats_champion_code", "stats_runner_up_code", "stats_third_place_code", "stats_fourth_place_code",
 			"top_scorer_ids", "top_scorer_goals",
@@ -137,7 +137,7 @@ func TestChampionshipRepository_GetByYear(t *testing.T) {
 		assert.Equal(t, 1930, result.Year)
 		assert.Equal(t, "1930-07-13", result.StartDate)
 		assert.Equal(t, "1930-07-30", result.EndDate)
-		assert.Equal(t, []string{"URU"}, result.HostNationCodes)
+		assert.Equal(t, []string{"URU"}, result.HostCodes)
 		require.NotNil(t, result.ChampionCode)
 		assert.Equal(t, "URU", *result.ChampionCode)
 		require.NotNil(t, result.Stats)
@@ -165,7 +165,7 @@ func TestChampionshipRepository_GetByYear(t *testing.T) {
 		endDate := time.Date(2026, 7, 19, 0, 0, 0, 0, time.UTC)
 
 		rows := mock.NewRows([]string{
-			"year", "start_date", "end_date", "host_nation_codes", "champion_code",
+			"year", "start_date", "end_date", "host_codes", "champion_code",
 			"total_teams", "total_matches", "total_stadiums", "total_players", "total_goals",
 			"stats_champion_code", "stats_runner_up_code", "stats_third_place_code", "stats_fourth_place_code",
 			"top_scorer_ids", "top_scorer_goals",
@@ -188,7 +188,7 @@ func TestChampionshipRepository_GetByYear(t *testing.T) {
 		assert.Equal(t, 2026, result.Year)
 		assert.Equal(t, "2026-06-11", result.StartDate)
 		assert.Equal(t, "2026-07-19", result.EndDate)
-		assert.Equal(t, []string{"USA", "CAN", "MEX"}, result.HostNationCodes)
+		assert.Equal(t, []string{"USA", "CAN", "MEX"}, result.HostCodes)
 		assert.Nil(t, result.ChampionCode)
 		assert.Nil(t, result.Stats) // Stats should be nil here, to be filled by service
 
