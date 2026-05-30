@@ -1,0 +1,17 @@
+# render.yaml — Infraestructura como código para Render
+# Documentación: https://render.com/docs/infrastructure-as-code
+
+services:
+  - type: web
+    name: worldcup-stats-service
+    runtime: go
+    region: oregon        # us-west-2, ajustar según preferencia
+    plan: free
+    buildCommand: go build -o server ./cmd/main.go
+    startCommand: ./server
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        sync: false       # se configura manualmente en el dashboard de Render
+      - key: GIN_MODE
+        value: release

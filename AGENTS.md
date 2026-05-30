@@ -18,7 +18,7 @@ El proyecto está orientado a ser una fuente de consulta sobre confederaciones, 
 | Driver DB | pgx v5 | driver nativo para PostgreSQL |
 | Queries | sqlc | generación de código Go tipado desde SQL |
 | Migraciones | golang-migrate | control de versiones del schema |
-| Deploy | Railway | free tier, auto-deploy desde GitHub |
+| Deploy | Render | free tier, auto-deploy desde GitHub |
 | Repositorio | GitHub | rama `main` → PROD / rama `dev` → DEV |
 
 ---
@@ -83,7 +83,7 @@ GIN_MODE=debug   # usar "release" en producción
 | Entorno | Plataforma | Branch Neon | Base de datos |
 |---------|-----------|-------------|---------------|
 | Desarrollo | local | `dev` | `worldcups_dev` |
-| Producción | Railway | `main` | `worldcups_prod` |
+| Producción | Render | `main` | `worldcups_prod` |
 
 ### Convenciones de schema
 

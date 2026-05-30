@@ -15,7 +15,7 @@ API REST que expone datos históricos de los Mundiales de Fútbol desde 1930 has
 | Driver DB | pgx v5 |
 | Queries | sqlc |
 | Migraciones | golang-migrate |
-| Deploy | Railway |
+| Deploy | Render |
 
 ---
 
@@ -268,6 +268,32 @@ curl -H "X-API-Version: 1" "http://localhost:8080/api/championships/1986"
 ```bash
 curl -H "X-API-Version: 1" "http://localhost:8080/api/teams/code/urs"
 ```
+
+---
+
+## Deploy en Render
+
+El proyecto incluye un archivo [`render.yaml`](render.yaml) para despliegue automático como **Infrastructure as Code**.
+
+### Pasos para el primer deploy
+
+1. **Conectar el repositorio** en [render.com](https://render.com) → _New_ → _Blueprint_
+2. **Configurar la variable de entorno** `DATABASE_URL` manualmente en el dashboard de Render (apuntando al branch `main` de Neon)
+3. **Aplicar las migraciones** antes del primer deploy (una sola vez):
+   ```bash
+   migrate -path db/migrations -database "$DATABASE_URL" up
+   ```
+4. Render detecta el `render.yaml` y despliega automáticamente en cada push a `main`
+
+### Variables de entorno en Render
+
+| Variable | Cómo se configura |
+|---|---|
+| `DATABASE_URL` | Manual en el dashboard de Render (valor secreto) |
+| `GIN_MODE` | Definida en `render.yaml` como `release` |
+| `PORT` | Inyectada automáticamente por Render |
+
+> **Nota:** El archivo `.env` nunca debe subirse al repositorio. En producción, todas las variables se gestionan desde el dashboard o el `render.yaml`.
 
 ---
 
