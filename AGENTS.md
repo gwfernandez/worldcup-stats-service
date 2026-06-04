@@ -57,7 +57,7 @@ Esto permite testear el service de forma aislada sin levantar HTTP ni base de da
   config.go                        # configuración desde variables de entorno
 /.agents
   /skills                          # habilidades específicas del agente
-  /workflows                       # flujos de trabajo automatizados (ej: resolve-issue)
+  /workflows                       # flujos de trabajo automatizados por etapas
 /.coverage                         # reportes de cobertura de tests
 sqlc.yaml                          # configuración de sqlc
 .env.example                       # variables de entorno requeridas
@@ -132,6 +132,31 @@ El proyecto utiliza **go-semantic-release**. El agente debe redactar mensajes de
 - **Tipos**: `feat`, `fix`, `perf`, `refactor`, `docs`, `style`, `test`, `build`, `ci`, `chore`, `revert`.
 - **Breaking Changes**: Usar `!` después del tipo/scope o `BREAKING CHANGE:` en el footer para incrementos de versión MAJOR.
 - **Automatización**: Los tags y releases se generan automáticamente al mezclar en `main`.
+
+---
+
+## Workflows del agente
+
+La resolución de issues de GitHub se organiza mediante workflows por etapas ubicados en `.agents/workflows/`.
+El flujo principal debe ejecutarse en este orden:
+
+| Etapa | Workflow | Propósito |
+|---|---|---|
+| 0 | `stage-0-setup.md` | Validar entorno, dependencias, build, health check y baseline de tests/coverage |
+| 1 | `stage-1-analysis.md` | Leer el issue, reformular el requerimiento, planificar, crear rama, implementar código y tests |
+| 2 | `stage-2-audit.md` | Auditar los cambios con la skill `code-quality-go` en modo Git Diff y corregir hallazgos |
+| 3 | `stage-3-testing.md` | Ejecutar suite completa, validar coverage mínimo del 90% en paquetes modificados y publicar evidencia |
+| 4 | `stage-4-pr.md` | Verificar diff final, commitear, pushear, crear PR y publicar walkthrough en el issue |
+
+### Reglas de ejecución
+
+- `stage-0-setup.md` solo detecta y reporta problemas del entorno; no debe corregirlos automáticamente.
+- `stage-1-analysis.md` requiere aprobación humana antes de escribir código y antes de avanzar a auditoría.
+- `stage-2-audit.md` requiere que la skill `code-quality-go` exista en `.agents/skills/code-quality-go/SKILL.md`.
+- Hallazgos críticos de auditoría deben corregirse obligatoriamente antes de avanzar a testing.
+- `stage-3-testing.md` debe comparar contra el baseline generado en Stage 0 y publicar el reporte de coverage en el issue.
+- `stage-4-pr.md` debe usar Conventional Commits con descripción en español, crear el PR contra `main` y comentar el walkthrough final en el issue.
+- Las migraciones nuevas, cambios destructivos, nuevas dependencias y cambios que rompan contratos de API requieren confirmación explícita.
 
 ---
 
@@ -211,9 +236,12 @@ Eres un **Backend Senior Engineer especializado en Go**, con foco en sistemas de
 Una tarea se considera completada cuando cumple **todos** los siguientes criterios:
 
 - [ ] El código compila sin errores ni warnings
-- [ ] Cobertura de tests ≥ 90% en los paquetes modificados
-- [ ] PR creado y vinculado al issue correspondiente
+- [ ] Auditoría de calidad ejecutada con `code-quality-go` sin hallazgos críticos pendientes
+- [ ] Cobertura de tests ≥ 90% en los paquetes modificados y comparada contra el baseline
+- [ ] Evidencia de testing publicada en el issue de GitHub
+- [ ] PR creado contra `main` y vinculado al issue correspondiente
 - [ ] Documentación actualizada (godoc, `AGENTS.md`, `README.md`)
+- [ ] Walkthrough final publicado en el issue de GitHub
 - [ ] El issue en GitHub está cerrado o en revisión
 
 ### Seguridad

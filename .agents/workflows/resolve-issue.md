@@ -14,6 +14,77 @@ description: Workflow que guía al agente en la resolución completa de un issue
 
 ---
 
+## Fase 0 — Validación del entorno
+
+Verificar que el entorno está en condiciones antes de arrancar. Si algún paso falla → **detener y reportar**. No continuar con un entorno roto.
+
+### 1. Verificar estado del repositorio
+
+```bash
+git fetch origin
+git status
+git diff main origin/main --stat
+```
+
+Condiciones requeridas:
+- Working tree limpio (sin cambios sin commitear ni archivos sin trackear)
+- `main` local sincronizado con `origin/main`
+
+Si no se cumplen → **detener y reportar**.
+
+### 2. Verificar dependencias
+
+```bash
+go mod verify
+go mod tidy
+git diff go.mod go.sum
+```
+
+Si `go mod tidy` genera cambios en `go.mod` o `go.sum` → reportar advertencia antes de continuar. No commitear cambios de dependencias como parte del issue.
+
+### 3. Verificar que el proyecto compila
+
+```bash
+go build ./...
+```
+
+Si hay errores de compilación → **detener y reportar**. No continuar con código que no compila.
+
+### 4. Ejecutar tests y guardar baseline
+
+```bash
+mkdir -p .coverage
+go test -coverprofile=.coverage/baseline.out ./... 2>&1 | tee /tmp/baseline_tests.txt
+go tool cover -func=.coverage/baseline.out | tee /tmp/baseline_coverage.txt
+```
+
+Capturar y registrar en memoria:
+- Cantidad de tests que pasan / fallan
+- Coverage por paquete (`handler`, `service`, `repository`, `config`)
+- Coverage total
+
+Si hay tests fallando en `main` antes del issue → **detener y reportar**. Los tests rotos preexistentes no son responsabilidad del issue.
+
+Reportar el resumen antes de continuar:
+
+```
+✅ Fase 0 — Entorno validado
+
+Repo:           main limpio, sincronizado con origin
+Dependencias:   OK (go.mod/go.sum sin cambios)
+Build:          OK
+Tests:          X passing, 0 failing
+Coverage total: X%
+  handler:      X%
+  service:      X%
+  repository:   X%
+  config:       X%
+
+Listo para continuar con la Fase 1.
+```
+
+---
+
 ## Fase 1 — Preparación
 
 1. Leer el issue de GitHub completo usando las herramientas de búsqueda/lectura y entender el requerimiento
@@ -85,14 +156,99 @@ description: Workflow que guía al agente en la resolución completa de un issue
 
 ## Fase 5 — Pull Request
 
-1. Usar la herramienta de creación de Pull Requests de GitHub para generar un PR desde el branch actual hacia `main` con:
-   - **Título:** `tipo(scope): descripción breve (#numero_issue)`
-   - **Descripción:**
-     - Resumen del issue de GitHub resuelto
-      - Principales cambios realizados
-      - Endpoints nuevos o modificados (si aplica)
-      - Impacto SemVer estimado (MAJOR/MINOR/PATCH)
-      - Confirmación de cumplimiento de los `✅ Criterios de Aceptación`
-      - Link al issue: `Closes #numero_issue`
+1. Usar la herramienta de creación de Pull Requests de GitHub para generar un PR desde el branch actual hacia `main`:
+
+```bash
+gh pr create \
+  --base main \
+  --title "<tipo>(<scope>): <descripción en español> (#<numero_issue>)" \
+  --body "$(cat <<'EOF'
+## Closes #<numero-de-issue>
+
+## ¿Qué hace este PR?
+
+<descripción de 2-3 oraciones en español explicando qué se implementó y por qué>
+
+## Cambios realizados
+
+### Archivos creados
+- `internal/domain/...` — descripción
+- `internal/repository/...` — descripción
+- `internal/service/...` — descripción
+- `internal/handler/...` — descripción
+- `db/queries/...` — descripción (si aplica)
+- `db/migrations/...` — descripción (si aplica)
+
+### Archivos modificados
+- `cmd/main.go` — descripción del cambio (si aplica)
+- `README.md` — descripción del cambio (si aplica)
+
+## Nuevos endpoints
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| `GET` | `/api/...` | ... |
+
+(Omitir sección si no hay nuevos endpoints)
+
+## Decisiones de implementación
+
+<Si se tomó alguna decisión no obvia de arquitectura o diseño, documentarla aquí. Si todo sigue los patrones establecidos, escribir "Sigue los patrones establecidos del proyecto.">
+
+## Testing
+
+| Métrica | Antes | Después |
+|---|---|---|
+| Tests passing | <baseline> | <actual> |
+| Tests nuevos | — | <cantidad> |
+| Coverage handler | <baseline> | <actual> |
+| Coverage service | <baseline> | <actual> |
+| Coverage repository | <baseline> | <actual> |
+| Coverage total | <baseline> | <actual> |
+
+Edge cases cubiertos:
+- <listar los edge cases del issue que tienen test>
+
+## Puntos de atención para el reviewer
+
+<Si hay algo que merece atención especial: decisiones de diseño no obvias, cambios de comportamiento, impacto en otros módulos. Si no hay nada, escribir "Ninguno".>
+
+## Checklist
+
+- [ ] El código compila sin errores ni warnings
+- [ ] Coverage ≥ 90% en paquetes modificados
+- [ ] Todas las funciones públicas tienen godoc
+- [ ] Sin datos sensibles en logs
+- [ ] Documentación actualizada (README, AGENTS.md si aplica)
+- [ ] API de solo lectura respetada (solo GET)
+- [ ] Criterios de aceptación del issue cumplidos
+
+EOF
+)"
+```
+
 2. Asignarme como reviewer (si la API lo permite, si no, dejar documentado)
-3. **Usar la herramienta de comentarios de GitHub** para publicar el documento de resumen ("Walkthrough") como un comentario final en el issue original, indicando que el trabajo ha concluido.
+3. **Usar la herramienta de comentarios de GitHub** para publicar el documento de resumen ("Walkthrough") como un comentario final en el issue original, indicando que el trabajo ha concluido:
+
+```
+✅ Trabajo completado — PR listo para review
+
+## Resumen
+
+<descripción de 2-3 oraciones de qué se implementó y qué problema resuelve>
+
+## Cambios principales
+
+- `<archivo>`: <descripción del cambio>
+- `<archivo>`: <descripción del cambio>
+
+## Testing
+
+- Tests nuevos: X
+- Coverage total: X% (sin regresiones)
+- Edge cases cubiertos: <lista resumida>
+
+## Pull Request
+
+<URL del PR> — listo para review de @gwfernandez
+```
