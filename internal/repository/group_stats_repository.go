@@ -32,7 +32,7 @@ func (r *groupStatsRepository) ListByYear(ctx context.Context, year int) ([]doma
 	return standings, nil
 }
 
-func toGroupStandingRecord(row sqlc.ChampionshipsGroupsStat) domain.GroupStandingRecord {
+func toGroupStandingRecord(row sqlc.ListGroupsStatsByYearRow) domain.GroupStandingRecord {
 	return domain.GroupStandingRecord{
 		Stage:     enumString(row.Stage),
 		GroupCode: strings.ToUpper(row.GroupCode),

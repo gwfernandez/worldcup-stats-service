@@ -2,8 +2,8 @@
 SELECT
     id,
     year,
-    stage,
-    stage_type,
+    stage::text AS stage,
+    stage_type::text AS stage_type,
     group_code,
     replayed,
     replay_of,
@@ -24,4 +24,4 @@ SELECT
     ref_id
 FROM matches
 WHERE year = $1
-ORDER BY stage, group_code, match_date, match_time;
+ORDER BY matches.stage, group_code, match_date, match_time;

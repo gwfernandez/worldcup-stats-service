@@ -15,8 +15,8 @@ const listMatchesByYear = `-- name: ListMatchesByYear :many
 SELECT
     id,
     year,
-    stage,
-    stage_type,
+    stage::text AS stage,
+    stage_type::text AS stage_type,
     group_code,
     replayed,
     replay_of,
@@ -37,14 +37,14 @@ SELECT
     ref_id
 FROM matches
 WHERE year = $1
-ORDER BY stage, group_code, match_date, match_time
+ORDER BY matches.stage, group_code, match_date, match_time
 `
 
 type ListMatchesByYearRow struct {
 	ID                     int64
 	Year                   int32
-	Stage                  interface{}
-	StageType              interface{}
+	Stage                  string
+	StageType              string
 	GroupCode              pgtype.Text
 	Replayed               bool
 	ReplayOf               pgtype.Int8

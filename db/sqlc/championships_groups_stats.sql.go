@@ -7,12 +7,14 @@ package sqlc
 
 import (
 	"context"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const listGroupsStatsByYear = `-- name: ListGroupsStatsByYear :many
 SELECT
     year,
-    stage,
+    stage::text AS stage,
     group_code,
     team_code,
     matches_played,
@@ -27,18 +29,35 @@ SELECT
     position
 FROM championships_groups_stats
 WHERE year = $1
-ORDER BY stage, group_code, position
+ORDER BY championships_groups_stats.stage, group_code, position
 `
 
-func (q *Queries) ListGroupsStatsByYear(ctx context.Context, year int32) ([]ChampionshipsGroupsStat, error) {
+type ListGroupsStatsByYearRow struct {
+	Year           int32
+	Stage          string
+	GroupCode      string
+	TeamCode       string
+	MatchesPlayed  int32
+	Wins           int32
+	Draws          int32
+	Losses         int32
+	GoalsFor       int32
+	GoalsAgainst   int32
+	GoalDifference pgtype.Int4
+	Points         int32
+	UnifiedPoints  int32
+	Position       pgtype.Int4
+}
+
+func (q *Queries) ListGroupsStatsByYear(ctx context.Context, year int32) ([]ListGroupsStatsByYearRow, error) {
 	rows, err := q.db.Query(ctx, listGroupsStatsByYear, year)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ChampionshipsGroupsStat
+	var items []ListGroupsStatsByYearRow
 	for rows.Next() {
-		var i ChampionshipsGroupsStat
+		var i ListGroupsStatsByYearRow
 		if err := rows.Scan(
 			&i.Year,
 			&i.Stage,

@@ -1,7 +1,7 @@
 -- name: ListGroupsStatsByYear :many
 SELECT
     year,
-    stage,
+    stage::text AS stage,
     group_code,
     team_code,
     matches_played,
@@ -16,4 +16,4 @@ SELECT
     position
 FROM championships_groups_stats
 WHERE year = $1
-ORDER BY stage, group_code, position;
+ORDER BY championships_groups_stats.stage, group_code, position;
