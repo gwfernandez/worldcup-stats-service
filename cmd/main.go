@@ -54,6 +54,10 @@ func main() {
 	championshipRepo := repository.NewChampionshipRepository(pool)
 	championshipSvc := service.NewChampionshipService(championshipRepo)
 	championshipHandlerV1 := v1.NewChampionshipHandler(championshipSvc)
+	matchRepo := repository.NewMatchRepository(pool)
+	groupStatsRepo := repository.NewGroupStatsRepository(pool)
+	fixtureSvc := service.NewFixtureService(matchRepo, groupStatsRepo)
+	fixtureHandlerV1 := v1.NewFixtureHandler(fixtureSvc)
 
 	// Set up Gin router
 	router := gin.Default()
@@ -71,6 +75,7 @@ func main() {
 		confederationHandlerV1.RegisterRoutes(v1Group)
 		teamHandlerV1.RegisterRoutes(v1Group)
 		championshipHandlerV1.RegisterRoutes(v1Group)
+		fixtureHandlerV1.RegisterRoutes(v1Group)
 	}
 
 	// Create HTTP server

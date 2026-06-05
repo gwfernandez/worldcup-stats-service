@@ -218,6 +218,7 @@ Notas de respuesta:
  |--------|------|-------------|
  | `GET` | `/api/championships` | Listar ediciones de campeonatos mundiales con filtros y paginación |
  | `GET` | `/api/championships/:year` | Obtener detalle de una edición por año con estadísticas |
+ | `GET` | `/api/championships/:year/fixture` | Obtener fixture completo de una edición por año |
 
 Parámetros soportados para `/api/championships`:
 
@@ -231,6 +232,7 @@ Notas de respuesta:
 
 - `host_codes` y `champion_code` se normalizan a mayúsculas.
 - Si no hay estadísticas cargadas para una edición, `stats` devuelve valores predeterminados (enteros en `0`, strings vacíos `""` y arrays vacíos `[]`).
+- El fixture agrupa stages de tipo `group` con `groups[].matches` y `groups[].standings`; los stages `knockout` exponen `matches` directamente.
 
 ### Ejemplos de request
  
@@ -257,6 +259,11 @@ curl -H "X-API-Version: 1" "http://localhost:8080/api/championships"
 **Filtrar mundiales por confederación del anfitrión**
 ```bash
 curl -H "X-API-Version: 1" "http://localhost:8080/api/championships?confederation_code=CONMEBOL"
+```
+
+**Obtener fixture completo de un mundial**
+```bash
+curl -H "X-API-Version: 1" "http://localhost:8080/api/championships/1978/fixture"
 ```
 
 **Obtener detalle completo de un mundial por año**
