@@ -124,6 +124,33 @@ GIN_MODE=debug   # usar "release" en producción
 - Prefijo de rutas: `/api/`
 - Nombres de funciones en handlers: `List`, `GetByID`, `Create`, `Update`, `Delete`
 
+### Respuestas paginadas
+
+Todo endpoint que incluya paginado de datos debe respetar la siguiente estructura de respuesta:
+
+```json
+{
+  "data": [
+    {
+      "id": 1,
+      "name": "John Doe",
+      "email": "john.doe@example.com"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "size": 30,
+    "total_elements": 22,
+    "total_pages": 1,
+    "has_next": false,
+    "has_previous": false
+  }
+}
+```
+
+- `data` debe ser siempre un array con el resultado a responder.
+- `pagination` debe incluir siempre la información de paginación (`page`, `size`, `total_elements`, `total_pages`, `has_next`, `has_previous`).
+
 ### Versionado y Commits (SemVer)
 
 El proyecto utiliza **go-semantic-release**. El agente debe redactar mensajes de commit siguiendo **Conventional Commits**:
