@@ -25,7 +25,7 @@ func TestVersioning(t *testing.T) {
 		router.ServeHTTP(resp, req)
 
 		assert.Equal(t, http.StatusOK, resp.Code)
-		assert.Equal(t, "1", resp.Header().Get(VersionUsedHeader))
+		assert.Equal(t, "1", resp.Header().Get("API-Version-Used"))
 	})
 
 	t.Run("Specific version from header", func(t *testing.T) {
@@ -38,11 +38,11 @@ func TestVersioning(t *testing.T) {
 
 		resp := httptest.NewRecorder()
 		req, _ := http.NewRequest(http.MethodGet, "/test", nil)
-		req.Header.Set(VersionHeader, "2")
+		req.Header.Set("API-Version", "2")
 		router.ServeHTTP(resp, req)
 
 		assert.Equal(t, http.StatusOK, resp.Code)
-		assert.Equal(t, "2", resp.Header().Get(VersionUsedHeader))
+		assert.Equal(t, "2", resp.Header().Get("API-Version-Used"))
 	})
 
 	t.Run("Invalid version format", func(t *testing.T) {
@@ -54,7 +54,7 @@ func TestVersioning(t *testing.T) {
 
 		resp := httptest.NewRecorder()
 		req, _ := http.NewRequest(http.MethodGet, "/test", nil)
-		req.Header.Set(VersionHeader, "abc")
+		req.Header.Set("API-Version", "abc")
 		router.ServeHTTP(resp, req)
 
 		assert.Equal(t, http.StatusBadRequest, resp.Code)
@@ -69,7 +69,7 @@ func TestVersioning(t *testing.T) {
 
 		resp := httptest.NewRecorder()
 		req, _ := http.NewRequest(http.MethodGet, "/test", nil)
-		req.Header.Set(VersionHeader, "-1")
+		req.Header.Set("API-Version", "-1")
 		router.ServeHTTP(resp, req)
 
 		assert.Equal(t, http.StatusBadRequest, resp.Code)

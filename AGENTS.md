@@ -124,6 +124,13 @@ GIN_MODE=debug   # usar "release" en producción
 - Prefijo de rutas: `/api/`
 - Nombres de funciones en handlers: `List`, `GetByID`, `Create`, `Update`, `Delete`
 
+### Versionado de API por header
+
+- La API utiliza versionado por header.
+- Para nuevos endpoints y documentación se debe usar `API-Version`.
+- No se deben introducir headers nuevos con prefijo `X-`.
+- La respuesta debe informar la versión procesada mediante `API-Version-Used`.
+
 ### Respuestas paginadas
 
 Todo endpoint que incluya paginado de datos debe respetar la siguiente estructura de respuesta:

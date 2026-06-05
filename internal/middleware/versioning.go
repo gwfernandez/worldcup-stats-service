@@ -9,18 +9,18 @@ import (
 
 const (
 	// VersionHeader is the custom header used for API versioning
-	VersionHeader = "X-API-Version"
+	VersionHeader = "API-Version"
 	// VersionUsedHeader is the response header indicating the version used
-	VersionUsedHeader = "X-API-Version-Used"
+	VersionUsedHeader = "API-Version-Used"
 	// DefaultVersion is the fallback version if no header is provided
 	DefaultVersion = 1
 	// ContextVersionKey is the key used to store the version in the Gin context
 	ContextVersionKey = "api_version"
 )
 
-// Versioning extracts the API version from the X-API-Version header.
+// Versioning extracts the API version from the API-Version header.
 // If the header is missing, it defaults to version 1.
-// It also sets the X-API-Version-Used header in the response.
+// It also sets the API-Version-Used header in the response.
 func Versioning() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		versionStr := c.GetHeader(VersionHeader)
