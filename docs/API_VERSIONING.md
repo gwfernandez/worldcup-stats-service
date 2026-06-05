@@ -4,7 +4,7 @@ Este documento detalla la estrategia de versionado adoptada para la API de World
 
 ## Enfoque Elegido: Versionado por Header (Custom Header)
 
-Se ha decidido implementar un esquema de versionado dinámico basado en un header HTTP personalizado: `X-API-Version`.
+Se ha decidido implementar un esquema de versionado dinámico basado en un header HTTP personalizado: `API-Version`.
 
 ### ¿Por qué esta decisión?
 1. **URLs Limpias**: Mantiene las rutas de la API limpias y semánticas (`/api/confederations` en lugar de `/api/v1/confederations`), enfocándose en el recurso y no en su versión.
@@ -15,35 +15,35 @@ Se ha decidido implementar un esquema de versionado dinámico basado en un heade
 
 ### Consumidores de la API
 
-Para acceder a una versión específica de la API, los clientes deben incluir el header `X-API-Version` en sus solicitudes HTTP.
+Para acceder a una versión específica de la API, los clientes deben incluir el header `API-Version` en sus solicitudes HTTP.
 
 **Ejemplo de Request:**
 ```http
 GET /api/confederations HTTP/1.1
 Host: api.example.com
-X-API-Version: 1
+API-Version: 1
 ```
 
 Otro ejemplo válido para recursos nuevos de v1:
 ```http
 GET /api/teams?name=argen&page=1&size=20 HTTP/1.1
 Host: api.example.com
-X-API-Version: 1
+API-Version: 1
 ```
 
 ### Comportamiento por Defecto
 
-Si no se provee el header `X-API-Version`, el sistema asumirá automáticamente la versión por defecto de la API. 
+Si no se provee el header `API-Version`, el sistema asumirá automáticamente la versión por defecto de la API. 
 * **Versión por defecto actual**: `1`
 
 ### Respuestas de la API
 
-El sistema responderá indicando qué versión fue efectivamente procesada a través del header `X-API-Version-Used`.
+El sistema responderá indicando qué versión fue efectivamente procesada a través del header `API-Version-Used`.
 
 **Ejemplo de Response:**
 ```http
 HTTP/1.1 200 OK
-X-API-Version-Used: 1
+API-Version-Used: 1
 Content-Type: application/json
 ```
 

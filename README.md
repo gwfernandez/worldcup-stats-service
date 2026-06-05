@@ -169,10 +169,10 @@ go tool cover -func=.coverage/coverage.out
 ### Versionado de API
 
 La API utiliza versionado por Header en lugar de versionado en la URL. 
-Para acceder a una versión específica, se debe incluir el header HTTP `X-API-Version`.
+Para acceder a una versión específica, se debe incluir el header HTTP `API-Version`.
 Si no se envía el header, la API utilizará la versión `1` por defecto.
 
-**Ejemplo:** `X-API-Version: 1`
+**Ejemplo:** `API-Version: 1`
 
 Para más detalles, consultar [Estrategia de Versionado](docs/API_VERSIONING.md).
 
@@ -267,42 +267,42 @@ Notas de respuesta:
  
  **Listar confederaciones**
 ```bash
-curl -H "X-API-Version: 1" http://localhost:8080/api/confederations
+curl -H "API-Version: 1" http://localhost:8080/api/confederations
 ```
 
 **Listar selecciones activas (paginado por defecto)**
 ```bash
-curl -H "X-API-Version: 1" "http://localhost:8080/api/teams"
+curl -H "API-Version: 1" "http://localhost:8080/api/teams"
 ```
 
 **Filtrar selecciones por nombre y confederación**
 ```bash
-curl -H "X-API-Version: 1" "http://localhost:8080/api/teams?name=argen&confederation_code=CONMEBOL&page=1&size=20"
+curl -H "API-Version: 1" "http://localhost:8080/api/teams?name=argen&confederation_code=CONMEBOL&page=1&size=20"
 ```
 
 **Listar campeonatos mundiales (orden cronológico ascendente)**
 ```bash
-curl -H "X-API-Version: 1" "http://localhost:8080/api/championships"
+curl -H "API-Version: 1" "http://localhost:8080/api/championships"
 ```
 
 **Filtrar mundiales por confederación del anfitrión**
 ```bash
-curl -H "X-API-Version: 1" "http://localhost:8080/api/championships?confederation_code=CONMEBOL"
+curl -H "API-Version: 1" "http://localhost:8080/api/championships?confederation_code=CONMEBOL"
 ```
 
 **Obtener fixture completo de un mundial**
 ```bash
-curl -H "X-API-Version: 1" "http://localhost:8080/api/championships/1978/fixture"
+curl -H "API-Version: 1" "http://localhost:8080/api/championships/1978/fixture"
 ```
 
 **Obtener detalle completo de un mundial por año**
 ```bash
-curl -H "X-API-Version: 1" "http://localhost:8080/api/championships/1986"
+curl -H "API-Version: 1" "http://localhost:8080/api/championships/1986"
 ```
 
 **Obtener selección por código FIFA**
 ```bash
-curl -H "X-API-Version: 1" "http://localhost:8080/api/teams/code/urs"
+curl -H "API-Version: 1" "http://localhost:8080/api/teams/code/urs"
 ```
 
 ---
