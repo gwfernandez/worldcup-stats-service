@@ -176,6 +176,35 @@ Si no se envía el header, la API utilizará la versión `1` por defecto.
 
 Para más detalles, consultar [Estrategia de Versionado](docs/API_VERSIONING.md).
 
+### Convención de respuestas paginadas
+
+Todo endpoint que incluya paginado de datos debe responder con un objeto JSON que contenga:
+
+- `data`: array con los elementos resultantes de la consulta.
+- `pagination`: objeto con la información de paginación de la respuesta.
+
+La estructura esperada es:
+
+```json
+{
+  "data": [
+    {
+      "id": 1,
+      "name": "John Doe",
+      "email": "john.doe@example.com"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "size": 30,
+    "total_elements": 22,
+    "total_pages": 1,
+    "has_next": false,
+    "has_previous": false
+  }
+}
+```
+
 ### Health
 
 | Método | Ruta | Descripción |
