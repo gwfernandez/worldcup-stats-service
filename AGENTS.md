@@ -157,6 +157,10 @@ Todo endpoint que incluya paginado de datos debe respetar la siguiente estructur
 
 - `data` debe ser siempre un array con el resultado a responder.
 - `pagination` debe incluir siempre la información de paginación (`page`, `size`, `total_elements`, `total_pages`, `has_next`, `has_previous`).
+- Para futuros endpoints paginados, `page` y `size` son opcionales salvo que el requerimiento indique explícitamente otra cosa.
+- Si `page` no se informa, usar `page=1`.
+- Si `size` no se informa, usar `size=20`.
+- Si `page < 1`, `size < 1` o `size > 100`, retornar `400 Bad Request` con formato `{"error": "mensaje"}`.
 
 ### Versionado y Commits (SemVer)
 
