@@ -89,6 +89,24 @@ func TestChampionshipHandler_ListTeamsByYear(t *testing.T) {
 		r.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
+		assert.JSONEq(t, `{
+			"data": [{
+				"year": 1930,
+				"teamCode": "ARG",
+				"confederationCode": "CONMEBOL",
+				"groupCode": "1",
+				"stageReached": "runner_up",
+				"managers": "Francisco Olazar"
+			}],
+			"pagination": {
+				"page": 1,
+				"size": 20,
+				"totalElements": 1,
+				"totalPages": 1,
+				"hasNext": false,
+				"hasPrevious": false
+			}
+		}`, w.Body.String())
 		svc.AssertExpectations(t)
 	})
 
@@ -160,8 +178,9 @@ func TestChampionshipHandler_List(t *testing.T) {
 		svc := new(MockChampionshipService)
 		r := setupChampionshipRouter(svc)
 
+		championCode := "URU"
 		expected := &domain.ChampionshipListResponse{
-			Data: []domain.Championship{{Year: 1930, StartDate: "1930-07-13", EndDate: "1930-07-30", HostCodes: []string{"URU"}}},
+			Data: []domain.Championship{{Year: 1930, StartDate: "1930-07-13", EndDate: "1930-07-30", HostCodes: []string{"URU"}, ChampionCode: &championCode}},
 			Pagination: domain.PaginationInfo{
 				Page:          1,
 				Size:          20,
@@ -185,6 +204,23 @@ func TestChampionshipHandler_List(t *testing.T) {
 		r.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
+		assert.JSONEq(t, `{
+			"data": [{
+				"year": 1930,
+				"startDate": "1930-07-13",
+				"endDate": "1930-07-30",
+				"hostCodes": ["URU"],
+				"championCode": "URU"
+			}],
+			"pagination": {
+				"page": 1,
+				"size": 20,
+				"totalElements": 1,
+				"totalPages": 1,
+				"hasNext": false,
+				"hasPrevious": false
+			}
+		}`, w.Body.String())
 		svc.AssertExpectations(t)
 	})
 
@@ -254,9 +290,25 @@ func TestChampionshipHandler_GetByYear(t *testing.T) {
 		r := setupChampionshipRouter(svc)
 
 		expected := &domain.Championship{
-			Year: 1930,
+			Year:      1930,
+			StartDate: "1930-07-13",
+			EndDate:   "1930-07-30",
+			HostCodes: []string{"URU"},
 			Stats: &domain.ChampionshipsStats{
-				TotalTeams: 13,
+				TotalTeams:      13,
+				TotalMatches:    18,
+				TotalStadiums:   3,
+				TotalPlayers:    176,
+				TotalGoals:      70,
+				RunnerUpCode:    "ARG",
+				ThirdPlaceCode:  "USA",
+				FourthPlaceCode: "YUG",
+				TopScorers: []domain.TopScorer{{
+					ID:         1,
+					Name:       "Guillermo Stabile",
+					NationCode: "ARG",
+				}},
+				TopScorerGoals: 8,
 			},
 		}
 
@@ -267,6 +319,29 @@ func TestChampionshipHandler_GetByYear(t *testing.T) {
 		r.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
+		assert.JSONEq(t, `{
+			"year": 1930,
+			"startDate": "1930-07-13",
+			"endDate": "1930-07-30",
+			"hostCodes": ["URU"],
+			"championCode": null,
+			"stats": {
+				"totalTeams": 13,
+				"totalMatches": 18,
+				"totalStadiums": 3,
+				"totalPlayers": 176,
+				"totalGoals": 70,
+				"runnerUpCode": "ARG",
+				"thirdPlaceCode": "USA",
+				"fourthPlaceCode": "YUG",
+				"topScorers": [{
+					"id": 1,
+					"name": "Guillermo Stabile",
+					"nationCode": "ARG"
+				}],
+				"topScorerGoals": 8
+			}
+		}`, w.Body.String())
 		svc.AssertExpectations(t)
 	})
 

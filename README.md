@@ -182,6 +182,7 @@ Todo endpoint que incluya paginado de datos debe responder con un objeto JSON qu
 
 - `data`: array con los elementos resultantes de la consulta.
 - `pagination`: objeto con la información de paginación de la respuesta.
+- Todas las propiedades de respuesta JSON usan `camelCase`.
 - `page` y `size` son opcionales para futuros endpoints paginados, salvo que el requerimiento indique explícitamente otra cosa.
 - Si `page` no se informa, se usa `page=1`.
 - Si `size` no se informa, se usa `size=20`.
@@ -201,10 +202,10 @@ La estructura esperada es:
   "pagination": {
     "page": 1,
     "size": 30,
-    "total_elements": 22,
-    "total_pages": 1,
-    "has_next": false,
-    "has_previous": false
+    "totalElements": 22,
+    "totalPages": 1,
+    "hasNext": false,
+    "hasPrevious": false
   }
 }
 ```
@@ -241,9 +242,9 @@ Parámetros soportados para `/api/teams`:
 
 Notas de respuesta:
 
-- `dissolution_date` se expone en formato `YYYY-MM-DD` cuando aplica.
-- `code` y `federation_code` se normalizan a mayúsculas.
-- Se incluye el campo calculado `is_dissolved`.
+- `dissolutionDate` se expone en formato `YYYY-MM-DD` cuando aplica.
+- `code` y `federationCode` se normalizan a mayúsculas.
+- Se incluye el campo calculado `isDissolved`.
 
 ### Campeonatos Mundiales
 
@@ -264,7 +265,7 @@ Parámetros soportados para `/api/championships`:
 
 Notas de respuesta:
 
-- `host_codes` y `champion_code` se normalizan a mayúsculas.
+- `hostCodes` y `championCode` se normalizan a mayúsculas.
 - Si no hay estadísticas cargadas para una edición, `stats` devuelve valores predeterminados (enteros en `0`, strings vacíos `""` y arrays vacíos `[]`).
 - El fixture agrupa stages de tipo `group` con `groups[].matches` y `groups[].standings`; los stages `knockout` exponen `matches` directamente.
 

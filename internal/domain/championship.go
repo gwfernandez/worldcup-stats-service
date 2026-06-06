@@ -4,30 +4,30 @@ package domain
 type TopScorer struct {
 	ID         int64  `json:"id"`
 	Name       string `json:"name"`
-	NationCode string `json:"nation_code"`
+	NationCode string `json:"nationCode"`
 }
 
 // ChampionshipsStats represents statistics for a specific championship edition.
 type ChampionshipsStats struct {
-	TotalTeams      int32       `json:"total_teams"`
-	TotalMatches    int32       `json:"total_matches"`
-	TotalStadiums   int32       `json:"total_stadiums"`
-	TotalPlayers    int32       `json:"total_players"`
-	TotalGoals      int32       `json:"total_goals"`
-	RunnerUpCode    string      `json:"runner_up_code"`
-	ThirdPlaceCode  string      `json:"third_place_code"`
-	FourthPlaceCode string      `json:"fourth_place_code"`
-	TopScorers      []TopScorer `json:"top_scorers"`
-	TopScorerGoals  int32       `json:"top_scorer_goals"`
+	TotalTeams      int32       `json:"totalTeams"`
+	TotalMatches    int32       `json:"totalMatches"`
+	TotalStadiums   int32       `json:"totalStadiums"`
+	TotalPlayers    int32       `json:"totalPlayers"`
+	TotalGoals      int32       `json:"totalGoals"`
+	RunnerUpCode    string      `json:"runnerUpCode"`
+	ThirdPlaceCode  string      `json:"thirdPlaceCode"`
+	FourthPlaceCode string      `json:"fourthPlaceCode"`
+	TopScorers      []TopScorer `json:"topScorers"`
+	TopScorerGoals  int32       `json:"topScorerGoals"`
 }
 
 // Championship represents a football world cup championship edition.
 type Championship struct {
 	Year         int                 `json:"year"`
-	StartDate    string              `json:"start_date"`
-	EndDate      string              `json:"end_date"`
-	HostCodes    []string            `json:"host_codes"`
-	ChampionCode *string             `json:"champion_code"`
+	StartDate    string              `json:"startDate"`
+	EndDate      string              `json:"endDate"`
+	HostCodes    []string            `json:"hostCodes"`
+	ChampionCode *string             `json:"championCode"`
 	Stats        *ChampionshipsStats `json:"stats,omitempty"`
 }
 
@@ -43,10 +43,10 @@ type ChampionshipFilter struct {
 // ChampionshipTeam represents a team that participated in a championship edition.
 type ChampionshipTeam struct {
 	Year              int    `json:"year"`
-	TeamCode          string `json:"team_code"`
-	ConfederationCode string `json:"confederation_code"`
-	GroupCode         string `json:"group_code"`
-	StageReached      string `json:"stage_reached"`
+	TeamCode          string `json:"teamCode"`
+	ConfederationCode string `json:"confederationCode"`
+	GroupCode         string `json:"groupCode"`
+	StageReached      string `json:"stageReached"`
 	Managers          string `json:"managers"`
 }
 
