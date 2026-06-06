@@ -11,6 +11,36 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const countChampionshipTeamsByYear = `-- name: CountChampionshipTeamsByYear :one
+SELECT COUNT(*)
+FROM championships_teams ct
+INNER JOIN teams t ON t.code = ct.team_code
+INNER JOIN championships_teams_stats cts ON ct.year = cts.year AND ct.team_code = cts.team_code
+WHERE ct.year = $1
+    AND ($2::text = '' OR LOWER(t.name) LIKE '%' || LOWER($2) || '%')
+    AND ($3::text = '' OR t.confederation_code = $3)
+    AND ($4::text = '' OR cts.group_code = $4)
+`
+
+type CountChampionshipTeamsByYearParams struct {
+	Year    int32
+	Column2 string
+	Column3 string
+	Column4 string
+}
+
+func (q *Queries) CountChampionshipTeamsByYear(ctx context.Context, arg CountChampionshipTeamsByYearParams) (int64, error) {
+	row := q.db.QueryRow(ctx, countChampionshipTeamsByYear,
+		arg.Year,
+		arg.Column2,
+		arg.Column3,
+		arg.Column4,
+	)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const countChampionships = `-- name: CountChampionships :one
 SELECT COUNT(*)
 FROM championships c
@@ -107,6 +137,93 @@ func (q *Queries) GetChampionshipByYear(ctx context.Context, year int32) (GetCha
 		&i.TopScorerGoals,
 	)
 	return i, err
+}
+
+const listChampionshipTeamsByYear = `-- name: ListChampionshipTeamsByYear :many
+SELECT
+    ct.year,
+    ct.team_code,
+    t.confederation_code,
+    cts.group_code,
+    COALESCE(CASE
+        WHEN ct.team_code = cs.champion_code THEN 'champion'
+        WHEN ct.team_code = cs.runner_up_code THEN 'runner_up'
+        WHEN ct.team_code = cs.third_place_code THEN 'third_place'
+        WHEN ct.team_code = cs.fourth_place_code THEN 'fourth_place'
+        ELSE cts.stage_reached::text
+    END, '')::text AS stage_reached,
+    COALESCE(m.managers, '')::text AS managers
+FROM championships_teams ct
+INNER JOIN teams t ON t.code = ct.team_code
+INNER JOIN championships_teams_stats cts ON ct.year = cts.year AND ct.team_code = cts.team_code
+INNER JOIN championships_stats cs ON cs.year = ct.year
+LEFT JOIN (
+    SELECT
+        cm.team_code,
+        string_agg(NULLIF(TRIM(CONCAT_WS(' ', NULLIF(m.first_name, ''), NULLIF(m.last_name, ''))), ''), ', ') AS managers
+    FROM championships_managers cm
+    INNER JOIN managers m ON cm.manager_id = m.id
+    WHERE cm.year = $1
+    GROUP BY cm.team_code
+) m ON m.team_code = ct.team_code
+WHERE ct.year = $1
+    AND ($2::text = '' OR LOWER(t.name) LIKE '%' || LOWER($2) || '%')
+    AND ($3::text = '' OR t.confederation_code = $3)
+    AND ($4::text = '' OR cts.group_code = $4)
+ORDER BY cts.position ASC, cts.stage_reached DESC
+LIMIT $5 OFFSET $6
+`
+
+type ListChampionshipTeamsByYearParams struct {
+	Year    int32
+	Column2 string
+	Column3 string
+	Column4 string
+	Limit   int32
+	Offset  int32
+}
+
+type ListChampionshipTeamsByYearRow struct {
+	Year              int32
+	TeamCode          string
+	ConfederationCode string
+	GroupCode         pgtype.Text
+	StageReached      string
+	Managers          string
+}
+
+func (q *Queries) ListChampionshipTeamsByYear(ctx context.Context, arg ListChampionshipTeamsByYearParams) ([]ListChampionshipTeamsByYearRow, error) {
+	rows, err := q.db.Query(ctx, listChampionshipTeamsByYear,
+		arg.Year,
+		arg.Column2,
+		arg.Column3,
+		arg.Column4,
+		arg.Limit,
+		arg.Offset,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListChampionshipTeamsByYearRow
+	for rows.Next() {
+		var i ListChampionshipTeamsByYearRow
+		if err := rows.Scan(
+			&i.Year,
+			&i.TeamCode,
+			&i.ConfederationCode,
+			&i.GroupCode,
+			&i.StageReached,
+			&i.Managers,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const listChampionships = `-- name: ListChampionships :many
