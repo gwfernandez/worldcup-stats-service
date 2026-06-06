@@ -119,7 +119,7 @@ func TestTeamHandler_List(t *testing.T) {
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
 
-	t.Run("success with confederation filter", func(t *testing.T) {
+	t.Run("success with camelCase filters", func(t *testing.T) {
 		svc := new(MockTeamService)
 		r := setupTeamRouter(svc)
 
@@ -128,13 +128,14 @@ func TestTeamHandler_List(t *testing.T) {
 		svc.On("List", mock.Anything, domain.TeamFilter{
 			Name:              "",
 			ConfederationCode: &confederationCode,
-			FederationName:    "",
-			FederationCode:    "",
+			FederationName:    "Asociación",
+			FederationCode:    "AFA",
+			IncludeDissolved:  true,
 			Page:              1,
 			Size:              20,
 		}).Return(expected, nil)
 
-		req, _ := http.NewRequest(http.MethodGet, "/api/teams?confederation_code=CONMEBOL", nil)
+		req, _ := http.NewRequest(http.MethodGet, "/api/teams?confederationCode=CONMEBOL&federationName=Asociaci%C3%B3n&federationCode=AFA&includeDissolved=true", nil)
 		w := httptest.NewRecorder()
 		r.ServeHTTP(w, req)
 
@@ -152,15 +153,16 @@ func TestTeamHandler_List(t *testing.T) {
 		}`, w.Body.String())
 	})
 
-	t.Run("bad request invalid include_dissolved", func(t *testing.T) {
+	t.Run("bad request invalid includeDissolved", func(t *testing.T) {
 		svc := new(MockTeamService)
 		r := setupTeamRouter(svc)
 
-		req, _ := http.NewRequest(http.MethodGet, "/api/teams?include_dissolved=nope", nil)
+		req, _ := http.NewRequest(http.MethodGet, "/api/teams?includeDissolved=nope", nil)
 		w := httptest.NewRecorder()
 		r.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusBadRequest, w.Code)
+		assert.JSONEq(t, `{"error":"invalid includeDissolved parameter"}`, w.Body.String())
 	})
 
 	t.Run("internal error", func(t *testing.T) {
