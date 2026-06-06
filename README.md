@@ -182,6 +182,10 @@ Todo endpoint que incluya paginado de datos debe responder con un objeto JSON qu
 
 - `data`: array con los elementos resultantes de la consulta.
 - `pagination`: objeto con la información de paginación de la respuesta.
+- `page` y `size` son opcionales para futuros endpoints paginados, salvo que el requerimiento indique explícitamente otra cosa.
+- Si `page` no se informa, se usa `page=1`.
+- Si `size` no se informa, se usa `size=20`.
+- Si `page < 1`, `size < 1` o `size > 100`, la API responde `400 Bad Request` con formato `{"error": "mensaje"}`.
 
 La estructura esperada es:
 
@@ -248,6 +252,7 @@ Notas de respuesta:
  | `GET` | `/api/championships` | Listar ediciones de campeonatos mundiales con filtros y paginación |
  | `GET` | `/api/championships/:year` | Obtener detalle de una edición por año con estadísticas |
  | `GET` | `/api/championships/:year/fixture` | Obtener fixture completo de una edición por año |
+ | `GET` | `/api/championships/:year/teams` | Listar selecciones participantes de una edición con filtros y paginación |
 
 Parámetros soportados para `/api/championships`:
 
@@ -262,6 +267,21 @@ Notas de respuesta:
 - `host_codes` y `champion_code` se normalizan a mayúsculas.
 - Si no hay estadísticas cargadas para una edición, `stats` devuelve valores predeterminados (enteros en `0`, strings vacíos `""` y arrays vacíos `[]`).
 - El fixture agrupa stages de tipo `group` con `groups[].matches` y `groups[].standings`; los stages `knockout` exponen `matches` directamente.
+
+Parámetros soportados para `/api/championships/:year/teams`:
+
+- `name`: búsqueda por nombre de selección (contiene, case-insensitive, sobre `teams.name`).
+- `confederation_code`: filtro por igualdad sobre `teams.confederation_code`, normalizado a mayúsculas.
+- `group_code`: filtro por igualdad sobre `championships_teams_stats.group_code`, normalizado a mayúsculas.
+- `page`: número de página (base 1, por defecto `1`).
+- `size`: tamaño de página (por defecto `20`, máximo `100`).
+
+Notas de respuesta:
+
+- Si `:year` no es numérico, responde `400 Bad Request` con `{"error":"invalid year parameter"}`.
+- Si `:year` es numérico pero no tiene selecciones asociadas, responde `200 OK` con `data: []` y metadata de paginación.
+- `managers` devuelve string vacío `""` cuando no hay DTs asociados.
+- Los resultados se ordenan por posición ascendente e instancia alcanzada descendente.
 
 ### Ejemplos de request
  
@@ -293,6 +313,16 @@ curl -H "API-Version: 1" "http://localhost:8080/api/championships?confederation_
 **Obtener fixture completo de un mundial**
 ```bash
 curl -H "API-Version: 1" "http://localhost:8080/api/championships/1978/fixture"
+```
+
+**Listar selecciones participantes de un mundial**
+```bash
+curl -H "API-Version: 1" "http://localhost:8080/api/championships/1930/teams?page=1&size=10"
+```
+
+**Filtrar selecciones participantes por nombre, confederación o grupo**
+```bash
+curl -H "API-Version: 1" "http://localhost:8080/api/championships/1930/teams?name=argentina&confederation_code=CONMEBOL&group_code=1"
 ```
 
 **Obtener detalle completo de un mundial por año**

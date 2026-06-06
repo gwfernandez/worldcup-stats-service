@@ -36,6 +36,14 @@ func (m *MockChampionshipService) GetByYear(ctx context.Context, year int) (*dom
 	return args.Get(0).(*domain.Championship), args.Error(1)
 }
 
+func (m *MockChampionshipService) ListTeamsByYear(ctx context.Context, filter domain.ChampionshipTeamFilter) (*domain.ChampionshipTeamListResponse, error) {
+	args := m.Called(ctx, filter)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*domain.ChampionshipTeamListResponse), args.Error(1)
+}
+
 func setupChampionshipRouter(svc *MockChampionshipService) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	r := gin.Default()
@@ -43,6 +51,108 @@ func setupChampionshipRouter(svc *MockChampionshipService) *gin.Engine {
 	rg := r.Group("/api")
 	h.RegisterRoutes(rg)
 	return r
+}
+
+func TestChampionshipHandler_ListTeamsByYear(t *testing.T) {
+	t.Run("success with defaults and filters", func(t *testing.T) {
+		svc := new(MockChampionshipService)
+		r := setupChampionshipRouter(svc)
+
+		expected := &domain.ChampionshipTeamListResponse{
+			Data: []domain.ChampionshipTeam{{
+				Year:              1930,
+				TeamCode:          "ARG",
+				ConfederationCode: "CONMEBOL",
+				GroupCode:         "1",
+				StageReached:      "runner_up",
+				Managers:          "Francisco Olazar",
+			}},
+			Pagination: domain.PaginationInfo{
+				Page:          1,
+				Size:          20,
+				TotalElements: 1,
+				TotalPages:    1,
+			},
+		}
+
+		svc.On("ListTeamsByYear", mock.Anything, domain.ChampionshipTeamFilter{
+			Year:              1930,
+			Name:              "argentina",
+			ConfederationCode: "CONMEBOL",
+			GroupCode:         "A",
+			Page:              1,
+			Size:              20,
+		}).Return(expected, nil)
+
+		req, _ := http.NewRequest(http.MethodGet, "/api/championships/1930/teams?name=argentina&confederation_code=conmebol&group_code=a", nil)
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		svc.AssertExpectations(t)
+	})
+
+	t.Run("invalid year", func(t *testing.T) {
+		svc := new(MockChampionshipService)
+		r := setupChampionshipRouter(svc)
+
+		req, _ := http.NewRequest(http.MethodGet, "/api/championships/abc/teams", nil)
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+		assert.JSONEq(t, `{"error":"invalid year parameter"}`, w.Body.String())
+	})
+
+	t.Run("invalid page", func(t *testing.T) {
+		svc := new(MockChampionshipService)
+		r := setupChampionshipRouter(svc)
+
+		req, _ := http.NewRequest(http.MethodGet, "/api/championships/1930/teams?page=0", nil)
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+		assert.JSONEq(t, `{"error":"invalid page parameter"}`, w.Body.String())
+	})
+
+	t.Run("invalid size", func(t *testing.T) {
+		svc := new(MockChampionshipService)
+		r := setupChampionshipRouter(svc)
+
+		req, _ := http.NewRequest(http.MethodGet, "/api/championships/1930/teams?size=101", nil)
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+		assert.JSONEq(t, `{"error":"invalid size parameter"}`, w.Body.String())
+	})
+
+	t.Run("service invalid input error", func(t *testing.T) {
+		svc := new(MockChampionshipService)
+		r := setupChampionshipRouter(svc)
+
+		svc.On("ListTeamsByYear", mock.Anything, mock.Anything).Return(nil, domain.ErrInvalidInput)
+
+		req, _ := http.NewRequest(http.MethodGet, "/api/championships/1930/teams", nil)
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+	})
+
+	t.Run("service internal error", func(t *testing.T) {
+		svc := new(MockChampionshipService)
+		r := setupChampionshipRouter(svc)
+
+		svc.On("ListTeamsByYear", mock.Anything, mock.Anything).Return(nil, errors.New("db error"))
+
+		req, _ := http.NewRequest(http.MethodGet, "/api/championships/1930/teams", nil)
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusInternalServerError, w.Code)
+	})
 }
 
 func TestChampionshipHandler_List(t *testing.T) {

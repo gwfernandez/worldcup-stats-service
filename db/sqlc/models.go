@@ -33,6 +33,12 @@ type ChampionshipsGroupsStat struct {
 	Position       pgtype.Int4
 }
 
+type ChampionshipsManager struct {
+	Year      int32
+	TeamCode  string
+	ManagerID int64
+}
+
 type ChampionshipsStat struct {
 	Year            int32
 	TotalTeams      int32
@@ -53,9 +59,35 @@ type ChampionshipsTeam struct {
 	TeamCode string
 }
 
+type ChampionshipsTeamsStat struct {
+	Year           int32
+	TeamCode       string
+	GroupCode      pgtype.Text
+	StageReached   interface{}
+	MatchesPlayed  int32
+	Wins           int32
+	Draws          int32
+	Losses         int32
+	GoalsFor       int32
+	GoalsAgainst   int32
+	GoalDifference pgtype.Int4
+	Points         int32
+	UnifiedPoints  int32
+	Position       pgtype.Int4
+}
+
 type Confederation struct {
 	Code string
 	Name string
+}
+
+type Manager struct {
+	ID          int64
+	FirstName   pgtype.Text
+	LastName    pgtype.Text
+	Nationality pgtype.Text
+	Wikipedia   pgtype.Text
+	RefID       pgtype.Text
 }
 
 type Match struct {
@@ -95,4 +127,5 @@ type Team struct {
 	ConfederationCode string
 	FederationName    string
 	FederationCode    string
+	UnifiedCode       string
 }

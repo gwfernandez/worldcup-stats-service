@@ -62,3 +62,47 @@ SELECT
 FROM championships c
 LEFT JOIN championships_stats s ON s.year = c.year
 WHERE c.year = $1;
+
+-- name: ListChampionshipTeamsByYear :many
+SELECT
+    ct.year,
+    ct.team_code,
+    t.confederation_code,
+    cts.group_code,
+    COALESCE(CASE
+        WHEN ct.team_code = cs.champion_code THEN 'champion'
+        WHEN ct.team_code = cs.runner_up_code THEN 'runner_up'
+        WHEN ct.team_code = cs.third_place_code THEN 'third_place'
+        WHEN ct.team_code = cs.fourth_place_code THEN 'fourth_place'
+        ELSE cts.stage_reached::text
+    END, '')::text AS stage_reached,
+    COALESCE(m.managers, '')::text AS managers
+FROM championships_teams ct
+INNER JOIN teams t ON t.code = ct.team_code
+INNER JOIN championships_teams_stats cts ON ct.year = cts.year AND ct.team_code = cts.team_code
+INNER JOIN championships_stats cs ON cs.year = ct.year
+LEFT JOIN (
+    SELECT
+        cm.team_code,
+        string_agg(NULLIF(TRIM(CONCAT_WS(' ', NULLIF(m.first_name, ''), NULLIF(m.last_name, ''))), ''), ', ') AS managers
+    FROM championships_managers cm
+    INNER JOIN managers m ON cm.manager_id = m.id
+    WHERE cm.year = $1
+    GROUP BY cm.team_code
+) m ON m.team_code = ct.team_code
+WHERE ct.year = $1
+    AND ($2::text = '' OR LOWER(t.name) LIKE '%' || LOWER($2) || '%')
+    AND ($3::text = '' OR t.confederation_code = $3)
+    AND ($4::text = '' OR cts.group_code = $4)
+ORDER BY cts.position ASC, cts.stage_reached DESC
+LIMIT $5 OFFSET $6;
+
+-- name: CountChampionshipTeamsByYear :one
+SELECT COUNT(*)
+FROM championships_teams ct
+INNER JOIN teams t ON t.code = ct.team_code
+INNER JOIN championships_teams_stats cts ON ct.year = cts.year AND ct.team_code = cts.team_code
+WHERE ct.year = $1
+    AND ($2::text = '' OR LOWER(t.name) LIKE '%' || LOWER($2) || '%')
+    AND ($3::text = '' OR t.confederation_code = $3)
+    AND ($4::text = '' OR cts.group_code = $4);

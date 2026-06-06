@@ -7,6 +7,8 @@ package sqlc
 
 import (
 	"context"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const countTeams = `-- name: CountTeams :one
@@ -53,9 +55,18 @@ FROM teams
 WHERE LOWER(code) = LOWER($1)
 `
 
-func (q *Queries) GetTeamByCode(ctx context.Context, lower string) (Team, error) {
+type GetTeamByCodeRow struct {
+	Code              string
+	Name              string
+	DissolutionDate   pgtype.Date
+	ConfederationCode string
+	FederationName    string
+	FederationCode    string
+}
+
+func (q *Queries) GetTeamByCode(ctx context.Context, lower string) (GetTeamByCodeRow, error) {
 	row := q.db.QueryRow(ctx, getTeamByCode, lower)
-	var i Team
+	var i GetTeamByCodeRow
 	err := row.Scan(
 		&i.Code,
 		&i.Name,
@@ -96,7 +107,16 @@ type ListTeamsParams struct {
 	Offset  int32
 }
 
-func (q *Queries) ListTeams(ctx context.Context, arg ListTeamsParams) ([]Team, error) {
+type ListTeamsRow struct {
+	Code              string
+	Name              string
+	DissolutionDate   pgtype.Date
+	ConfederationCode string
+	FederationName    string
+	FederationCode    string
+}
+
+func (q *Queries) ListTeams(ctx context.Context, arg ListTeamsParams) ([]ListTeamsRow, error) {
 	rows, err := q.db.Query(ctx, listTeams,
 		arg.Column1,
 		arg.Column2,
@@ -110,9 +130,9 @@ func (q *Queries) ListTeams(ctx context.Context, arg ListTeamsParams) ([]Team, e
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Team
+	var items []ListTeamsRow
 	for rows.Next() {
-		var i Team
+		var i ListTeamsRow
 		if err := rows.Scan(
 			&i.Code,
 			&i.Name,

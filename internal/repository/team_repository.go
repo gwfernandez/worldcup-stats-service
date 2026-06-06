@@ -56,7 +56,7 @@ func (r *teamRepository) List(ctx context.Context, filter domain.TeamFilter) ([]
 
 	teams := make([]domain.Team, len(rows))
 	for i, row := range rows {
-		teams[i] = toTeamDomain(row)
+		teams[i] = toTeamDomainFromList(row)
 	}
 
 	return teams, total, nil
@@ -70,21 +70,43 @@ func (r *teamRepository) GetByCode(ctx context.Context, code string) (*domain.Te
 		}
 		return nil, err
 	}
-	team := toTeamDomain(row)
+	team := toTeamDomainFromGet(row)
 	return &team, nil
 }
 
-func toTeamDomain(row sqlc.Team) domain.Team {
-	dissolutionDate := dateToStringPtr(row.DissolutionDate)
+func toTeamDomainFromList(row sqlc.ListTeamsRow) domain.Team {
+	return buildTeamDomain(
+		row.Code,
+		row.Name,
+		row.DissolutionDate,
+		row.ConfederationCode,
+		row.FederationName,
+		row.FederationCode,
+	)
+}
+
+func toTeamDomainFromGet(row sqlc.GetTeamByCodeRow) domain.Team {
+	return buildTeamDomain(
+		row.Code,
+		row.Name,
+		row.DissolutionDate,
+		row.ConfederationCode,
+		row.FederationName,
+		row.FederationCode,
+	)
+}
+
+func buildTeamDomain(code, name string, dissolutionDateValue pgtype.Date, confederationCode, federationName, federationCode string) domain.Team {
+	dissolutionDate := dateToStringPtr(dissolutionDateValue)
 
 	return domain.Team{
-		Name:              row.Name,
-		Code:              strings.ToUpper(row.Code),
+		Name:              name,
+		Code:              strings.ToUpper(code),
 		DissolutionDate:   dissolutionDate,
 		IsDissolved:       dissolutionDate != nil,
-		ConfederationCode: strings.ToUpper(row.ConfederationCode),
-		FederationName:    row.FederationName,
-		FederationCode:    strings.ToUpper(row.FederationCode),
+		ConfederationCode: strings.ToUpper(confederationCode),
+		FederationName:    federationName,
+		FederationCode:    strings.ToUpper(federationCode),
 	}
 }
 

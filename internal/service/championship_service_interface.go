@@ -10,4 +10,5 @@ import (
 type ChampionshipService interface {
 	List(ctx context.Context, filter domain.ChampionshipFilter) (*domain.ChampionshipListResponse, error)
 	GetByYear(ctx context.Context, year int) (*domain.Championship, error)
+	ListTeamsByYear(ctx context.Context, filter domain.ChampionshipTeamFilter) (*domain.ChampionshipTeamListResponse, error)
 }
