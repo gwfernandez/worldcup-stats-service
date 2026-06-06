@@ -210,6 +210,12 @@ La estructura esperada es:
 }
 ```
 
+### Convención de query params
+
+Todos los query params de la API usan `camelCase`.
+
+Los parámetros de una sola palabra se mantienen sin cambios, por ejemplo `name`, `host`, `year`, `page` y `size`.
+
 ### Health
 
 | Método | Ruta | Descripción |
@@ -233,10 +239,10 @@ La estructura esperada es:
 Parámetros soportados para `/api/teams`:
 
 - `name`: búsqueda por contiene, case-insensitive.
-- `confederation_code`: filtro por igualdad exacta, case-insensitive.
-- `federation_name`: búsqueda por contiene, case-insensitive.
-- `federation_code`: filtro por igualdad exacta, case-insensitive.
-- `include_dissolved`: `true|false` (por defecto `false`).
+- `confederationCode`: filtro por igualdad exacta, case-insensitive.
+- `federationName`: búsqueda por contiene, case-insensitive.
+- `federationCode`: filtro por igualdad exacta, case-insensitive.
+- `includeDissolved`: `true|false` (por defecto `false`).
 - `page`: número de página (base 1, por defecto `1`).
 - `size`: tamaño de página (por defecto `20`, máximo `100`).
 
@@ -259,7 +265,7 @@ Parámetros soportados para `/api/championships`:
 
 - `year`: filtro exacto por año del campeonato.
 - `host`: búsqueda por nombre del país anfitrión (contiene, case-insensitive, sobre el nombre de la selección en `teams`).
-- `confederation_code`: filtro por código de la confederación de los países anfitriones.
+- `confederationCode`: filtro por código de la confederación de los países anfitriones.
 - `page`: número de página (base 1, por defecto `1`).
 - `size`: tamaño de página (por defecto `20`, máximo `100`).
 
@@ -272,8 +278,8 @@ Notas de respuesta:
 Parámetros soportados para `/api/championships/:year/teams`:
 
 - `name`: búsqueda por nombre de selección (contiene, case-insensitive, sobre `teams.name`).
-- `confederation_code`: filtro por igualdad sobre `teams.confederation_code`, normalizado a mayúsculas.
-- `group_code`: filtro por igualdad sobre `championships_teams_stats.group_code`, normalizado a mayúsculas.
+- `confederationCode`: filtro por igualdad sobre `teams.confederation_code`, normalizado a mayúsculas.
+- `groupCode`: filtro por igualdad sobre `championships_teams_stats.group_code`, normalizado a mayúsculas.
 - `page`: número de página (base 1, por defecto `1`).
 - `size`: tamaño de página (por defecto `20`, máximo `100`).
 
@@ -298,7 +304,7 @@ curl -H "API-Version: 1" "http://localhost:8080/api/teams"
 
 **Filtrar selecciones por nombre y confederación**
 ```bash
-curl -H "API-Version: 1" "http://localhost:8080/api/teams?name=argen&confederation_code=CONMEBOL&page=1&size=20"
+curl -H "API-Version: 1" "http://localhost:8080/api/teams?name=argen&confederationCode=CONMEBOL&page=1&size=20"
 ```
 
 **Listar campeonatos mundiales (orden cronológico ascendente)**
@@ -308,7 +314,7 @@ curl -H "API-Version: 1" "http://localhost:8080/api/championships"
 
 **Filtrar mundiales por confederación del anfitrión**
 ```bash
-curl -H "API-Version: 1" "http://localhost:8080/api/championships?confederation_code=CONMEBOL"
+curl -H "API-Version: 1" "http://localhost:8080/api/championships?confederationCode=CONMEBOL"
 ```
 
 **Obtener fixture completo de un mundial**
@@ -323,7 +329,7 @@ curl -H "API-Version: 1" "http://localhost:8080/api/championships/1930/teams?pag
 
 **Filtrar selecciones participantes por nombre, confederación o grupo**
 ```bash
-curl -H "API-Version: 1" "http://localhost:8080/api/championships/1930/teams?name=argentina&confederation_code=CONMEBOL&group_code=1"
+curl -H "API-Version: 1" "http://localhost:8080/api/championships/1930/teams?name=argentina&confederationCode=CONMEBOL&groupCode=1"
 ```
 
 **Obtener detalle completo de un mundial por año**

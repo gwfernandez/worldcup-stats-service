@@ -84,7 +84,7 @@ func TestChampionshipHandler_ListTeamsByYear(t *testing.T) {
 			Size:              20,
 		}).Return(expected, nil)
 
-		req, _ := http.NewRequest(http.MethodGet, "/api/championships/1930/teams?name=argentina&confederation_code=conmebol&group_code=a", nil)
+		req, _ := http.NewRequest(http.MethodGet, "/api/championships/1930/teams?name=argentina&confederationCode=conmebol&groupCode=a", nil)
 		w := httptest.NewRecorder()
 		r.ServeHTTP(w, req)
 
@@ -199,7 +199,7 @@ func TestChampionshipHandler_List(t *testing.T) {
 			Size:              20,
 		}).Return(expected, nil)
 
-		req, _ := http.NewRequest(http.MethodGet, "/api/championships?year=1930&host=uru&confederation_code=CONMEBOL", nil)
+		req, _ := http.NewRequest(http.MethodGet, "/api/championships?year=1930&host=uru&confederationCode=CONMEBOL", nil)
 		w := httptest.NewRecorder()
 		r.ServeHTTP(w, req)
 

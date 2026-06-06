@@ -110,7 +110,7 @@ func (h *ChampionshipHandler) ListTeamsByYear(c *gin.Context) {
 func parseChampionshipFilter(c *gin.Context) (domain.ChampionshipFilter, error) {
 	filter := domain.ChampionshipFilter{
 		Host:              c.Query("host"),
-		ConfederationCode: c.Query("confederation_code"),
+		ConfederationCode: c.Query("confederationCode"),
 		Page:              defaultPage,
 		Size:              defaultSize,
 	}
@@ -158,8 +158,8 @@ func parseChampionshipTeamFilter(c *gin.Context) (domain.ChampionshipTeamFilter,
 	filter := domain.ChampionshipTeamFilter{
 		Year:              year,
 		Name:              c.Query("name"),
-		ConfederationCode: strings.ToUpper(c.Query("confederation_code")),
-		GroupCode:         strings.ToUpper(c.Query("group_code")),
+		ConfederationCode: strings.ToUpper(c.Query("confederationCode")),
+		GroupCode:         strings.ToUpper(c.Query("groupCode")),
 		Page:              defaultPage,
 		Size:              defaultSize,
 	}

@@ -79,8 +79,8 @@ func (h *TeamHandler) GetByCode(c *gin.Context) {
 func parseTeamFilter(c *gin.Context) (domain.TeamFilter, error) {
 	filter := domain.TeamFilter{
 		Name:           c.Query("name"),
-		FederationName: c.Query("federation_name"),
-		FederationCode: c.Query("federation_code"),
+		FederationName: c.Query("federationName"),
+		FederationCode: c.Query("federationCode"),
 		Page:           defaultPage,
 		Size:           defaultSize,
 	}
@@ -108,14 +108,14 @@ func parseTeamFilter(c *gin.Context) (domain.TeamFilter, error) {
 		return domain.TeamFilter{}, errors.New("invalid size parameter")
 	}
 
-	if rawConfederationCode := c.Query("confederation_code"); rawConfederationCode != "" {
+	if rawConfederationCode := c.Query("confederationCode"); rawConfederationCode != "" {
 		filter.ConfederationCode = &rawConfederationCode
 	}
 
-	if rawIncludeDissolved := c.Query("include_dissolved"); rawIncludeDissolved != "" {
+	if rawIncludeDissolved := c.Query("includeDissolved"); rawIncludeDissolved != "" {
 		includeDissolved, err := strconv.ParseBool(rawIncludeDissolved)
 		if err != nil {
-			return domain.TeamFilter{}, errors.New("invalid include_dissolved parameter")
+			return domain.TeamFilter{}, errors.New("invalid includeDissolved parameter")
 		}
 		filter.IncludeDissolved = includeDissolved
 	}

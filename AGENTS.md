@@ -163,6 +163,13 @@ Todo endpoint que incluya paginado de datos debe respetar la siguiente estructur
 - Si `size` no se informa, usar `size=20`.
 - Si `page < 1`, `size < 1` o `size > 100`, retornar `400 Bad Request` con formato `{"error": "mensaje"}`.
 
+### Query params
+
+- Todos los query params deben usar `camelCase`.
+- Los parámetros de una sola palabra se mantienen sin cambios (`name`, `host`, `year`, `page`, `size`, etc.).
+- No introducir nuevos query params en `snake_case`.
+- Los mensajes de error asociados a query params deben referenciar el nombre `camelCase` del parámetro.
+
 ### Versionado y Commits (SemVer)
 
 El proyecto utiliza **go-semantic-release**. El agente debe redactar mensajes de commit siguiendo **Conventional Commits**:
