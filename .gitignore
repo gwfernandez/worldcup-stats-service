@@ -29,3 +29,11 @@ go.work.sum
 # OS
 .DS_Store
 Thumbs.db
+
+# temporary files
+.temp/
+.tmp/
+temp/
+tmp/
+*.temp
+*.tmp
