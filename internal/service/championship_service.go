@@ -54,6 +54,41 @@ func (s *championshipService) List(ctx context.Context, filter domain.Championsh
 	}, nil
 }
 
+// ListTeamsByYear returns a paginated and filtered list of teams for a championship year.
+func (s *championshipService) ListTeamsByYear(ctx context.Context, filter domain.ChampionshipTeamFilter) (*domain.ChampionshipTeamListResponse, error) {
+	if filter.Page < 1 {
+		return nil, fmt.Errorf("%w: page must be greater than or equal to 1", domain.ErrInvalidInput)
+	}
+	if filter.Size < 1 || filter.Size > 100 {
+		return nil, fmt.Errorf("%w: size must be between 1 and 100", domain.ErrInvalidInput)
+	}
+
+	data, totalElements, err := s.repo.ListTeamsByYear(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+	totalPages := int(math.Ceil(float64(totalElements) / float64(filter.Size)))
+	if totalElements == 0 {
+		totalPages = 0
+	}
+
+	if data == nil {
+		data = make([]domain.ChampionshipTeam, 0)
+	}
+
+	return &domain.ChampionshipTeamListResponse{
+		Data: data,
+		Pagination: domain.PaginationInfo{
+			Page:          filter.Page,
+			Size:          filter.Size,
+			TotalElements: totalElements,
+			TotalPages:    totalPages,
+			HasNext:       filter.Page < totalPages,
+			HasPrevious:   filter.Page > 1,
+		},
+	}, nil
+}
+
 // GetByYear returns a championship by its year, filling stats with default values if they don't exist.
 func (s *championshipService) GetByYear(ctx context.Context, year int) (*domain.Championship, error) {
 	championship, err := s.repo.GetByYear(ctx, year)

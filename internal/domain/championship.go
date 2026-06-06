@@ -40,8 +40,34 @@ type ChampionshipFilter struct {
 	Size              int
 }
 
+// ChampionshipTeam represents a team that participated in a championship edition.
+type ChampionshipTeam struct {
+	Year              int    `json:"year"`
+	TeamCode          string `json:"team_code"`
+	ConfederationCode string `json:"confederation_code"`
+	GroupCode         string `json:"group_code"`
+	StageReached      string `json:"stage_reached"`
+	Managers          string `json:"managers"`
+}
+
+// ChampionshipTeamFilter represents filters for listing championship teams.
+type ChampionshipTeamFilter struct {
+	Year              int
+	Name              string
+	ConfederationCode string
+	GroupCode         string
+	Page              int
+	Size              int
+}
+
 // ChampionshipListResponse represents the JSON response for listing championships.
 type ChampionshipListResponse struct {
 	Data       []Championship `json:"data"`
 	Pagination PaginationInfo `json:"pagination"`
+}
+
+// ChampionshipTeamListResponse represents the JSON response for listing championship teams.
+type ChampionshipTeamListResponse struct {
+	Data       []ChampionshipTeam `json:"data"`
+	Pagination PaginationInfo     `json:"pagination"`
 }

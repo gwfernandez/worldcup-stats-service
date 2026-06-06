@@ -69,6 +69,41 @@ func (r *championshipRepository) GetByYear(ctx context.Context, year int) (*doma
 	return &championship, nil
 }
 
+// ListTeamsByYear retrieves a paginated list of teams that participated in a championship year.
+func (r *championshipRepository) ListTeamsByYear(ctx context.Context, filter domain.ChampionshipTeamFilter) ([]domain.ChampionshipTeam, int64, error) {
+	total, err := r.queries.CountChampionshipTeamsByYear(ctx, sqlc.CountChampionshipTeamsByYearParams{
+		Year:    int32(filter.Year),
+		Column2: filter.Name,
+		Column3: filter.ConfederationCode,
+		Column4: filter.GroupCode,
+	})
+	if err != nil {
+		return nil, 0, err
+	}
+
+	limit := int32(filter.Size)
+	offset := int32((filter.Page - 1) * filter.Size)
+
+	rows, err := r.queries.ListChampionshipTeamsByYear(ctx, sqlc.ListChampionshipTeamsByYearParams{
+		Year:    int32(filter.Year),
+		Column2: filter.Name,
+		Column3: filter.ConfederationCode,
+		Column4: filter.GroupCode,
+		Limit:   limit,
+		Offset:  offset,
+	})
+	if err != nil {
+		return nil, 0, err
+	}
+
+	teams := make([]domain.ChampionshipTeam, len(rows))
+	for i, row := range rows {
+		teams[i] = toChampionshipTeamDomain(row)
+	}
+
+	return teams, total, nil
+}
+
 func toChampionshipDomain(row sqlc.Championship) domain.Championship {
 	var championCode *string
 	if row.ChampionCode.Valid {
@@ -132,6 +167,22 @@ func toChampionshipDetailDomain(row sqlc.GetChampionshipByYearRow) domain.Champi
 	}
 
 	return c
+}
+
+func toChampionshipTeamDomain(row sqlc.ListChampionshipTeamsByYearRow) domain.ChampionshipTeam {
+	groupCode := ""
+	if row.GroupCode.Valid {
+		groupCode = row.GroupCode.String
+	}
+
+	return domain.ChampionshipTeam{
+		Year:              int(row.Year),
+		TeamCode:          strings.ToUpper(row.TeamCode),
+		ConfederationCode: strings.ToUpper(row.ConfederationCode),
+		GroupCode:         strings.ToUpper(groupCode),
+		StageReached:      row.StageReached,
+		Managers:          row.Managers,
+	}
 }
 
 func dateToString(date pgtype.Date) string {

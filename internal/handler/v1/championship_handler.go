@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 
@@ -27,6 +28,7 @@ func (h *ChampionshipHandler) RegisterRoutes(rg *gin.RouterGroup) {
 	{
 		championships.GET("", h.List)
 		championships.GET("/:year", h.GetByYear)
+		championships.GET("/:year/teams", h.ListTeamsByYear)
 	}
 }
 
@@ -80,6 +82,31 @@ func (h *ChampionshipHandler) GetByYear(c *gin.Context) {
 	c.JSON(http.StatusOK, championship)
 }
 
+// ListTeamsByYear godoc
+// @Summary List teams that participated in a championship year with filters and pagination
+// @Produce json
+// @Param year path int true "Championship Year"
+// @Router /api/championships/{year}/teams [get]
+func (h *ChampionshipHandler) ListTeamsByYear(c *gin.Context) {
+	filter, err := parseChampionshipTeamFilter(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	response, err := h.service.ListTeamsByYear(c.Request.Context(), filter)
+	if err != nil {
+		if errors.Is(err, domain.ErrInvalidInput) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to retrieve championship teams"})
+		return
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
 func parseChampionshipFilter(c *gin.Context) (domain.ChampionshipFilter, error) {
 	filter := domain.ChampionshipFilter{
 		Host:              c.Query("host"),
@@ -117,6 +144,47 @@ func parseChampionshipFilter(c *gin.Context) (domain.ChampionshipFilter, error) 
 			return domain.ChampionshipFilter{}, errors.New("invalid year parameter")
 		}
 		filter.Year = year
+	}
+
+	return filter, nil
+}
+
+func parseChampionshipTeamFilter(c *gin.Context) (domain.ChampionshipTeamFilter, error) {
+	year, err := strconv.Atoi(c.Param("year"))
+	if err != nil {
+		return domain.ChampionshipTeamFilter{}, errors.New("invalid year parameter")
+	}
+
+	filter := domain.ChampionshipTeamFilter{
+		Year:              year,
+		Name:              c.Query("name"),
+		ConfederationCode: strings.ToUpper(c.Query("confederation_code")),
+		GroupCode:         strings.ToUpper(c.Query("group_code")),
+		Page:              defaultPage,
+		Size:              defaultSize,
+	}
+
+	if rawPage := c.Query("page"); rawPage != "" {
+		page, err := strconv.Atoi(rawPage)
+		if err != nil {
+			return domain.ChampionshipTeamFilter{}, errors.New("invalid page parameter")
+		}
+		filter.Page = page
+	}
+
+	if rawSize := c.Query("size"); rawSize != "" {
+		size, err := strconv.Atoi(rawSize)
+		if err != nil {
+			return domain.ChampionshipTeamFilter{}, errors.New("invalid size parameter")
+		}
+		filter.Size = size
+	}
+
+	if filter.Page < 1 {
+		return domain.ChampionshipTeamFilter{}, errors.New("invalid page parameter")
+	}
+	if filter.Size < 1 || filter.Size > maxSize {
+		return domain.ChampionshipTeamFilter{}, errors.New("invalid size parameter")
 	}
 
 	return filter, nil
