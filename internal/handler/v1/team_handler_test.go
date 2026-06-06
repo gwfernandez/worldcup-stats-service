@@ -50,7 +50,19 @@ func TestTeamHandler_List(t *testing.T) {
 		svc := new(MockTeamService)
 		r := setupTeamRouter(svc)
 
-		expected := &domain.TeamListResponse{Pagination: domain.PaginationInfo{Page: 1, Size: 20, TotalElements: 1, TotalPages: 1, HasNext: false, HasPrevious: false}}
+		dissolutionDate := "1991-12-26"
+		expected := &domain.TeamListResponse{
+			Data: []domain.Team{{
+				Code:              "URS",
+				Name:              "Soviet Union",
+				IsDissolved:       true,
+				ConfederationCode: "UEFA",
+				FederationName:    "Football Federation of the USSR",
+				FederationCode:    "FFUSSR",
+				DissolutionDate:   &dissolutionDate,
+			}},
+			Pagination: domain.PaginationInfo{Page: 1, Size: 20, TotalElements: 1, TotalPages: 1, HasNext: false, HasPrevious: false},
+		}
 		svc.On("List", mock.Anything, domain.TeamFilter{
 			Name:           "argen",
 			FederationName: "",
@@ -64,6 +76,25 @@ func TestTeamHandler_List(t *testing.T) {
 		r.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
+		assert.JSONEq(t, `{
+			"data": [{
+				"code": "URS",
+				"name": "Soviet Union",
+				"isDissolved": true,
+				"confederationCode": "UEFA",
+				"federationName": "Football Federation of the USSR",
+				"federationCode": "FFUSSR",
+				"dissolutionDate": "1991-12-26"
+			}],
+			"pagination": {
+				"page": 1,
+				"size": 20,
+				"totalElements": 1,
+				"totalPages": 1,
+				"hasNext": false,
+				"hasPrevious": false
+			}
+		}`, w.Body.String())
 	})
 
 	t.Run("bad request invalid page", func(t *testing.T) {
@@ -93,7 +124,7 @@ func TestTeamHandler_List(t *testing.T) {
 		r := setupTeamRouter(svc)
 
 		confederationCode := "CONMEBOL"
-		expected := &domain.TeamListResponse{Pagination: domain.PaginationInfo{Page: 1, Size: 20, TotalElements: 1, TotalPages: 1, HasNext: false, HasPrevious: false}}
+		expected := &domain.TeamListResponse{Data: []domain.Team{}, Pagination: domain.PaginationInfo{Page: 1, Size: 20, TotalElements: 1, TotalPages: 1, HasNext: false, HasPrevious: false}}
 		svc.On("List", mock.Anything, domain.TeamFilter{
 			Name:              "",
 			ConfederationCode: &confederationCode,
@@ -108,6 +139,17 @@ func TestTeamHandler_List(t *testing.T) {
 		r.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
+		assert.JSONEq(t, `{
+			"data": [],
+			"pagination": {
+				"page": 1,
+				"size": 20,
+				"totalElements": 1,
+				"totalPages": 1,
+				"hasNext": false,
+				"hasPrevious": false
+			}
+		}`, w.Body.String())
 	})
 
 	t.Run("bad request invalid include_dissolved", func(t *testing.T) {
@@ -146,7 +188,14 @@ func TestTeamHandler_GetByCode(t *testing.T) {
 		svc := new(MockTeamService)
 		r := setupTeamRouter(svc)
 
-		expected := &domain.Team{Code: "URS", Name: "Soviet Union"}
+		expected := &domain.Team{
+			Code:              "URS",
+			Name:              "Soviet Union",
+			IsDissolved:       true,
+			ConfederationCode: "UEFA",
+			FederationName:    "Football Federation of the USSR",
+			FederationCode:    "FFUSSR",
+		}
 		svc.On("GetByCode", mock.Anything, "urs").Return(expected, nil)
 
 		req, _ := http.NewRequest(http.MethodGet, "/api/teams/urs", nil)
@@ -154,6 +203,15 @@ func TestTeamHandler_GetByCode(t *testing.T) {
 		r.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
+		assert.JSONEq(t, `{
+			"code": "URS",
+			"name": "Soviet Union",
+			"isDissolved": true,
+			"confederationCode": "UEFA",
+			"federationName": "Football Federation of the USSR",
+			"federationCode": "FFUSSR",
+			"dissolutionDate": null
+		}`, w.Body.String())
 	})
 
 	t.Run("not found", func(t *testing.T) {

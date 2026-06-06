@@ -147,16 +147,17 @@ Todo endpoint que incluya paginado de datos debe respetar la siguiente estructur
   "pagination": {
     "page": 1,
     "size": 30,
-    "total_elements": 22,
-    "total_pages": 1,
-    "has_next": false,
-    "has_previous": false
+    "totalElements": 22,
+    "totalPages": 1,
+    "hasNext": false,
+    "hasPrevious": false
   }
 }
 ```
 
+- Todas las propiedades de respuesta JSON deben usar `camelCase`.
 - `data` debe ser siempre un array con el resultado a responder.
-- `pagination` debe incluir siempre la información de paginación (`page`, `size`, `total_elements`, `total_pages`, `has_next`, `has_previous`).
+- `pagination` debe incluir siempre la información de paginación (`page`, `size`, `totalElements`, `totalPages`, `hasNext`, `hasPrevious`).
 - Para futuros endpoints paginados, `page` y `size` son opcionales salvo que el requerimiento indique explícitamente otra cosa.
 - Si `page` no se informa, usar `page=1`.
 - Si `size` no se informa, usar `size=20`.

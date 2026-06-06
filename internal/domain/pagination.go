@@ -4,8 +4,8 @@ package domain
 type PaginationInfo struct {
 	Page          int   `json:"page"`
 	Size          int   `json:"size"`
-	TotalElements int64 `json:"total_elements"`
-	TotalPages    int   `json:"total_pages"`
-	HasNext       bool  `json:"has_next"`
-	HasPrevious   bool  `json:"has_previous"`
+	TotalElements int64 `json:"totalElements"`
+	TotalPages    int   `json:"totalPages"`
+	HasNext       bool  `json:"hasNext"`
+	HasPrevious   bool  `json:"hasPrevious"`
 }

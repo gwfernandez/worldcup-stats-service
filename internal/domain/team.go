@@ -4,11 +4,11 @@ package domain
 type Team struct {
 	Code              string  `json:"code"`
 	Name              string  `json:"name"`
-	IsDissolved       bool    `json:"is_dissolved"`
-	ConfederationCode string  `json:"confederation_code"`
-	FederationName    string  `json:"federation_name"`
-	FederationCode    string  `json:"federation_code"`
-	DissolutionDate   *string `json:"dissolution_date"`
+	IsDissolved       bool    `json:"isDissolved"`
+	ConfederationCode string  `json:"confederationCode"`
+	FederationName    string  `json:"federationName"`
+	FederationCode    string  `json:"federationCode"`
+	DissolutionDate   *string `json:"dissolutionDate"`
 }
 
 // TeamFilter defines supported filters for listing teams.
