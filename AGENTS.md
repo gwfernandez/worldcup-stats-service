@@ -105,6 +105,8 @@ GIN_MODE=debug   # usar "release" en producción
 | Estadísticas de Mundial | `championships_stats` | Datos estadísticos de la edición (goles, partidos, podio) |
 | Partido | `matches` | Encuentros entre dos selecciones |
 | Estadísticas de Grupo | `championships_groups_stats` | Tabla de posiciones por grupo y etapa |
+| Estadio | `stadiums` | Estadios utilizados en las ediciones del mundial |
+| Estadísticas de Estadio por Mundial | `championships_stadiums_stats` | Cantidad de partidos disputados por estadio y edición |
 
 ### Planificadas
 
@@ -222,6 +224,7 @@ El flujo principal debe ejecutarse en este orden:
 | `GET` | `/api/championships` | Listar todas las ediciones de los mundiales con filtros |
 | `GET` | `/api/championships/:year` | Obtener detalle de una edición por año con estadísticas |
 | `GET` | `/api/championships/:year/fixture` | Obtener fixture completo de una edición por año |
+| `GET` | `/api/championships/:year/stadiums` | Listar estadios utilizados de una edición con filtros |
 
 ---
 
