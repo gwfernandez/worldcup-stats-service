@@ -11,6 +11,26 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const countChampionshipStadiumsByYear = `-- name: CountChampionshipStadiumsByYear :one
+SELECT COUNT(*)
+FROM championships_stadiums_stats css
+INNER JOIN stadiums s ON s.id = css.stadium_id
+WHERE css.year = $1
+    AND ($2::text = '' OR LOWER(s.name) LIKE '%' || LOWER($2) || '%')
+`
+
+type CountChampionshipStadiumsByYearParams struct {
+	Year    int32
+	Column2 string
+}
+
+func (q *Queries) CountChampionshipStadiumsByYear(ctx context.Context, arg CountChampionshipStadiumsByYearParams) (int64, error) {
+	row := q.db.QueryRow(ctx, countChampionshipStadiumsByYear, arg.Year, arg.Column2)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const countChampionshipTeamsByYear = `-- name: CountChampionshipTeamsByYear :one
 SELECT COUNT(*)
 FROM championships_teams ct
@@ -137,6 +157,70 @@ func (q *Queries) GetChampionshipByYear(ctx context.Context, year int32) (GetCha
 		&i.TopScorerGoals,
 	)
 	return i, err
+}
+
+const listChampionshipStadiumsByYear = `-- name: ListChampionshipStadiumsByYear :many
+SELECT
+    css.year,
+    s.id,
+    s.name,
+    COALESCE(s.city_name, '')::text AS city_name,
+    COALESCE(s.capacity, 0)::integer AS capacity,
+    css.matches_played
+FROM championships_stadiums_stats css
+INNER JOIN stadiums s ON s.id = css.stadium_id
+WHERE css.year = $1
+    AND ($2::text = '' OR LOWER(s.name) LIKE '%' || LOWER($2) || '%')
+ORDER BY css.matches_played DESC, s.name ASC
+LIMIT $3 OFFSET $4
+`
+
+type ListChampionshipStadiumsByYearParams struct {
+	Year    int32
+	Column2 string
+	Limit   int32
+	Offset  int32
+}
+
+type ListChampionshipStadiumsByYearRow struct {
+	Year          int32
+	ID            int64
+	Name          string
+	CityName      string
+	Capacity      int32
+	MatchesPlayed int32
+}
+
+func (q *Queries) ListChampionshipStadiumsByYear(ctx context.Context, arg ListChampionshipStadiumsByYearParams) ([]ListChampionshipStadiumsByYearRow, error) {
+	rows, err := q.db.Query(ctx, listChampionshipStadiumsByYear,
+		arg.Year,
+		arg.Column2,
+		arg.Limit,
+		arg.Offset,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListChampionshipStadiumsByYearRow
+	for rows.Next() {
+		var i ListChampionshipStadiumsByYearRow
+		if err := rows.Scan(
+			&i.Year,
+			&i.ID,
+			&i.Name,
+			&i.CityName,
+			&i.Capacity,
+			&i.MatchesPlayed,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const listChampionshipTeamsByYear = `-- name: ListChampionshipTeamsByYear :many

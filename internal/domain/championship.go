@@ -60,6 +60,24 @@ type ChampionshipTeamFilter struct {
 	Size              int
 }
 
+// ChampionshipStadium represents a stadium used in a championship edition.
+type ChampionshipStadium struct {
+	Year          int    `json:"year"`
+	ID            int64  `json:"id"`
+	Name          string `json:"name"`
+	CityName      string `json:"cityName"`
+	Capacity      int32  `json:"capacity"`
+	MatchesPlayed int32  `json:"matchesPlayed"`
+}
+
+// ChampionshipStadiumFilter represents filters for listing championship stadiums.
+type ChampionshipStadiumFilter struct {
+	Year int
+	Name string
+	Page int
+	Size int
+}
+
 // ChampionshipListResponse represents the JSON response for listing championships.
 type ChampionshipListResponse struct {
 	Data       []Championship `json:"data"`
@@ -70,4 +88,10 @@ type ChampionshipListResponse struct {
 type ChampionshipTeamListResponse struct {
 	Data       []ChampionshipTeam `json:"data"`
 	Pagination PaginationInfo     `json:"pagination"`
+}
+
+// ChampionshipStadiumListResponse represents the JSON response for listing championship stadiums.
+type ChampionshipStadiumListResponse struct {
+	Data       []ChampionshipStadium `json:"data"`
+	Pagination PaginationInfo        `json:"pagination"`
 }

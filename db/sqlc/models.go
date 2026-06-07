@@ -39,6 +39,12 @@ type ChampionshipsManager struct {
 	ManagerID int64
 }
 
+type ChampionshipsStadiumsStat struct {
+	Year          int32
+	StadiumID     int64
+	MatchesPlayed int32
+}
+
 type ChampionshipsStat struct {
 	Year            int32
 	TotalTeams      int32
@@ -116,8 +122,13 @@ type Match struct {
 }
 
 type Stadium struct {
-	ID   int64
-	Name string
+	ID            int64
+	Name          string
+	CityName      pgtype.Text
+	Country       pgtype.Text
+	Capacity      pgtype.Int4
+	WikipediaLink pgtype.Text
+	RefID         pgtype.Text
 }
 
 type Team struct {
