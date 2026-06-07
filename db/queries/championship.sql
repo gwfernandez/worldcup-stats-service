@@ -106,3 +106,34 @@ WHERE ct.year = $1
     AND ($2::text = '' OR LOWER(t.name) LIKE '%' || LOWER($2) || '%')
     AND ($3::text = '' OR t.confederation_code = $3)
     AND ($4::text = '' OR cts.group_code = $4);
+
+-- name: ListChampionshipScorersByYear :many
+SELECT
+    TRIM(CONCAT_WS(' ', NULLIF(p.first_name, ''), NULLIF(p.last_name, '')))::text AS full_name,
+    ss.team_code,
+    ss.goals
+FROM squads_stats ss
+INNER JOIN players p ON p.id = ss.player_id
+WHERE ss.year = $1
+    AND ss.goals > 0
+    AND (
+        $2::text = ''
+        OR LOWER(p.first_name) LIKE '%' || LOWER($2) || '%'
+        OR LOWER(p.last_name) LIKE '%' || LOWER($2) || '%'
+    )
+    AND ($3::text = '' OR ss.team_code = $3)
+ORDER BY ss.goals DESC, full_name ASC
+LIMIT $4 OFFSET $5;
+
+-- name: CountChampionshipScorersByYear :one
+SELECT COUNT(*)
+FROM squads_stats ss
+INNER JOIN players p ON p.id = ss.player_id
+WHERE ss.year = $1
+    AND ss.goals > 0
+    AND (
+        $2::text = ''
+        OR LOWER(p.first_name) LIKE '%' || LOWER($2) || '%'
+        OR LOWER(p.last_name) LIKE '%' || LOWER($2) || '%'
+    )
+    AND ($3::text = '' OR ss.team_code = $3);
