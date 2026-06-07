@@ -105,13 +105,15 @@ GIN_MODE=debug   # usar "release" en producción
 | Estadísticas de Mundial | `championships_stats` | Datos estadísticos de la edición (goles, partidos, podio) |
 | Partido | `matches` | Encuentros entre dos selecciones |
 | Estadísticas de Grupo | `championships_groups_stats` | Tabla de posiciones por grupo y etapa |
+| Jugador | `players` | Jugadores participantes |
+| Plantel | `squads` | Relación de jugadores por selección y mundial |
+| Estadísticas de Plantel | `squads_stats` | Estadísticas de jugadores por selección y mundial |
 
 ### Planificadas
 
 | Entidad | Tabla | Descripción |
 |---------|-------|-------------|
 | Selección | `teams` | Selecciones nacionales participantes |
-| Jugador | `players` | Jugadores participantes |
 | Gol | `goals` | Goles por partido y jugador |
 
 ---
@@ -222,6 +224,8 @@ El flujo principal debe ejecutarse en este orden:
 | `GET` | `/api/championships` | Listar todas las ediciones de los mundiales con filtros |
 | `GET` | `/api/championships/:year` | Obtener detalle de una edición por año con estadísticas |
 | `GET` | `/api/championships/:year/fixture` | Obtener fixture completo de una edición por año |
+| `GET` | `/api/championships/:year/teams` | Listar selecciones participantes de una edición con filtros |
+| `GET` | `/api/championships/:year/scores` | Listar goleadores de una edición con filtros |
 
 ---
 
