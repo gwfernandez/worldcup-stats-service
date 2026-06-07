@@ -29,7 +29,7 @@ func (h *ChampionshipHandler) RegisterRoutes(rg *gin.RouterGroup) {
 		championships.GET("", h.List)
 		championships.GET("/:year", h.GetByYear)
 		championships.GET("/:year/teams", h.ListTeamsByYear)
-		championships.GET("/:year/scores", h.ListScorersByYear)
+		championships.GET("/:year/scorers", h.ListScorersByYear)
 	}
 }
 
@@ -112,7 +112,7 @@ func (h *ChampionshipHandler) ListTeamsByYear(c *gin.Context) {
 // @Summary List scorers for a championship year with filters and pagination
 // @Produce json
 // @Param year path int true "Championship Year"
-// @Router /api/championships/{year}/scores [get]
+// @Router /api/championships/{year}/scorers [get]
 func (h *ChampionshipHandler) ListScorersByYear(c *gin.Context) {
 	filter, err := parseChampionshipScorerFilter(c)
 	if err != nil {

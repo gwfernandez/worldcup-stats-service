@@ -88,7 +88,7 @@ func TestChampionshipHandler_ListScorersByYear(t *testing.T) {
 			Size:     20,
 		}).Return(expected, nil)
 
-		req, _ := http.NewRequest(http.MethodGet, "/api/championships/1930/scores?name=guille&teamCode=arg", nil)
+		req, _ := http.NewRequest(http.MethodGet, "/api/championships/1930/scorers?name=guille&teamCode=arg", nil)
 		w := httptest.NewRecorder()
 		r.ServeHTTP(w, req)
 
@@ -131,7 +131,7 @@ func TestChampionshipHandler_ListScorersByYear(t *testing.T) {
 			Size: 10,
 		}).Return(expected, nil)
 
-		req, _ := http.NewRequest(http.MethodGet, "/api/championships/1930/scores?page=2&size=10", nil)
+		req, _ := http.NewRequest(http.MethodGet, "/api/championships/1930/scorers?page=2&size=10", nil)
 		w := httptest.NewRecorder()
 		r.ServeHTTP(w, req)
 
@@ -143,7 +143,7 @@ func TestChampionshipHandler_ListScorersByYear(t *testing.T) {
 		svc := new(MockChampionshipService)
 		r := setupChampionshipRouter(svc)
 
-		req, _ := http.NewRequest(http.MethodGet, "/api/championships/abc/scores", nil)
+		req, _ := http.NewRequest(http.MethodGet, "/api/championships/abc/scorers", nil)
 		w := httptest.NewRecorder()
 		r.ServeHTTP(w, req)
 
@@ -155,7 +155,7 @@ func TestChampionshipHandler_ListScorersByYear(t *testing.T) {
 		svc := new(MockChampionshipService)
 		r := setupChampionshipRouter(svc)
 
-		req, _ := http.NewRequest(http.MethodGet, "/api/championships/1930/scores?page=0", nil)
+		req, _ := http.NewRequest(http.MethodGet, "/api/championships/1930/scorers?page=0", nil)
 		w := httptest.NewRecorder()
 		r.ServeHTTP(w, req)
 
@@ -167,7 +167,7 @@ func TestChampionshipHandler_ListScorersByYear(t *testing.T) {
 		svc := new(MockChampionshipService)
 		r := setupChampionshipRouter(svc)
 
-		req, _ := http.NewRequest(http.MethodGet, "/api/championships/1930/scores?size=101", nil)
+		req, _ := http.NewRequest(http.MethodGet, "/api/championships/1930/scorers?size=101", nil)
 		w := httptest.NewRecorder()
 		r.ServeHTTP(w, req)
 
@@ -181,7 +181,7 @@ func TestChampionshipHandler_ListScorersByYear(t *testing.T) {
 
 		svc.On("ListScorersByYear", mock.Anything, mock.Anything).Return(nil, domain.ErrInvalidInput)
 
-		req, _ := http.NewRequest(http.MethodGet, "/api/championships/1930/scores", nil)
+		req, _ := http.NewRequest(http.MethodGet, "/api/championships/1930/scorers", nil)
 		w := httptest.NewRecorder()
 		r.ServeHTTP(w, req)
 
@@ -194,7 +194,7 @@ func TestChampionshipHandler_ListScorersByYear(t *testing.T) {
 
 		svc.On("ListScorersByYear", mock.Anything, mock.Anything).Return(nil, errors.New("db error"))
 
-		req, _ := http.NewRequest(http.MethodGet, "/api/championships/1930/scores", nil)
+		req, _ := http.NewRequest(http.MethodGet, "/api/championships/1930/scorers", nil)
 		w := httptest.NewRecorder()
 		r.ServeHTTP(w, req)
 

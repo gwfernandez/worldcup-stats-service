@@ -225,7 +225,7 @@ El flujo principal debe ejecutarse en este orden:
 | `GET` | `/api/championships/:year` | Obtener detalle de una edición por año con estadísticas |
 | `GET` | `/api/championships/:year/fixture` | Obtener fixture completo de una edición por año |
 | `GET` | `/api/championships/:year/teams` | Listar selecciones participantes de una edición con filtros |
-| `GET` | `/api/championships/:year/scores` | Listar goleadores de una edición con filtros |
+| `GET` | `/api/championships/:year/scorers` | Listar goleadores de una edición con filtros |
 
 ---
 
