@@ -158,6 +158,21 @@ type Stadium struct {
 	RefID         pgtype.Text
 }
 
+type Standing struct {
+	TeamCode        string
+	MatchesPlayed   int32
+	Wins            int32
+	Draws           int32
+	Losses          int32
+	GoalsFor        int32
+	GoalsAgainst    int32
+	GoalDifference  int32
+	Points          int32
+	UnifiedPoints   int32
+	Position        int32
+	UnifiedPosition int32
+}
+
 type Team struct {
 	Code              string
 	Name              string
