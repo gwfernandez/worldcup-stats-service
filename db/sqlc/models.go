@@ -121,6 +121,33 @@ type Match struct {
 	StageType              interface{}
 }
 
+type Player struct {
+	ID          int64
+	FirstName   pgtype.Text
+	LastName    pgtype.Text
+	Nationality pgtype.Text
+	BirthDate   pgtype.Date
+	DeathDate   pgtype.Date
+	Wikipedia   pgtype.Text
+	RefID       pgtype.Text
+}
+
+type Squad struct {
+	Year        int32
+	TeamCode    string
+	PlayerID    int64
+	ShirtNumber pgtype.Int4
+	Position    pgtype.Text
+}
+
+type SquadsStat struct {
+	Year        int32
+	TeamCode    string
+	PlayerID    int64
+	Appearances int32
+	Goals       int32
+}
+
 type Stadium struct {
 	ID            int64
 	Name          string

@@ -50,6 +50,14 @@ func (m *MockChampionshipRepository) ListStadiumsByYear(ctx context.Context, fil
 	return args.Get(0).([]domain.ChampionshipStadium), args.Get(1).(int64), args.Error(2)
 }
 
+func (m *MockChampionshipRepository) ListScorersByYear(ctx context.Context, filter domain.ChampionshipScorerFilter) ([]domain.ChampionshipScorer, int64, error) {
+	args := m.Called(ctx, filter)
+	if args.Get(0) == nil {
+		return nil, args.Get(1).(int64), args.Error(2)
+	}
+	return args.Get(0).([]domain.ChampionshipScorer), args.Get(1).(int64), args.Error(2)
+}
+
 func TestChampionshipService_List(t *testing.T) {
 	ctx := context.Background()
 
@@ -310,6 +318,98 @@ func TestChampionshipService_ListStadiumsByYear(t *testing.T) {
 		mockRepo.On("ListStadiumsByYear", ctx, filter).Return(nil, int64(0), errors.New("db error"))
 
 		res, err := svc.ListStadiumsByYear(ctx, filter)
+		assert.Error(t, err)
+		assert.Nil(t, res)
+		mockRepo.AssertExpectations(t)
+	})
+}
+
+func TestChampionshipService_ListScorersByYear(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("success", func(t *testing.T) {
+		mockRepo := new(MockChampionshipRepository)
+		svc := service.NewChampionshipService(mockRepo)
+		filter := domain.ChampionshipScorerFilter{Year: 1930, TeamCode: "ARG", Page: 1, Size: 10}
+
+		expected := []domain.ChampionshipScorer{
+			{FullName: "Guillermo Stabile", TeamCode: "ARG", Goals: 8},
+			{FullName: "Carlos Peucelle", TeamCode: "ARG", Goals: 3},
+		}
+		mockRepo.On("ListScorersByYear", ctx, filter).Return(expected, int64(13), nil)
+
+		res, err := svc.ListScorersByYear(ctx, filter)
+		assert.NoError(t, err)
+		require.NotNil(t, res)
+		assert.Len(t, res.Data, 2)
+		assert.Equal(t, 1, res.Pagination.Page)
+		assert.Equal(t, 10, res.Pagination.Size)
+		assert.Equal(t, int64(13), res.Pagination.TotalElements)
+		assert.Equal(t, 2, res.Pagination.TotalPages)
+		assert.True(t, res.Pagination.HasNext)
+		assert.False(t, res.Pagination.HasPrevious)
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("empty response", func(t *testing.T) {
+		mockRepo := new(MockChampionshipRepository)
+		svc := service.NewChampionshipService(mockRepo)
+		filter := domain.ChampionshipScorerFilter{Year: 9999, Page: 1, Size: 20}
+
+		mockRepo.On("ListScorersByYear", ctx, filter).Return(nil, int64(0), nil)
+
+		res, err := svc.ListScorersByYear(ctx, filter)
+		assert.NoError(t, err)
+		require.NotNil(t, res)
+		assert.Empty(t, res.Data)
+		assert.NotNil(t, res.Data)
+		assert.Equal(t, 0, res.Pagination.TotalPages)
+		assert.False(t, res.Pagination.HasNext)
+		assert.False(t, res.Pagination.HasPrevious)
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("invalid pagination page", func(t *testing.T) {
+		mockRepo := new(MockChampionshipRepository)
+		svc := service.NewChampionshipService(mockRepo)
+		filter := domain.ChampionshipScorerFilter{Year: 1930, Page: 0, Size: 20}
+
+		res, err := svc.ListScorersByYear(ctx, filter)
+		assert.Error(t, err)
+		assert.True(t, errors.Is(err, domain.ErrInvalidInput))
+		assert.Nil(t, res)
+	})
+
+	t.Run("invalid pagination size too small", func(t *testing.T) {
+		mockRepo := new(MockChampionshipRepository)
+		svc := service.NewChampionshipService(mockRepo)
+		filter := domain.ChampionshipScorerFilter{Year: 1930, Page: 1, Size: 0}
+
+		res, err := svc.ListScorersByYear(ctx, filter)
+		assert.Error(t, err)
+		assert.True(t, errors.Is(err, domain.ErrInvalidInput))
+		assert.Nil(t, res)
+	})
+
+	t.Run("invalid pagination size too large", func(t *testing.T) {
+		mockRepo := new(MockChampionshipRepository)
+		svc := service.NewChampionshipService(mockRepo)
+		filter := domain.ChampionshipScorerFilter{Year: 1930, Page: 1, Size: 101}
+
+		res, err := svc.ListScorersByYear(ctx, filter)
+		assert.Error(t, err)
+		assert.True(t, errors.Is(err, domain.ErrInvalidInput))
+		assert.Nil(t, res)
+	})
+
+	t.Run("repository error", func(t *testing.T) {
+		mockRepo := new(MockChampionshipRepository)
+		svc := service.NewChampionshipService(mockRepo)
+		filter := domain.ChampionshipScorerFilter{Year: 1930, Page: 1, Size: 20}
+
+		mockRepo.On("ListScorersByYear", ctx, filter).Return(nil, int64(0), errors.New("db error"))
+
+		res, err := svc.ListScorersByYear(ctx, filter)
 		assert.Error(t, err)
 		assert.Nil(t, res)
 		mockRepo.AssertExpectations(t)

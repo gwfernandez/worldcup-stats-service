@@ -11,6 +11,33 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const countChampionshipScorersByYear = `-- name: CountChampionshipScorersByYear :one
+SELECT COUNT(*)
+FROM squads_stats ss
+INNER JOIN players p ON p.id = ss.player_id
+WHERE ss.year = $1
+    AND ss.goals > 0
+    AND (
+        $2::text = ''
+        OR LOWER(p.first_name) LIKE '%' || LOWER($2) || '%'
+        OR LOWER(p.last_name) LIKE '%' || LOWER($2) || '%'
+    )
+    AND ($3::text = '' OR ss.team_code = $3)
+`
+
+type CountChampionshipScorersByYearParams struct {
+	Year    int32
+	Column2 string
+	Column3 string
+}
+
+func (q *Queries) CountChampionshipScorersByYear(ctx context.Context, arg CountChampionshipScorersByYearParams) (int64, error) {
+	row := q.db.QueryRow(ctx, countChampionshipScorersByYear, arg.Year, arg.Column2, arg.Column3)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const countChampionshipStadiumsByYear = `-- name: CountChampionshipStadiumsByYear :one
 SELECT COUNT(*)
 FROM championships_stadiums_stats css
@@ -157,6 +184,65 @@ func (q *Queries) GetChampionshipByYear(ctx context.Context, year int32) (GetCha
 		&i.TopScorerGoals,
 	)
 	return i, err
+}
+
+const listChampionshipScorersByYear = `-- name: ListChampionshipScorersByYear :many
+SELECT
+    TRIM(CONCAT_WS(' ', NULLIF(p.first_name, ''), NULLIF(p.last_name, '')))::text AS full_name,
+    ss.team_code,
+    ss.goals
+FROM squads_stats ss
+INNER JOIN players p ON p.id = ss.player_id
+WHERE ss.year = $1
+    AND ss.goals > 0
+    AND (
+        $2::text = ''
+        OR LOWER(p.first_name) LIKE '%' || LOWER($2) || '%'
+        OR LOWER(p.last_name) LIKE '%' || LOWER($2) || '%'
+    )
+    AND ($3::text = '' OR ss.team_code = $3)
+ORDER BY ss.goals DESC, full_name ASC
+LIMIT $4 OFFSET $5
+`
+
+type ListChampionshipScorersByYearParams struct {
+	Year    int32
+	Column2 string
+	Column3 string
+	Limit   int32
+	Offset  int32
+}
+
+type ListChampionshipScorersByYearRow struct {
+	FullName string
+	TeamCode string
+	Goals    int32
+}
+
+func (q *Queries) ListChampionshipScorersByYear(ctx context.Context, arg ListChampionshipScorersByYearParams) ([]ListChampionshipScorersByYearRow, error) {
+	rows, err := q.db.Query(ctx, listChampionshipScorersByYear,
+		arg.Year,
+		arg.Column2,
+		arg.Column3,
+		arg.Limit,
+		arg.Offset,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListChampionshipScorersByYearRow
+	for rows.Next() {
+		var i ListChampionshipScorersByYearRow
+		if err := rows.Scan(&i.FullName, &i.TeamCode, &i.Goals); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const listChampionshipStadiumsByYear = `-- name: ListChampionshipStadiumsByYear :many

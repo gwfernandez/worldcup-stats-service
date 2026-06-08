@@ -30,6 +30,7 @@ func (h *ChampionshipHandler) RegisterRoutes(rg *gin.RouterGroup) {
 		championships.GET("/:year", h.GetByYear)
 		championships.GET("/:year/teams", h.ListTeamsByYear)
 		championships.GET("/:year/stadiums", h.ListStadiumsByYear)
+		championships.GET("/:year/scorers", h.ListScorersByYear)
 	}
 }
 
@@ -133,6 +134,31 @@ func (h *ChampionshipHandler) ListStadiumsByYear(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
+// ListScorersByYear godoc
+// @Summary List scorers for a championship year with filters and pagination
+// @Produce json
+// @Param year path int true "Championship Year"
+// @Router /api/championships/{year}/scorers [get]
+func (h *ChampionshipHandler) ListScorersByYear(c *gin.Context) {
+	filter, err := parseChampionshipScorerFilter(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	response, err := h.service.ListScorersByYear(c.Request.Context(), filter)
+	if err != nil {
+		if errors.Is(err, domain.ErrInvalidInput) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to retrieve championship scorers"})
+		return
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
 func parseChampionshipFilter(c *gin.Context) (domain.ChampionshipFilter, error) {
 	filter := domain.ChampionshipFilter{
 		Host:              c.Query("host"),
@@ -209,6 +235,46 @@ func parseChampionshipStadiumFilter(c *gin.Context) (domain.ChampionshipStadiumF
 	}
 	if filter.Size < 1 || filter.Size > maxSize {
 		return domain.ChampionshipStadiumFilter{}, errors.New("invalid size parameter")
+	}
+
+	return filter, nil
+}
+
+func parseChampionshipScorerFilter(c *gin.Context) (domain.ChampionshipScorerFilter, error) {
+	year, err := strconv.Atoi(c.Param("year"))
+	if err != nil {
+		return domain.ChampionshipScorerFilter{}, errors.New("invalid year parameter")
+	}
+
+	filter := domain.ChampionshipScorerFilter{
+		Year:     year,
+		Name:     c.Query("name"),
+		TeamCode: strings.ToUpper(c.Query("teamCode")),
+		Page:     defaultPage,
+		Size:     defaultSize,
+	}
+
+	if rawPage := c.Query("page"); rawPage != "" {
+		page, err := strconv.Atoi(rawPage)
+		if err != nil {
+			return domain.ChampionshipScorerFilter{}, errors.New("invalid page parameter")
+		}
+		filter.Page = page
+	}
+
+	if rawSize := c.Query("size"); rawSize != "" {
+		size, err := strconv.Atoi(rawSize)
+		if err != nil {
+			return domain.ChampionshipScorerFilter{}, errors.New("invalid size parameter")
+		}
+		filter.Size = size
+	}
+
+	if filter.Page < 1 {
+		return domain.ChampionshipScorerFilter{}, errors.New("invalid page parameter")
+	}
+	if filter.Size < 1 || filter.Size > maxSize {
+		return domain.ChampionshipScorerFilter{}, errors.New("invalid size parameter")
 	}
 
 	return filter, nil

@@ -12,4 +12,5 @@ type ChampionshipRepository interface {
 	GetByYear(ctx context.Context, year int) (*domain.Championship, error)
 	ListTeamsByYear(ctx context.Context, filter domain.ChampionshipTeamFilter) ([]domain.ChampionshipTeam, int64, error)
 	ListStadiumsByYear(ctx context.Context, filter domain.ChampionshipStadiumFilter) ([]domain.ChampionshipStadium, int64, error)
+	ListScorersByYear(ctx context.Context, filter domain.ChampionshipScorerFilter) ([]domain.ChampionshipScorer, int64, error)
 }
