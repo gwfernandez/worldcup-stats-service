@@ -252,6 +252,23 @@ Notas de respuesta:
 - `code` y `federationCode` se normalizan a mayúsculas.
 - Se incluye el campo calculado `isDissolved`.
 
+### Campeones Mundiales
+
+ | Método | Ruta | Descripción |
+ |--------|------|-------------|
+ | `GET` | `/api/champions` | Listar tabla histórica de campeones mundiales con paginación |
+
+Parámetros soportados para `/api/champions`:
+
+- `page`: número de página (base 1, por defecto `1`).
+- `size`: tamaño de página (por defecto `20`, máximo `100`).
+
+Notas de respuesta:
+
+- No soporta filtros.
+- Los resultados se ordenan por `wins` descendente y, ante empates, por `name` ascendente.
+- `years` se expone como array de números ordenado ascendentemente.
+
 ### Campeonatos Mundiales
 
  | Método | Ruta | Descripción |
@@ -349,6 +366,11 @@ curl -H "API-Version: 1" "http://localhost:8080/api/teams"
 **Filtrar selecciones por nombre y confederación**
 ```bash
 curl -H "API-Version: 1" "http://localhost:8080/api/teams?name=argen&confederationCode=CONMEBOL&page=1&size=20"
+```
+
+**Listar campeones mundiales**
+```bash
+curl -H "API-Version: 1" "http://localhost:8080/api/champions?page=1&size=10"
 ```
 
 **Listar campeonatos mundiales (orden cronológico ascendente)**
