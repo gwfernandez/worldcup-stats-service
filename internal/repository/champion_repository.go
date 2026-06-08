@@ -44,7 +44,7 @@ func (r *championRepository) List(ctx context.Context, filter domain.ChampionFil
 
 func toChampionDomain(row sqlc.ListChampionsRow) domain.Champion {
 	return domain.Champion{
-		TeamCode: strings.ToUpper(row.TeamCode.String),
+		TeamCode: strings.ToUpper(row.TeamCode),
 		Name:     row.Name,
 		Wins:     row.Wins,
 		Years:    row.Years,
