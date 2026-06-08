@@ -58,6 +58,22 @@ func (q *Queries) CountChampionshipStadiumsByYear(ctx context.Context, arg Count
 	return count, err
 }
 
+const countChampionshipStandingsByYear = `-- name: CountChampionshipStandingsByYear :one
+SELECT COUNT(*)
+FROM championships_teams ct
+INNER JOIN teams t ON t.code = ct.team_code
+INNER JOIN championships_teams_stats cts ON ct.year = cts.year AND ct.team_code = cts.team_code
+INNER JOIN championships_stats cs ON cs.year = ct.year
+WHERE ct.year = $1
+`
+
+func (q *Queries) CountChampionshipStandingsByYear(ctx context.Context, year int32) (int64, error) {
+	row := q.db.QueryRow(ctx, countChampionshipStandingsByYear, year)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const countChampionshipTeamsByYear = `-- name: CountChampionshipTeamsByYear :one
 SELECT COUNT(*)
 FROM championships_teams ct
@@ -298,6 +314,92 @@ func (q *Queries) ListChampionshipStadiumsByYear(ctx context.Context, arg ListCh
 			&i.CityName,
 			&i.Capacity,
 			&i.MatchesPlayed,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listChampionshipStandingsByYear = `-- name: ListChampionshipStandingsByYear :many
+SELECT
+    cts.team_code,
+    COALESCE(cts.group_code, '')::text AS group_code,
+    cts.matches_played,
+    cts.wins,
+    cts.draws,
+    cts.losses,
+    cts.goals_for,
+    cts.goals_against,
+    cts.goal_difference,
+    cts.points,
+    cts.unified_points,
+    cts.position,
+    COALESCE(CASE
+        WHEN ct.team_code = cs.champion_code THEN 'champion'
+        WHEN ct.team_code = cs.runner_up_code THEN 'runner_up'
+        WHEN ct.team_code = cs.third_place_code THEN 'third_place'
+        WHEN ct.team_code = cs.fourth_place_code THEN 'fourth_place'
+        ELSE cts.stage_reached::text
+    END, '')::text AS performance
+FROM championships_teams ct
+INNER JOIN teams t ON t.code = ct.team_code
+INNER JOIN championships_teams_stats cts ON ct.year = cts.year AND ct.team_code = cts.team_code
+INNER JOIN championships_stats cs ON cs.year = ct.year
+WHERE ct.year = $1
+ORDER BY cts.position ASC, cts.stage_reached
+LIMIT $2 OFFSET $3
+`
+
+type ListChampionshipStandingsByYearParams struct {
+	Year   int32
+	Limit  int32
+	Offset int32
+}
+
+type ListChampionshipStandingsByYearRow struct {
+	TeamCode       string
+	GroupCode      string
+	MatchesPlayed  int32
+	Wins           int32
+	Draws          int32
+	Losses         int32
+	GoalsFor       int32
+	GoalsAgainst   int32
+	GoalDifference pgtype.Int4
+	Points         int32
+	UnifiedPoints  int32
+	Position       pgtype.Int4
+	Performance    string
+}
+
+func (q *Queries) ListChampionshipStandingsByYear(ctx context.Context, arg ListChampionshipStandingsByYearParams) ([]ListChampionshipStandingsByYearRow, error) {
+	rows, err := q.db.Query(ctx, listChampionshipStandingsByYear, arg.Year, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListChampionshipStandingsByYearRow
+	for rows.Next() {
+		var i ListChampionshipStandingsByYearRow
+		if err := rows.Scan(
+			&i.TeamCode,
+			&i.GroupCode,
+			&i.MatchesPlayed,
+			&i.Wins,
+			&i.Draws,
+			&i.Losses,
+			&i.GoalsFor,
+			&i.GoalsAgainst,
+			&i.GoalDifference,
+			&i.Points,
+			&i.UnifiedPoints,
+			&i.Position,
+			&i.Performance,
 		); err != nil {
 			return nil, err
 		}

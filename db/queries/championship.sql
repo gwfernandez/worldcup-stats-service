@@ -107,6 +107,43 @@ WHERE ct.year = $1
     AND ($3::text = '' OR t.confederation_code = $3)
     AND ($4::text = '' OR cts.group_code = $4);
 
+-- name: ListChampionshipStandingsByYear :many
+SELECT
+    cts.team_code,
+    COALESCE(cts.group_code, '')::text AS group_code,
+    cts.matches_played,
+    cts.wins,
+    cts.draws,
+    cts.losses,
+    cts.goals_for,
+    cts.goals_against,
+    cts.goal_difference,
+    cts.points,
+    cts.unified_points,
+    cts.position,
+    COALESCE(CASE
+        WHEN ct.team_code = cs.champion_code THEN 'champion'
+        WHEN ct.team_code = cs.runner_up_code THEN 'runner_up'
+        WHEN ct.team_code = cs.third_place_code THEN 'third_place'
+        WHEN ct.team_code = cs.fourth_place_code THEN 'fourth_place'
+        ELSE cts.stage_reached::text
+    END, '')::text AS performance
+FROM championships_teams ct
+INNER JOIN teams t ON t.code = ct.team_code
+INNER JOIN championships_teams_stats cts ON ct.year = cts.year AND ct.team_code = cts.team_code
+INNER JOIN championships_stats cs ON cs.year = ct.year
+WHERE ct.year = $1
+ORDER BY cts.position ASC, cts.stage_reached
+LIMIT $2 OFFSET $3;
+
+-- name: CountChampionshipStandingsByYear :one
+SELECT COUNT(*)
+FROM championships_teams ct
+INNER JOIN teams t ON t.code = ct.team_code
+INNER JOIN championships_teams_stats cts ON ct.year = cts.year AND ct.team_code = cts.team_code
+INNER JOIN championships_stats cs ON cs.year = ct.year
+WHERE ct.year = $1;
+
 -- name: ListChampionshipStadiumsByYear :many
 SELECT
     css.year,

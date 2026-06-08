@@ -94,6 +94,30 @@ type ChampionshipScorerFilter struct {
 	Size     int
 }
 
+// ChampionshipStanding represents a team standing in a championship edition.
+type ChampionshipStanding struct {
+	TeamCode       string `json:"teamCode"`
+	GroupCode      string `json:"groupCode"`
+	MatchesPlayed  int32  `json:"matchesPlayed"`
+	Wins           int32  `json:"wins"`
+	Draws          int32  `json:"draws"`
+	Losses         int32  `json:"losses"`
+	GoalsFor       int32  `json:"goalsFor"`
+	GoalsAgainst   int32  `json:"goalsAgainst"`
+	GoalDifference int32  `json:"goalDifference"`
+	Points         int32  `json:"points"`
+	UnifiedPoints  int32  `json:"unifiedPoints"`
+	Position       int32  `json:"position"`
+	Performance    string `json:"performance"`
+}
+
+// ChampionshipStandingFilter represents filters for listing championship standings.
+type ChampionshipStandingFilter struct {
+	Year int
+	Page int
+	Size int
+}
+
 // ChampionshipListResponse represents the JSON response for listing championships.
 type ChampionshipListResponse struct {
 	Data       []Championship `json:"data"`
@@ -116,4 +140,10 @@ type ChampionshipStadiumListResponse struct {
 type ChampionshipScorerListResponse struct {
 	Data       []ChampionshipScorer `json:"data"`
 	Pagination PaginationInfo       `json:"pagination"`
+}
+
+// ChampionshipStandingListResponse represents the JSON response for listing championship standings.
+type ChampionshipStandingListResponse struct {
+	Data       []ChampionshipStanding `json:"data"`
+	Pagination PaginationInfo         `json:"pagination"`
 }

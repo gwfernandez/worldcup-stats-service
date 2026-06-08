@@ -61,6 +61,14 @@ func (m *MockChampionshipService) ListScorersByYear(ctx context.Context, filter 
 	return args.Get(0).(*domain.ChampionshipScorerListResponse), args.Error(1)
 }
 
+func (m *MockChampionshipService) ListStandingsByYear(ctx context.Context, filter domain.ChampionshipStandingFilter) (*domain.ChampionshipStandingListResponse, error) {
+	args := m.Called(ctx, filter)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*domain.ChampionshipStandingListResponse), args.Error(1)
+}
+
 func setupChampionshipRouter(svc *MockChampionshipService) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	r := gin.Default()
@@ -328,6 +336,165 @@ func TestChampionshipHandler_ListTeamsByYear(t *testing.T) {
 		r.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusInternalServerError, w.Code)
+	})
+}
+
+func TestChampionshipHandler_ListStandingsByYear(t *testing.T) {
+	t.Run("success with defaults", func(t *testing.T) {
+		svc := new(MockChampionshipService)
+		r := setupChampionshipRouter(svc)
+
+		expected := &domain.ChampionshipStandingListResponse{
+			Data: []domain.ChampionshipStanding{{
+				TeamCode:       "URU",
+				GroupCode:      "3",
+				MatchesPlayed:  4,
+				Wins:           4,
+				Draws:          0,
+				Losses:         0,
+				GoalsFor:       15,
+				GoalsAgainst:   3,
+				GoalDifference: 12,
+				Points:         8,
+				UnifiedPoints:  12,
+				Position:       1,
+				Performance:    "champion",
+			}},
+			Pagination: domain.PaginationInfo{
+				Page:          1,
+				Size:          20,
+				TotalElements: 1,
+				TotalPages:    1,
+			},
+		}
+
+		svc.On("ListStandingsByYear", mock.Anything, domain.ChampionshipStandingFilter{
+			Year: 1930,
+			Page: 1,
+			Size: 20,
+		}).Return(expected, nil)
+
+		req, _ := http.NewRequest(http.MethodGet, "/api/championships/1930/standings", nil)
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		assert.Equal(t, "1", w.Header().Get("API-Version-Used"))
+		assert.JSONEq(t, `{
+			"data": [{
+				"teamCode": "URU",
+				"groupCode": "3",
+				"matchesPlayed": 4,
+				"wins": 4,
+				"draws": 0,
+				"losses": 0,
+				"goalsFor": 15,
+				"goalsAgainst": 3,
+				"goalDifference": 12,
+				"points": 8,
+				"unifiedPoints": 12,
+				"position": 1,
+				"performance": "champion"
+			}],
+			"pagination": {
+				"page": 1,
+				"size": 20,
+				"totalElements": 1,
+				"totalPages": 1,
+				"hasNext": false,
+				"hasPrevious": false
+			}
+		}`, w.Body.String())
+		svc.AssertExpectations(t)
+	})
+
+	t.Run("success with explicit pagination", func(t *testing.T) {
+		svc := new(MockChampionshipService)
+		r := setupChampionshipRouter(svc)
+
+		expected := &domain.ChampionshipStandingListResponse{
+			Data: []domain.ChampionshipStanding{},
+			Pagination: domain.PaginationInfo{
+				Page: 2,
+				Size: 100,
+			},
+		}
+
+		svc.On("ListStandingsByYear", mock.Anything, domain.ChampionshipStandingFilter{
+			Year: 2026,
+			Page: 2,
+			Size: 100,
+		}).Return(expected, nil)
+
+		req, _ := http.NewRequest(http.MethodGet, "/api/championships/2026/standings?page=2&size=100", nil)
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		svc.AssertExpectations(t)
+	})
+
+	t.Run("invalid year", func(t *testing.T) {
+		svc := new(MockChampionshipService)
+		r := setupChampionshipRouter(svc)
+
+		req, _ := http.NewRequest(http.MethodGet, "/api/championships/abc/standings", nil)
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+		assert.JSONEq(t, `{"error":"invalid year parameter"}`, w.Body.String())
+	})
+
+	t.Run("invalid page", func(t *testing.T) {
+		svc := new(MockChampionshipService)
+		r := setupChampionshipRouter(svc)
+
+		req, _ := http.NewRequest(http.MethodGet, "/api/championships/1930/standings?page=0", nil)
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+		assert.JSONEq(t, `{"error":"invalid page parameter"}`, w.Body.String())
+	})
+
+	t.Run("invalid size", func(t *testing.T) {
+		svc := new(MockChampionshipService)
+		r := setupChampionshipRouter(svc)
+
+		req, _ := http.NewRequest(http.MethodGet, "/api/championships/1930/standings?size=101", nil)
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+		assert.JSONEq(t, `{"error":"invalid size parameter"}`, w.Body.String())
+	})
+
+	t.Run("service invalid input error", func(t *testing.T) {
+		svc := new(MockChampionshipService)
+		r := setupChampionshipRouter(svc)
+
+		svc.On("ListStandingsByYear", mock.Anything, mock.Anything).Return(nil, domain.ErrInvalidInput)
+
+		req, _ := http.NewRequest(http.MethodGet, "/api/championships/1930/standings", nil)
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+	})
+
+	t.Run("service internal error", func(t *testing.T) {
+		svc := new(MockChampionshipService)
+		r := setupChampionshipRouter(svc)
+
+		svc.On("ListStandingsByYear", mock.Anything, mock.Anything).Return(nil, errors.New("db error"))
+
+		req, _ := http.NewRequest(http.MethodGet, "/api/championships/1930/standings", nil)
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusInternalServerError, w.Code)
+		assert.JSONEq(t, `{"error":"failed to retrieve championship standings"}`, w.Body.String())
 	})
 }
 

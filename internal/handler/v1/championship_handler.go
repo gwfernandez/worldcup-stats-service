@@ -31,6 +31,7 @@ func (h *ChampionshipHandler) RegisterRoutes(rg *gin.RouterGroup) {
 		championships.GET("/:year/teams", h.ListTeamsByYear)
 		championships.GET("/:year/stadiums", h.ListStadiumsByYear)
 		championships.GET("/:year/scorers", h.ListScorersByYear)
+		championships.GET("/:year/standings", h.ListStandingsByYear)
 	}
 }
 
@@ -159,6 +160,31 @@ func (h *ChampionshipHandler) ListScorersByYear(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
+// ListStandingsByYear godoc
+// @Summary List standings for a championship year with pagination
+// @Produce json
+// @Param year path int true "Championship Year"
+// @Router /api/championships/{year}/standings [get]
+func (h *ChampionshipHandler) ListStandingsByYear(c *gin.Context) {
+	filter, err := parseChampionshipStandingFilter(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	response, err := h.service.ListStandingsByYear(c.Request.Context(), filter)
+	if err != nil {
+		if errors.Is(err, domain.ErrInvalidInput) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to retrieve championship standings"})
+		return
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
 func parseChampionshipFilter(c *gin.Context) (domain.ChampionshipFilter, error) {
 	filter := domain.ChampionshipFilter{
 		Host:              c.Query("host"),
@@ -196,6 +222,44 @@ func parseChampionshipFilter(c *gin.Context) (domain.ChampionshipFilter, error) 
 			return domain.ChampionshipFilter{}, errors.New("invalid year parameter")
 		}
 		filter.Year = year
+	}
+
+	return filter, nil
+}
+
+func parseChampionshipStandingFilter(c *gin.Context) (domain.ChampionshipStandingFilter, error) {
+	year, err := strconv.Atoi(c.Param("year"))
+	if err != nil {
+		return domain.ChampionshipStandingFilter{}, errors.New("invalid year parameter")
+	}
+
+	filter := domain.ChampionshipStandingFilter{
+		Year: year,
+		Page: defaultPage,
+		Size: defaultSize,
+	}
+
+	if rawPage := c.Query("page"); rawPage != "" {
+		page, err := strconv.Atoi(rawPage)
+		if err != nil {
+			return domain.ChampionshipStandingFilter{}, errors.New("invalid page parameter")
+		}
+		filter.Page = page
+	}
+
+	if rawSize := c.Query("size"); rawSize != "" {
+		size, err := strconv.Atoi(rawSize)
+		if err != nil {
+			return domain.ChampionshipStandingFilter{}, errors.New("invalid size parameter")
+		}
+		filter.Size = size
+	}
+
+	if filter.Page < 1 {
+		return domain.ChampionshipStandingFilter{}, errors.New("invalid page parameter")
+	}
+	if filter.Size < 1 || filter.Size > maxSize {
+		return domain.ChampionshipStandingFilter{}, errors.New("invalid size parameter")
 	}
 
 	return filter, nil
