@@ -219,6 +219,12 @@ El flujo principal debe ejecutarse en este orden:
 | `GET` | `/api/confederations` | Listar todas las confederaciones |
 | `GET` | `/api/confederations/:id` | Obtener confederación por id |
 
+### Campeones `/api/champions`
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| `GET` | `/api/champions` | Listar tabla histórica de campeones mundiales con paginación |
+
 ### Campeonatos `/api/championships`
 
 | Método | Ruta | Descripción |
