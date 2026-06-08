@@ -54,6 +54,9 @@ func main() {
 	championRepo := repository.NewChampionRepository(pool)
 	championSvc := service.NewChampionService(championRepo)
 	championHandlerV1 := v1.NewChampionHandler(championSvc)
+	standingRepo := repository.NewStandingRepository(pool)
+	standingSvc := service.NewStandingService(standingRepo)
+	standingHandlerV1 := v1.NewStandingHandler(standingSvc)
 	championshipRepo := repository.NewChampionshipRepository(pool)
 	championshipSvc := service.NewChampionshipService(championshipRepo)
 	championshipHandlerV1 := v1.NewChampionshipHandler(championshipSvc)
@@ -78,6 +81,7 @@ func main() {
 		confederationHandlerV1.RegisterRoutes(v1Group)
 		teamHandlerV1.RegisterRoutes(v1Group)
 		championHandlerV1.RegisterRoutes(v1Group)
+		standingHandlerV1.RegisterRoutes(v1Group)
 		championshipHandlerV1.RegisterRoutes(v1Group)
 		fixtureHandlerV1.RegisterRoutes(v1Group)
 	}

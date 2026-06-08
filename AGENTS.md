@@ -225,6 +225,19 @@ El flujo principal debe ejecutarse en este orden:
 |--------|------|-------------|
 | `GET` | `/api/champions` | Listar tabla histórica de campeones mundiales con paginación |
 
+### Tabla histórica de posiciones `/api/standings`
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| `GET` | `/api/standings` | Listar tabla histórica de posiciones de todos los mundiales con filtros y paginación |
+
+Parámetros soportados:
+
+- `name`: búsqueda por nombre de selección, case-insensitive y por contiene.
+- `confederationCode`: filtro por igualdad exacta sobre el código de confederación. La API normaliza el valor a mayúsculas.
+- `page`: número de página (base 1, por defecto `1`).
+- `size`: tamaño de página (por defecto `20`, máximo `100`).
+
 ### Campeonatos `/api/championships`
 
 | Método | Ruta | Descripción |

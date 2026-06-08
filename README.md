@@ -269,6 +269,51 @@ Notas de respuesta:
 - Los resultados se ordenan por `wins` descendente y, ante empates, por `name` ascendente.
 - `years` se expone como array de números ordenado ascendentemente.
 
+### Tabla Histórica de Posiciones
+
+ | Método | Ruta | Descripción |
+ |--------|------|-------------|
+ | `GET` | `/api/standings` | Listar tabla histórica de posiciones de todos los mundiales con filtros y paginación |
+
+Parámetros soportados para `/api/standings`:
+
+- `name`: búsqueda por nombre de selección, case-insensitive y por contiene.
+- `confederationCode`: filtro por igualdad exacta sobre el código de confederación. La API normaliza el valor a mayúsculas.
+- `page`: número de página (base 1, por defecto `1`).
+- `size`: tamaño de página (por defecto `20`, máximo `100`).
+
+Ejemplo de respuesta:
+
+```json
+{
+  "data": [
+    {
+      "teamCode": "BRA",
+      "name": "Brasil",
+      "matchesPlayed": 114,
+      "wins": 79,
+      "draws": 14,
+      "losses": 21,
+      "goalsFor": 237,
+      "goalsAgainst": 108,
+      "goalDifference": 129,
+      "points": 193,
+      "unifiedPoints": 237,
+      "position": 1,
+      "unifiedPosition": 1
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "size": 20,
+    "totalElements": 1,
+    "totalPages": 1,
+    "hasNext": false,
+    "hasPrevious": false
+  }
+}
+```
+
 ### Campeonatos Mundiales
 
  | Método | Ruta | Descripción |
