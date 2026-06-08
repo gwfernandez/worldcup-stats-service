@@ -107,6 +107,28 @@ WHERE ct.year = $1
     AND ($3::text = '' OR t.confederation_code = $3)
     AND ($4::text = '' OR cts.group_code = $4);
 
+-- name: ListChampionshipStadiumsByYear :many
+SELECT
+    css.year,
+    s.id,
+    s.name,
+    COALESCE(s.city_name, '')::text AS city_name,
+    COALESCE(s.capacity, 0)::integer AS capacity,
+    css.matches_played
+FROM championships_stadiums_stats css
+INNER JOIN stadiums s ON s.id = css.stadium_id
+WHERE css.year = $1
+    AND ($2::text = '' OR LOWER(s.name) LIKE '%' || LOWER($2) || '%')
+ORDER BY css.matches_played DESC, s.name ASC
+LIMIT $3 OFFSET $4;
+
+-- name: CountChampionshipStadiumsByYear :one
+SELECT COUNT(*)
+FROM championships_stadiums_stats css
+INNER JOIN stadiums s ON s.id = css.stadium_id
+WHERE css.year = $1
+    AND ($2::text = '' OR LOWER(s.name) LIKE '%' || LOWER($2) || '%');
+
 -- name: ListChampionshipScorersByYear :many
 SELECT
     TRIM(CONCAT_WS(' ', NULLIF(p.first_name, ''), NULLIF(p.last_name, '')))::text AS full_name,

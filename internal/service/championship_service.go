@@ -89,6 +89,41 @@ func (s *championshipService) ListTeamsByYear(ctx context.Context, filter domain
 	}, nil
 }
 
+// ListStadiumsByYear returns a paginated and filtered list of stadiums for a championship year.
+func (s *championshipService) ListStadiumsByYear(ctx context.Context, filter domain.ChampionshipStadiumFilter) (*domain.ChampionshipStadiumListResponse, error) {
+	if filter.Page < 1 {
+		return nil, fmt.Errorf("%w: page must be greater than or equal to 1", domain.ErrInvalidInput)
+	}
+	if filter.Size < 1 || filter.Size > 100 {
+		return nil, fmt.Errorf("%w: size must be between 1 and 100", domain.ErrInvalidInput)
+	}
+
+	data, totalElements, err := s.repo.ListStadiumsByYear(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+	totalPages := int(math.Ceil(float64(totalElements) / float64(filter.Size)))
+	if totalElements == 0 {
+		totalPages = 0
+	}
+
+	if data == nil {
+		data = make([]domain.ChampionshipStadium, 0)
+	}
+
+	return &domain.ChampionshipStadiumListResponse{
+		Data: data,
+		Pagination: domain.PaginationInfo{
+			Page:          filter.Page,
+			Size:          filter.Size,
+			TotalElements: totalElements,
+			TotalPages:    totalPages,
+			HasNext:       filter.Page < totalPages,
+			HasPrevious:   filter.Page > 1,
+		},
+	}, nil
+}
+
 // ListScorersByYear returns a paginated and filtered list of scorers for a championship year.
 func (s *championshipService) ListScorersByYear(ctx context.Context, filter domain.ChampionshipScorerFilter) (*domain.ChampionshipScorerListResponse, error) {
 	if filter.Page < 1 {
