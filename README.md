@@ -262,6 +262,7 @@ Notas de respuesta:
  | `GET` | `/api/championships/:year/teams` | Listar selecciones participantes de una edición con filtros y paginación |
  | `GET` | `/api/championships/:year/scorers` | Listar goleadores de una edición con filtros y paginación |
  | `GET` | `/api/championships/:year/stadiums` | Listar estadios utilizados en una edición con filtros y paginación |
+ | `GET` | `/api/championships/:year/standings` | Listar tabla de posiciones de una edición con paginación |
 
 Parámetros soportados para `/api/championships`:
 
@@ -318,6 +319,20 @@ Notas de respuesta:
 - Si `:year` es numérico pero no tiene estadios asociados, responde `200 OK` con `data: []` y metadata de paginación.
 - Los resultados se ordenan por `matchesPlayed` descendente y `name` ascendente.
 - La respuesta expone `year`, `id`, `name`, `cityName`, `capacity` y `matchesPlayed`.
+
+Parámetros soportados para `/api/championships/:year/standings`:
+
+- `page`: número de página (base 1, por defecto `1`).
+- `size`: tamaño de página (por defecto `20`, máximo `100`).
+
+Notas de respuesta:
+
+- Si `:year` no es numérico, responde `400 Bad Request` con `{"error":"invalid year parameter"}`.
+- Si `:year` es numérico pero no tiene posiciones asociadas, responde `200 OK` con `data: []` y metadata de paginación.
+- No soporta filtros adicionales.
+- Los resultados se ordenan por `position` ascendente e instancia alcanzada.
+- `teamCode` y `groupCode` se normalizan a mayúsculas.
+- La respuesta expone `teamCode`, `groupCode`, `matchesPlayed`, `wins`, `draws`, `losses`, `goalsFor`, `goalsAgainst`, `goalDifference`, `points`, `unifiedPoints`, `position` y `performance`.
 
 ### Ejemplos de request
  
@@ -379,6 +394,11 @@ curl -H "API-Version: 1" "http://localhost:8080/api/championships/1930/stadiums?
 **Filtrar estadios por nombre**
 ```bash
 curl -H "API-Version: 1" "http://localhost:8080/api/championships/1930/stadiums?name=centenario"
+```
+
+**Listar tabla de posiciones de un mundial**
+```bash
+curl -H "API-Version: 1" "http://localhost:8080/api/championships/1930/standings?page=1&size=10"
 ```
 
 **Obtener detalle completo de un mundial por año**

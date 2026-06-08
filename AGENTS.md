@@ -229,6 +229,7 @@ El flujo principal debe ejecutarse en este orden:
 | `GET` | `/api/championships/:year/teams` | Listar selecciones participantes de una edición con filtros |
 | `GET` | `/api/championships/:year/scorers` | Listar goleadores de una edición con filtros |
 | `GET` | `/api/championships/:year/stadiums` | Listar estadios utilizados de una edición con filtros |
+| `GET` | `/api/championships/:year/standings` | Listar tabla de posiciones de una edición con paginación |
 
 ---
 

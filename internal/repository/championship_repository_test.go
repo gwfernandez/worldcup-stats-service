@@ -284,6 +284,105 @@ func TestChampionshipRepository_ListStadiumsByYear(t *testing.T) {
 	})
 }
 
+func TestChampionshipRepository_ListStandingsByYear(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		mock, err := pgxmock.NewPool()
+		require.NoError(t, err)
+		defer mock.Close()
+
+		repo := repository.NewChampionshipRepository(mock)
+		filter := domain.ChampionshipStandingFilter{
+			Year: 1930,
+			Page: 2,
+			Size: 10,
+		}
+
+		countRows := mock.NewRows([]string{"count"}).AddRow(int64(13))
+		mock.ExpectQuery(`^-- name: CountChampionshipStandingsByYear :one.*`).
+			WithArgs(int32(1930)).
+			WillReturnRows(countRows)
+
+		rows := mock.NewRows([]string{
+			"team_code", "group_code", "matches_played", "wins", "draws", "losses",
+			"goals_for", "goals_against", "goal_difference", "points", "unified_points",
+			"position", "performance",
+		}).
+			AddRow("uru", "3", int32(4), int32(4), int32(0), int32(0), int32(15), int32(3), pgtype.Int4{Int32: 12, Valid: true}, int32(8), int32(12), pgtype.Int4{Int32: 1, Valid: true}, "champion").
+			AddRow("arg", "1", int32(5), int32(4), int32(0), int32(1), int32(18), int32(9), pgtype.Int4{Int32: 9, Valid: true}, int32(8), int32(12), pgtype.Int4{Int32: 2, Valid: true}, "runner_up")
+
+		mock.ExpectQuery(`^-- name: ListChampionshipStandingsByYear :many.*`).
+			WithArgs(int32(1930), int32(10), int32(10)).
+			WillReturnRows(rows)
+
+		result, total, err := repo.ListStandingsByYear(context.Background(), filter)
+		assert.NoError(t, err)
+		assert.Equal(t, int64(13), total)
+		require.Len(t, result, 2)
+		assert.Equal(t, domain.ChampionshipStanding{
+			TeamCode:       "URU",
+			GroupCode:      "3",
+			MatchesPlayed:  4,
+			Wins:           4,
+			Draws:          0,
+			Losses:         0,
+			GoalsFor:       15,
+			GoalsAgainst:   3,
+			GoalDifference: 12,
+			Points:         8,
+			UnifiedPoints:  12,
+			Position:       1,
+			Performance:    "champion",
+		}, result[0])
+		assert.Equal(t, "ARG", result[1].TeamCode)
+		assert.Equal(t, "runner_up", result[1].Performance)
+
+		assert.NoError(t, mock.ExpectationsWereMet())
+	})
+
+	t.Run("db error on count", func(t *testing.T) {
+		mock, err := pgxmock.NewPool()
+		require.NoError(t, err)
+		defer mock.Close()
+
+		repo := repository.NewChampionshipRepository(mock)
+		filter := domain.ChampionshipStandingFilter{Year: 1930, Page: 1, Size: 10}
+
+		mock.ExpectQuery(`^-- name: CountChampionshipStandingsByYear :one.*`).
+			WithArgs(int32(1930)).
+			WillReturnError(errors.New("db error"))
+
+		result, total, err := repo.ListStandingsByYear(context.Background(), filter)
+		assert.Error(t, err)
+		assert.Nil(t, result)
+		assert.Equal(t, int64(0), total)
+		assert.NoError(t, mock.ExpectationsWereMet())
+	})
+
+	t.Run("db error on list", func(t *testing.T) {
+		mock, err := pgxmock.NewPool()
+		require.NoError(t, err)
+		defer mock.Close()
+
+		repo := repository.NewChampionshipRepository(mock)
+		filter := domain.ChampionshipStandingFilter{Year: 1930, Page: 1, Size: 10}
+
+		countRows := mock.NewRows([]string{"count"}).AddRow(int64(13))
+		mock.ExpectQuery(`^-- name: CountChampionshipStandingsByYear :one.*`).
+			WithArgs(int32(1930)).
+			WillReturnRows(countRows)
+
+		mock.ExpectQuery(`^-- name: ListChampionshipStandingsByYear :many.*`).
+			WithArgs(int32(1930), int32(10), int32(0)).
+			WillReturnError(errors.New("db error"))
+
+		result, total, err := repo.ListStandingsByYear(context.Background(), filter)
+		assert.Error(t, err)
+		assert.Nil(t, result)
+		assert.Equal(t, int64(0), total)
+		assert.NoError(t, mock.ExpectationsWereMet())
+	})
+}
+
 func TestChampionshipRepository_ListScorersByYear(t *testing.T) {
 	t.Run("success with filters", func(t *testing.T) {
 		mock, err := pgxmock.NewPool()
