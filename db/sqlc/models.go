@@ -130,6 +130,12 @@ type Player struct {
 	DeathDate   pgtype.Date
 	Wikipedia   pgtype.Text
 	RefID       pgtype.Text
+	ListTeams   []string
+}
+
+type PlayersStat struct {
+	ID    int64
+	Goals int32
 }
 
 type Squad struct {
