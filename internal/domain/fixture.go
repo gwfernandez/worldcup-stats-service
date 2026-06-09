@@ -28,7 +28,7 @@ type FixtureMatch struct {
 // GroupStanding represents a team standing inside a fixture group.
 type GroupStanding struct {
 	TeamCode       string `json:"teamCode"`
-	Name           string `json:"name"`
+	TeamName       string `json:"teamName"`
 	MatchesPlayed  int32  `json:"matchesPlayed"`
 	Wins           int32  `json:"wins"`
 	Draws          int32  `json:"draws"`

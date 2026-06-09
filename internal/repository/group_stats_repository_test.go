@@ -38,7 +38,7 @@ func TestGroupStatsRepository_ListByYear(t *testing.T) {
 		assert.Equal(t, "group_stage", result[0].Stage)
 		assert.Equal(t, "A", result[0].GroupCode)
 		assert.Equal(t, "ARG", result[0].Standing.TeamCode)
-		assert.Equal(t, "Argentina", result[0].Standing.Name)
+		assert.Equal(t, "Argentina", result[0].Standing.TeamName)
 		assert.Equal(t, int32(3), result[0].Standing.GoalDifference)
 		require.NotNil(t, result[0].Standing.Position)
 		assert.Equal(t, int32(1), *result[0].Standing.Position)

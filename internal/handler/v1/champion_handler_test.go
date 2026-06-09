@@ -44,7 +44,7 @@ func TestChampionHandler_List(t *testing.T) {
 		expected := &domain.ChampionListResponse{
 			Data: []domain.Champion{{
 				TeamCode: "BRA",
-				Name:     "Brasil",
+				TeamName: "Brasil",
 				Wins:     5,
 				Years:    []int32{1958, 1962, 1970, 1994, 2002},
 			}},
@@ -67,7 +67,7 @@ func TestChampionHandler_List(t *testing.T) {
 		assert.JSONEq(t, `{
 			"data": [{
 				"teamCode": "BRA",
-				"name": "Brasil",
+				"teamName": "Brasil",
 				"wins": 5,
 				"years": [1958, 1962, 1970, 1994, 2002]
 			}],
@@ -122,7 +122,7 @@ func TestChampionHandler_List(t *testing.T) {
 		svc := new(MockChampionService)
 		r := setupChampionRouter(svc)
 		expected := &domain.ChampionListResponse{
-			Data:       []domain.Champion{{TeamCode: "GER", Name: "Germany", Wins: 4, Years: []int32{1954, 1974, 1990, 2014}}},
+			Data:       []domain.Champion{{TeamCode: "GER", TeamName: "Germany", Wins: 4, Years: []int32{1954, 1974, 1990, 2014}}},
 			Pagination: domain.PaginationInfo{Page: 1, Size: 20, TotalElements: 1, TotalPages: 1},
 		}
 		svc.On("List", mock.Anything, domain.ChampionFilter{Language: "en", Page: 1, Size: 20}).Return(expected, nil)
@@ -136,7 +136,7 @@ func TestChampionHandler_List(t *testing.T) {
 		assert.JSONEq(t, `{
 			"data": [{
 				"teamCode": "GER",
-				"name": "Germany",
+				"teamName": "Germany",
 				"wins": 4,
 				"years": [1954, 1974, 1990, 2014]
 			}],

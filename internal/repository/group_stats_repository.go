@@ -41,7 +41,7 @@ func toGroupStandingRecord(row sqlc.ListGroupsStatsByYearRow) domain.GroupStandi
 		GroupCode: strings.ToUpper(row.GroupCode),
 		Standing: domain.GroupStanding{
 			TeamCode:       strings.ToUpper(row.TeamCode),
-			Name:           row.Name,
+			TeamName:       row.Name,
 			MatchesPlayed:  row.MatchesPlayed,
 			Wins:           row.Wins,
 			Draws:          row.Draws,

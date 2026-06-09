@@ -306,7 +306,7 @@ func toChampionshipScorerDomain(row sqlc.ListChampionshipScorersByYearRow) domai
 func toChampionshipStandingDomain(row sqlc.ListChampionshipStandingsByYearRow) domain.ChampionshipStanding {
 	return domain.ChampionshipStanding{
 		TeamCode:       strings.ToUpper(row.TeamCode),
-		Name:           row.Name,
+		TeamName:       row.Name,
 		GroupCode:      strings.ToUpper(row.GroupCode),
 		MatchesPlayed:  row.MatchesPlayed,
 		Wins:           row.Wins,

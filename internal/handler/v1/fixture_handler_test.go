@@ -53,7 +53,7 @@ func TestFixtureHandler_GetByYear(t *testing.T) {
 				}},
 				Standings: []domain.GroupStanding{{
 					TeamCode: "ARG",
-					Name:     "Argentina",
+					TeamName: "Argentina",
 				}},
 			}},
 		}}}
@@ -98,7 +98,7 @@ func TestFixtureHandler_GetByYear(t *testing.T) {
 						}],
 						"standings": [{
 							"teamCode": "ARG",
-							"name": "Argentina",
+							"teamName": "Argentina",
 							"matchesPlayed": 0,
 							"wins": 0,
 							"draws": 0,

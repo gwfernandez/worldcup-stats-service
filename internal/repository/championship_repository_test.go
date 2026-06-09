@@ -324,7 +324,7 @@ func TestChampionshipRepository_ListStandingsByYear(t *testing.T) {
 		require.Len(t, result, 2)
 		assert.Equal(t, domain.ChampionshipStanding{
 			TeamCode:       "URU",
-			Name:           "Uruguay",
+			TeamName:       "Uruguay",
 			GroupCode:      "3",
 			MatchesPlayed:  4,
 			Wins:           4,

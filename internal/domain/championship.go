@@ -102,7 +102,7 @@ type ChampionshipScorerFilter struct {
 // ChampionshipStanding represents a team standing in a championship edition.
 type ChampionshipStanding struct {
 	TeamCode       string `json:"teamCode"`
-	Name           string `json:"name"`
+	TeamName       string `json:"teamName"`
 	GroupCode      string `json:"groupCode"`
 	MatchesPlayed  int32  `json:"matchesPlayed"`
 	Wins           int32  `json:"wins"`

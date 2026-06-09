@@ -38,7 +38,7 @@ func TestChampionRepository_List(t *testing.T) {
 		assert.Equal(t, int64(2), total)
 		require.Len(t, result, 2)
 		assert.Equal(t, "BRA", result[0].TeamCode)
-		assert.Equal(t, "Brasil", result[0].Name)
+		assert.Equal(t, "Brasil", result[0].TeamName)
 		assert.Equal(t, int64(5), result[0].Wins)
 		assert.Equal(t, []int32{1958, 1962, 1970, 1994, 2002}, result[0].Years)
 		assert.Equal(t, "ARG", result[1].TeamCode)

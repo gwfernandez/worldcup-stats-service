@@ -52,7 +52,7 @@ func TestStandingRepository_List(t *testing.T) {
 		assert.Equal(t, int64(11), total)
 		require.Len(t, result, 1)
 		assert.Equal(t, "ARG", result[0].TeamCode)
-		assert.Equal(t, "Argentina", result[0].Name)
+		assert.Equal(t, "Argentina", result[0].TeamName)
 		assert.Equal(t, int32(88), result[0].MatchesPlayed)
 		assert.Equal(t, int32(53), result[0].Wins)
 		assert.Equal(t, int32(10), result[0].Draws)

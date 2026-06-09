@@ -34,7 +34,7 @@ func TestChampionService_List(t *testing.T) {
 		filter := domain.ChampionFilter{Page: 1, Size: 10}
 		expected := []domain.Champion{{
 			TeamCode: "BRA",
-			Name:     "Brasil",
+			TeamName: "Brasil",
 			Wins:     5,
 			Years:    []int32{1958, 1962, 1970, 1994, 2002},
 		}}

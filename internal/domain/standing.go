@@ -3,7 +3,7 @@ package domain
 // Standing represents a team in the historical standings table.
 type Standing struct {
 	TeamCode        string `json:"teamCode"`
-	Name            string `json:"name"`
+	TeamName        string `json:"teamName"`
 	MatchesPlayed   int32  `json:"matchesPlayed"`
 	Wins            int32  `json:"wins"`
 	Draws           int32  `json:"draws"`

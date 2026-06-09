@@ -44,7 +44,7 @@ func TestStandingHandler_List(t *testing.T) {
 		expected := &domain.StandingListResponse{
 			Data: []domain.Standing{{
 				TeamCode:        "BRA",
-				Name:            "Brasil",
+				TeamName:        "Brasil",
 				MatchesPlayed:   114,
 				Wins:            79,
 				Draws:           14,
@@ -77,7 +77,7 @@ func TestStandingHandler_List(t *testing.T) {
 		assert.JSONEq(t, `{
 			"data": [{
 				"teamCode": "BRA",
-				"name": "Brasil",
+				"teamName": "Brasil",
 				"matchesPlayed": 114,
 				"wins": 79,
 				"draws": 14,
@@ -141,7 +141,7 @@ func TestStandingHandler_List(t *testing.T) {
 		svc := new(MockStandingService)
 		r := setupStandingRouter(svc)
 		expected := &domain.StandingListResponse{
-			Data:       []domain.Standing{{TeamCode: "GER", Name: "Germany", Position: 2}},
+			Data:       []domain.Standing{{TeamCode: "GER", TeamName: "Germany", Position: 2}},
 			Pagination: domain.PaginationInfo{Page: 1, Size: 20, TotalElements: 1, TotalPages: 1},
 		}
 		svc.On("List", mock.Anything, domain.StandingFilter{Name: "ger", Language: "en", Page: 1, Size: 20}).Return(expected, nil)
@@ -155,7 +155,7 @@ func TestStandingHandler_List(t *testing.T) {
 		assert.JSONEq(t, `{
 			"data": [{
 				"teamCode": "GER",
-				"name": "Germany",
+				"teamName": "Germany",
 				"matchesPlayed": 0,
 				"wins": 0,
 				"draws": 0,

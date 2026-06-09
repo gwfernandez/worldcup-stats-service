@@ -356,7 +356,7 @@ func TestChampionshipHandler_ListStandingsByYear(t *testing.T) {
 		expected := &domain.ChampionshipStandingListResponse{
 			Data: []domain.ChampionshipStanding{{
 				TeamCode:       "URU",
-				Name:           "Uruguay",
+				TeamName:       "Uruguay",
 				GroupCode:      "3",
 				MatchesPlayed:  4,
 				Wins:           4,
@@ -394,7 +394,7 @@ func TestChampionshipHandler_ListStandingsByYear(t *testing.T) {
 		assert.JSONEq(t, `{
 			"data": [{
 				"teamCode": "URU",
-				"name": "Uruguay",
+				"teamName": "Uruguay",
 				"groupCode": "3",
 				"matchesPlayed": 4,
 				"wins": 4,
