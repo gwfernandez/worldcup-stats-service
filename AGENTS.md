@@ -238,6 +238,20 @@ Parámetros soportados:
 - `page`: número de página (base 1, por defecto `1`).
 - `size`: tamaño de página (por defecto `20`, máximo `100`).
 
+### Tabla histórica de goleadores `/api/scorers`
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| `GET` | `/api/scorers` | Listar tabla histórica de goleadores de todos los mundiales con filtros y paginación |
+
+Parámetros soportados:
+
+- `name`: búsqueda por nombre o apellido de jugador, case-insensitive y por contiene.
+- `teamCode`: filtro por igualdad exacta sobre el código unificado de selección. La API normaliza el valor a mayúsculas.
+- `confederationCode`: filtro por igualdad exacta sobre el código de confederación. La API normaliza el valor a mayúsculas.
+- `page`: número de página (base 1, por defecto `1`).
+- `size`: tamaño de página (por defecto `20`, máximo `100`).
+
 ### Campeonatos `/api/championships`
 
 | Método | Ruta | Descripción |
