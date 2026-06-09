@@ -39,8 +39,8 @@ func TestChampionshipRepository_List(t *testing.T) {
 
 		startDate := time.Date(1978, 6, 1, 0, 0, 0, 0, time.UTC)
 		endDate := time.Date(1978, 6, 25, 0, 0, 0, 0, time.UTC)
-		rows := mock.NewRows([]string{"year", "start_date", "end_date", "host_codes", "champion_code"}).
-			AddRow(int32(1978), startDate, endDate, []string{"arg"}, pgtype.Text{String: "ARG", Valid: true})
+		rows := mock.NewRows([]string{"year", "start_date", "end_date", "host_codes", "champion_code", "champion_name"}).
+			AddRow(int32(1978), startDate, endDate, []string{"arg"}, pgtype.Text{String: "ARG", Valid: true}, "Argentina")
 
 		mock.ExpectQuery(`^-- name: ListChampionships :many.*`).
 			WithArgs(int32(1978), "arg", "CONMEBOL", int32(10), int32(0), "en").
@@ -56,6 +56,8 @@ func TestChampionshipRepository_List(t *testing.T) {
 		assert.Equal(t, []string{"ARG"}, result[0].HostCodes)
 		require.NotNil(t, result[0].ChampionCode)
 		assert.Equal(t, "ARG", *result[0].ChampionCode)
+		require.NotNil(t, result[0].ChampionName)
+		assert.Equal(t, "Argentina", *result[0].ChampionName)
 
 		assert.NoError(t, mock.ExpectationsWereMet())
 	})

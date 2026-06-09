@@ -28,6 +28,7 @@ type Championship struct {
 	EndDate      string              `json:"endDate"`
 	HostCodes    []string            `json:"hostCodes"`
 	ChampionCode *string             `json:"championCode"`
+	ChampionName *string             `json:"championName,omitempty"`
 	Stats        *ChampionshipsStats `json:"stats,omitempty"`
 }
 

@@ -201,11 +201,16 @@ func (r *championshipRepository) ListStandingsByYear(ctx context.Context, filter
 	return standings, total, nil
 }
 
-func toChampionshipDomain(row sqlc.Championship) domain.Championship {
+func toChampionshipDomain(row sqlc.ListChampionshipsRow) domain.Championship {
 	var championCode *string
 	if row.ChampionCode.Valid {
 		val := strings.ToUpper(row.ChampionCode.String)
 		championCode = &val
+	}
+
+	var championName *string
+	if row.ChampionName != "" {
+		championName = &row.ChampionName
 	}
 
 	return domain.Championship{
@@ -214,6 +219,7 @@ func toChampionshipDomain(row sqlc.Championship) domain.Championship {
 		EndDate:      dateToString(row.EndDate),
 		HostCodes:    uppercaseSlice(row.HostCodes),
 		ChampionCode: championCode,
+		ChampionName: championName,
 	}
 }
 

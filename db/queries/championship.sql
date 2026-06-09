@@ -4,8 +4,13 @@ SELECT
     start_date,
     end_date,
     host_codes,
-    champion_code
+    champion_code,
+    COALESCE(champion_translation.name, champion_team.name, '')::varchar AS champion_name
 FROM championships c
+LEFT JOIN teams champion_team ON champion_team.code = c.champion_code
+LEFT JOIN team_translations champion_translation
+    ON champion_translation.team_code = champion_team.code
+    AND champion_translation.language = sqlc.arg(language)
 WHERE
     ($1::integer = 0 OR c.year = $1)
     AND ($2::text = '' OR EXISTS (

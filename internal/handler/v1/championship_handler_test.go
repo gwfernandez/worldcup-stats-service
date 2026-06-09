@@ -663,8 +663,16 @@ func TestChampionshipHandler_List(t *testing.T) {
 		r := setupChampionshipRouter(svc)
 
 		championCode := "URU"
+		championName := "Uruguay"
 		expected := &domain.ChampionshipListResponse{
-			Data: []domain.Championship{{Year: 1930, StartDate: "1930-07-13", EndDate: "1930-07-30", HostCodes: []string{"URU"}, ChampionCode: &championCode}},
+			Data: []domain.Championship{{
+				Year:         1930,
+				StartDate:    "1930-07-13",
+				EndDate:      "1930-07-30",
+				HostCodes:    []string{"URU"},
+				ChampionCode: &championCode,
+				ChampionName: &championName,
+			}},
 			Pagination: domain.PaginationInfo{
 				Page:          1,
 				Size:          20,
@@ -695,7 +703,8 @@ func TestChampionshipHandler_List(t *testing.T) {
 				"startDate": "1930-07-13",
 				"endDate": "1930-07-30",
 				"hostCodes": ["URU"],
-				"championCode": "URU"
+				"championCode": "URU",
+				"championName": "Uruguay"
 			}],
 			"pagination": {
 				"page": 1,
