@@ -19,8 +19,8 @@ type mockFixtureService struct {
 	mock.Mock
 }
 
-func (m *mockFixtureService) GetByYear(ctx context.Context, year int) (*domain.Fixture, error) {
-	args := m.Called(ctx, year)
+func (m *mockFixtureService) GetByYear(ctx context.Context, year int, language string) (*domain.Fixture, error) {
+	args := m.Called(ctx, year, language)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
@@ -40,16 +40,80 @@ func TestFixtureHandler_GetByYear(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		svc := new(mockFixtureService)
 		r := setupFixtureRouter(svc)
-		expected := &domain.Fixture{Year: 1978, Stages: []domain.FixtureStage{{Stage: "group_stage"}}}
+		expected := &domain.Fixture{Year: 1978, Stages: []domain.FixtureStage{{
+			Stage: "group_stage",
+			Groups: []domain.FixtureGroup{{
+				GroupCode: "A",
+				Matches: []domain.FixtureMatch{{
+					ID:           1,
+					HomeTeamCode: "ARG",
+					HomeTeamName: "Argentina",
+					AwayTeamCode: "FRA",
+					AwayTeamName: "France",
+				}},
+				Standings: []domain.GroupStanding{{
+					TeamCode: "ARG",
+					Name:     "Argentina",
+				}},
+			}},
+		}}}
 
-		svc.On("GetByYear", mock.Anything, 1978).Return(expected, nil)
+		svc.On("GetByYear", mock.Anything, 1978, "en").Return(expected, nil)
 
 		req, _ := http.NewRequest(http.MethodGet, "/api/championships/1978/fixture", nil)
+		req.Header.Set("Accept-Language", "en")
 		w := httptest.NewRecorder()
 		r.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
-		assert.JSONEq(t, `{"data":{"year":1978,"stages":[{"stage":"group_stage"}]}}`, w.Body.String())
+		assert.JSONEq(t, `{
+			"data": {
+				"year": 1978,
+				"stages": [{
+					"stage": "group_stage",
+					"groups": [{
+						"groupCode": "A",
+						"matches": [{
+							"id": 1,
+							"stageType": "",
+							"replayed": false,
+							"replayOf": null,
+							"matchDate": null,
+							"matchTime": null,
+							"stadiumId": null,
+							"homeTeamCode": "ARG",
+							"homeTeamName": "Argentina",
+							"awayTeamCode": "FRA",
+							"awayTeamName": "France",
+							"homeTeamScore": null,
+							"awayTeamScore": null,
+							"extraTime": false,
+							"penaltyShootout": false,
+							"homeTeamScorePenalties": null,
+							"awayTeamScorePenalties": null,
+							"homeTeamWin": null,
+							"awayTeamWin": null,
+							"draw": null,
+							"refId": null
+						}],
+						"standings": [{
+							"teamCode": "ARG",
+							"name": "Argentina",
+							"matchesPlayed": 0,
+							"wins": 0,
+							"draws": 0,
+							"losses": 0,
+							"goalsFor": 0,
+							"goalsAgainst": 0,
+							"goalDifference": 0,
+							"points": 0,
+							"unifiedPoints": 0,
+							"position": null
+						}]
+					}]
+				}]
+			}
+		}`, w.Body.String())
 		svc.AssertExpectations(t)
 	})
 
@@ -70,7 +134,7 @@ func TestFixtureHandler_GetByYear(t *testing.T) {
 		svc := new(mockFixtureService)
 		r := setupFixtureRouter(svc)
 
-		svc.On("GetByYear", mock.Anything, 2023).Return(nil, domain.ErrNotFound)
+		svc.On("GetByYear", mock.Anything, 2023, "es").Return(nil, domain.ErrNotFound)
 
 		req, _ := http.NewRequest(http.MethodGet, "/api/championships/2023/fixture", nil)
 		w := httptest.NewRecorder()
@@ -85,7 +149,7 @@ func TestFixtureHandler_GetByYear(t *testing.T) {
 		svc := new(mockFixtureService)
 		r := setupFixtureRouter(svc)
 
-		svc.On("GetByYear", mock.Anything, 1978).Return(nil, errors.New("db error"))
+		svc.On("GetByYear", mock.Anything, 1978, "es").Return(nil, errors.New("db error"))
 
 		req, _ := http.NewRequest(http.MethodGet, "/api/championships/1978/fixture", nil)
 		w := httptest.NewRecorder()

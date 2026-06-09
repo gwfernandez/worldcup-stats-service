@@ -17,8 +17,8 @@ type mockMatchRepository struct {
 	mock.Mock
 }
 
-func (m *mockMatchRepository) ListByYear(ctx context.Context, year int) ([]domain.FixtureMatchRecord, error) {
-	args := m.Called(ctx, year)
+func (m *mockMatchRepository) ListByYear(ctx context.Context, year int, language string) ([]domain.FixtureMatchRecord, error) {
+	args := m.Called(ctx, year, language)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
@@ -29,8 +29,8 @@ type mockGroupStatsRepository struct {
 	mock.Mock
 }
 
-func (m *mockGroupStatsRepository) ListByYear(ctx context.Context, year int) ([]domain.GroupStandingRecord, error) {
-	args := m.Called(ctx, year)
+func (m *mockGroupStatsRepository) ListByYear(ctx context.Context, year int, language string) ([]domain.GroupStandingRecord, error) {
+	args := m.Called(ctx, year, language)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
@@ -58,10 +58,10 @@ func TestFixtureService_GetByYear(t *testing.T) {
 			groupStandingRecord("group_stage", "B", "BRA", 1),
 		}
 
-		matchRepo.On("ListByYear", ctx, 1978).Return(matches, nil)
-		statsRepo.On("ListByYear", ctx, 1978).Return(standings, nil)
+		matchRepo.On("ListByYear", ctx, 1978, "en").Return(matches, nil)
+		statsRepo.On("ListByYear", ctx, 1978, "en").Return(standings, nil)
 
-		result, err := svc.GetByYear(ctx, 1978)
+		result, err := svc.GetByYear(ctx, 1978, "en")
 		assert.NoError(t, err)
 		require.NotNil(t, result)
 		assert.Equal(t, 1978, result.Year)
@@ -99,10 +99,10 @@ func TestFixtureService_GetByYear(t *testing.T) {
 			},
 		}
 
-		matchRepo.On("ListByYear", ctx, 1938).Return(matches, nil)
-		statsRepo.On("ListByYear", ctx, 1938).Return([]domain.GroupStandingRecord{}, nil)
+		matchRepo.On("ListByYear", ctx, 1938, "es").Return(matches, nil)
+		statsRepo.On("ListByYear", ctx, 1938, "es").Return([]domain.GroupStandingRecord{}, nil)
 
-		result, err := svc.GetByYear(ctx, 1938)
+		result, err := svc.GetByYear(ctx, 1938, "es")
 		assert.NoError(t, err)
 		require.NotNil(t, result)
 		require.Len(t, result.Stages, 1)
@@ -119,9 +119,9 @@ func TestFixtureService_GetByYear(t *testing.T) {
 		statsRepo := new(mockGroupStatsRepository)
 		svc := service.NewFixtureService(matchRepo, statsRepo)
 
-		matchRepo.On("ListByYear", ctx, 2023).Return([]domain.FixtureMatchRecord{}, nil)
+		matchRepo.On("ListByYear", ctx, 2023, "es").Return([]domain.FixtureMatchRecord{}, nil)
 
-		result, err := svc.GetByYear(ctx, 2023)
+		result, err := svc.GetByYear(ctx, 2023, "es")
 		assert.Error(t, err)
 		assert.True(t, errors.Is(err, domain.ErrNotFound))
 		assert.Nil(t, result)
@@ -134,12 +134,12 @@ func TestFixtureService_GetByYear(t *testing.T) {
 		statsRepo := new(mockGroupStatsRepository)
 		svc := service.NewFixtureService(matchRepo, statsRepo)
 
-		matchRepo.On("ListByYear", ctx, 1978).Return([]domain.FixtureMatchRecord{
+		matchRepo.On("ListByYear", ctx, 1978, "es").Return([]domain.FixtureMatchRecord{
 			fixtureMatchRecord("group_stage", "A", 1, "group"),
 		}, nil)
-		statsRepo.On("ListByYear", ctx, 1978).Return(nil, errors.New("db error"))
+		statsRepo.On("ListByYear", ctx, 1978, "es").Return(nil, errors.New("db error"))
 
-		result, err := svc.GetByYear(ctx, 1978)
+		result, err := svc.GetByYear(ctx, 1978, "es")
 		assert.Error(t, err)
 		assert.Nil(t, result)
 		matchRepo.AssertExpectations(t)

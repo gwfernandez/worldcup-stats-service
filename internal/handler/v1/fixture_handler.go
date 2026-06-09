@@ -41,7 +41,7 @@ func (h *FixtureHandler) GetByYear(c *gin.Context) {
 		return
 	}
 
-	fixture, err := h.service.GetByYear(c.Request.Context(), year)
+	fixture, err := h.service.GetByYear(c.Request.Context(), year, resolveLanguage(c.Request))
 	if err != nil {
 		if errors.Is(err, domain.ErrNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "championship not found"})

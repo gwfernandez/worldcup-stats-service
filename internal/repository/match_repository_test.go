@@ -25,22 +25,22 @@ func TestMatchRepository_ListByYear(t *testing.T) {
 
 		rows := mock.NewRows([]string{
 			"id", "year", "stage", "stage_type", "group_code", "replayed", "replay_of", "match_date", "match_time",
-			"stadium_id", "home_team_code", "away_team_code", "home_team_score", "away_team_score", "extra_time",
+			"stadium_id", "home_team_code", "home_team_name", "away_team_code", "away_team_name", "home_team_score", "away_team_score", "extra_time",
 			"penalty_shootout", "home_team_score_penalties", "away_team_score_penalties", "home_team_win",
 			"away_team_win", "draw", "ref_id",
 		}).AddRow(
 			int64(10), int32(1938), "round_of_16", "knockout", nil, true, pgtype.Int8{Int64: 9, Valid: true},
-			matchDate, matchTime, pgtype.Int8{Int64: 3, Valid: true}, "bra", "pol",
+			matchDate, matchTime, pgtype.Int8{Int64: 3, Valid: true}, "bra", "Brazil", "pol", "Poland",
 			pgtype.Int4{Int32: 6, Valid: true}, pgtype.Int4{Int32: 5, Valid: true}, true, false,
 			pgtype.Int4{Valid: false}, pgtype.Int4{Valid: false}, pgtype.Bool{Bool: true, Valid: true},
 			pgtype.Bool{Bool: false, Valid: true}, pgtype.Bool{Bool: false, Valid: true}, pgtype.Text{String: "M-1938-10", Valid: true},
 		)
 
 		mock.ExpectQuery(`^-- name: ListMatchesByYear :many.*`).
-			WithArgs(int32(1938)).
+			WithArgs(int32(1938), "en").
 			WillReturnRows(rows)
 
-		result, err := repo.ListByYear(context.Background(), 1938)
+		result, err := repo.ListByYear(context.Background(), 1938, "en")
 		assert.NoError(t, err)
 		require.Len(t, result, 1)
 		assert.Equal(t, "round_of_16", result[0].Stage)
@@ -55,7 +55,9 @@ func TestMatchRepository_ListByYear(t *testing.T) {
 		require.NotNil(t, result[0].Match.MatchTime)
 		assert.Equal(t, "17:00:00", *result[0].Match.MatchTime)
 		assert.Equal(t, "BRA", result[0].Match.HomeTeamCode)
+		assert.Equal(t, "Brazil", result[0].Match.HomeTeamName)
 		assert.Equal(t, "POL", result[0].Match.AwayTeamCode)
+		assert.Equal(t, "Poland", result[0].Match.AwayTeamName)
 		require.NotNil(t, result[0].Match.HomeTeamWin)
 		assert.True(t, *result[0].Match.HomeTeamWin)
 		assert.NoError(t, mock.ExpectationsWereMet())
@@ -69,16 +71,16 @@ func TestMatchRepository_ListByYear(t *testing.T) {
 		repo := repository.NewMatchRepository(mock)
 		rows := mock.NewRows([]string{
 			"id", "year", "stage", "stage_type", "group_code", "replayed", "replay_of", "match_date", "match_time",
-			"stadium_id", "home_team_code", "away_team_code", "home_team_score", "away_team_score", "extra_time",
+			"stadium_id", "home_team_code", "home_team_name", "away_team_code", "away_team_name", "home_team_score", "away_team_score", "extra_time",
 			"penalty_shootout", "home_team_score_penalties", "away_team_score_penalties", "home_team_win",
 			"away_team_win", "draw", "ref_id",
 		})
 
 		mock.ExpectQuery(`^-- name: ListMatchesByYear :many.*`).
-			WithArgs(int32(2023)).
+			WithArgs(int32(2023), "es").
 			WillReturnRows(rows)
 
-		result, err := repo.ListByYear(context.Background(), 2023)
+		result, err := repo.ListByYear(context.Background(), 2023, "es")
 		assert.NoError(t, err)
 		assert.Empty(t, result)
 		assert.NoError(t, mock.ExpectationsWereMet())

@@ -402,6 +402,8 @@ Notas de respuesta:
 - `hostCodes` y `championCode` se normalizan a mayúsculas.
 - Si no hay estadísticas cargadas para una edición, `stats` devuelve valores predeterminados (enteros en `0`, strings vacíos `""` y arrays vacíos `[]`).
 - El fixture agrupa stages de tipo `group` con `groups[].matches` y `groups[].standings`; los stages `knockout` exponen `matches` directamente.
+- En el fixture, cada match expone `homeTeamCode`, `homeTeamName`, `awayTeamCode` y `awayTeamName`; cada standing de grupo expone `teamCode` y `name`.
+- Los nombres de selecciones del fixture se resuelven según `Accept-Language` con fallback a `teams.name`.
 
 Parámetros soportados para `/api/championships/:year/teams`:
 

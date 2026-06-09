@@ -25,8 +25,8 @@ func NewFixtureService(matchRepo repository.MatchRepository, groupStatsRepo repo
 }
 
 // GetByYear returns the full fixture for a championship year.
-func (s *fixtureService) GetByYear(ctx context.Context, year int) (*domain.Fixture, error) {
-	matches, err := s.matchRepo.ListByYear(ctx, year)
+func (s *fixtureService) GetByYear(ctx context.Context, year int, language string) (*domain.Fixture, error) {
+	matches, err := s.matchRepo.ListByYear(ctx, year, language)
 	if err != nil {
 		return nil, err
 	}
@@ -34,7 +34,7 @@ func (s *fixtureService) GetByYear(ctx context.Context, year int) (*domain.Fixtu
 		return nil, fmt.Errorf("%w: championship not found", domain.ErrNotFound)
 	}
 
-	standings, err := s.groupStatsRepo.ListByYear(ctx, year)
+	standings, err := s.groupStatsRepo.ListByYear(ctx, year, language)
 	if err != nil {
 		return nil, err
 	}

@@ -8,5 +8,5 @@ import (
 
 // MatchRepository defines the contract for match data access.
 type MatchRepository interface {
-	ListByYear(ctx context.Context, year int) ([]domain.FixtureMatchRecord, error)
+	ListByYear(ctx context.Context, year int, language string) ([]domain.FixtureMatchRecord, error)
 }
