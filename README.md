@@ -176,6 +176,20 @@ Si no se envía el header, la API utilizará la versión `1` por defecto.
 
 Para más detalles, consultar [Estrategia de Versionado](docs/API_VERSIONING.md).
 
+### Internacionalización
+
+La API permite solicitar datos localizados mediante el header HTTP `Accept-Language`.
+Si no se envía el header, o si el idioma solicitado no está soportado, se utiliza `es` por defecto.
+
+Idiomas soportados inicialmente:
+
+- `es`: español, idioma por defecto.
+- `en`: inglés.
+
+Cuando falta una traducción para el idioma solicitado, la API responde el valor base almacenado en la tabla principal. Para confederaciones, el campo `confederations.name` funciona como fallback en español.
+
+**Ejemplo:** `Accept-Language: en`
+
 ### Convención de respuestas paginadas
 
 Todo endpoint que incluya paginado de datos debe responder con un objeto JSON que contenga:

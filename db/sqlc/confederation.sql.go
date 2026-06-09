@@ -10,29 +10,58 @@ import (
 )
 
 const getConfederationByCode = `-- name: GetConfederationByCode :one
-SELECT code, name FROM confederations WHERE lower(code) = lower($1)
+SELECT
+    c.code,
+    COALESCE(ct.name, c.name)::varchar AS name
+FROM confederations c
+LEFT JOIN confederation_translations ct
+    ON ct.confederation_code = c.code
+    AND ct.language = $1
+WHERE lower(c.code) = lower($2)
 `
 
-func (q *Queries) GetConfederationByCode(ctx context.Context, lower string) (Confederation, error) {
-	row := q.db.QueryRow(ctx, getConfederationByCode, lower)
-	var i Confederation
+type GetConfederationByCodeParams struct {
+	Language string
+	Code     string
+}
+
+type GetConfederationByCodeRow struct {
+	Code string
+	Name string
+}
+
+func (q *Queries) GetConfederationByCode(ctx context.Context, arg GetConfederationByCodeParams) (GetConfederationByCodeRow, error) {
+	row := q.db.QueryRow(ctx, getConfederationByCode, arg.Language, arg.Code)
+	var i GetConfederationByCodeRow
 	err := row.Scan(&i.Code, &i.Name)
 	return i, err
 }
 
 const listConfederations = `-- name: ListConfederations :many
-SELECT code, name FROM confederations ORDER BY code
+SELECT
+    c.code,
+    COALESCE(ct.name, c.name)::varchar AS name
+FROM confederations c
+LEFT JOIN confederation_translations ct
+    ON ct.confederation_code = c.code
+    AND ct.language = $1
+ORDER BY c.code
 `
 
-func (q *Queries) ListConfederations(ctx context.Context) ([]Confederation, error) {
-	rows, err := q.db.Query(ctx, listConfederations)
+type ListConfederationsRow struct {
+	Code string
+	Name string
+}
+
+func (q *Queries) ListConfederations(ctx context.Context, language string) ([]ListConfederationsRow, error) {
+	rows, err := q.db.Query(ctx, listConfederations, language)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Confederation
+	var items []ListConfederationsRow
 	for rows.Next() {
-		var i Confederation
+		var i ListConfederationsRow
 		if err := rows.Scan(&i.Code, &i.Name); err != nil {
 			return nil, err
 		}
