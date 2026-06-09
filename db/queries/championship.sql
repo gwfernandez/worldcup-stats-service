@@ -4,15 +4,23 @@ SELECT
     start_date,
     end_date,
     host_codes,
-    champion_code
+    champion_code,
+    COALESCE(champion_translation.name, champion_team.name, '')::varchar AS champion_name
 FROM championships c
+LEFT JOIN teams champion_team ON champion_team.code = c.champion_code
+LEFT JOIN team_translations champion_translation
+    ON champion_translation.team_code = champion_team.code
+    AND champion_translation.language = sqlc.arg(language)
 WHERE
     ($1::integer = 0 OR c.year = $1)
     AND ($2::text = '' OR EXISTS (
         SELECT 1
         FROM teams t
+        LEFT JOIN team_translations tt
+            ON tt.team_code = t.code
+            AND tt.language = sqlc.arg(language)
         WHERE t.code = ANY(c.host_codes)
-          AND LOWER(t.name) LIKE '%' || LOWER($2) || '%'
+          AND LOWER(COALESCE(tt.name, t.name)) LIKE '%' || LOWER($2) || '%'
     ))
     AND ($3::text = '' OR EXISTS (
         SELECT 1
@@ -31,8 +39,11 @@ WHERE
     AND ($2::text = '' OR EXISTS (
         SELECT 1
         FROM teams t
+        LEFT JOIN team_translations tt
+            ON tt.team_code = t.code
+            AND tt.language = sqlc.arg(language)
         WHERE t.code = ANY(c.host_codes)
-          AND LOWER(t.name) LIKE '%' || LOWER($2) || '%'
+          AND LOWER(COALESCE(tt.name, t.name)) LIKE '%' || LOWER($2) || '%'
     ))
     AND ($3::text = '' OR EXISTS (
         SELECT 1
@@ -67,6 +78,7 @@ WHERE c.year = $1;
 SELECT
     ct.year,
     ct.team_code,
+    COALESCE(tt.name, t.name)::varchar AS name,
     t.confederation_code,
     cts.group_code,
     COALESCE(CASE
@@ -79,6 +91,9 @@ SELECT
     COALESCE(m.managers, '')::text AS managers
 FROM championships_teams ct
 INNER JOIN teams t ON t.code = ct.team_code
+LEFT JOIN team_translations tt
+    ON tt.team_code = t.code
+    AND tt.language = sqlc.arg(language)
 INNER JOIN championships_teams_stats cts ON ct.year = cts.year AND ct.team_code = cts.team_code
 INNER JOIN championships_stats cs ON cs.year = ct.year
 LEFT JOIN (
@@ -91,7 +106,7 @@ LEFT JOIN (
     GROUP BY cm.team_code
 ) m ON m.team_code = ct.team_code
 WHERE ct.year = $1
-    AND ($2::text = '' OR LOWER(t.name) LIKE '%' || LOWER($2) || '%')
+    AND ($2::text = '' OR LOWER(COALESCE(tt.name, t.name)) LIKE '%' || LOWER($2) || '%')
     AND ($3::text = '' OR t.confederation_code = $3)
     AND ($4::text = '' OR cts.group_code = $4)
 ORDER BY cts.position ASC, cts.stage_reached DESC
@@ -101,15 +116,19 @@ LIMIT $5 OFFSET $6;
 SELECT COUNT(*)
 FROM championships_teams ct
 INNER JOIN teams t ON t.code = ct.team_code
+LEFT JOIN team_translations tt
+    ON tt.team_code = t.code
+    AND tt.language = sqlc.arg(language)
 INNER JOIN championships_teams_stats cts ON ct.year = cts.year AND ct.team_code = cts.team_code
 WHERE ct.year = $1
-    AND ($2::text = '' OR LOWER(t.name) LIKE '%' || LOWER($2) || '%')
+    AND ($2::text = '' OR LOWER(COALESCE(tt.name, t.name)) LIKE '%' || LOWER($2) || '%')
     AND ($3::text = '' OR t.confederation_code = $3)
     AND ($4::text = '' OR cts.group_code = $4);
 
 -- name: ListChampionshipStandingsByYear :many
 SELECT
     cts.team_code,
+    COALESCE(tt.name, t.name)::varchar AS name,
     COALESCE(cts.group_code, '')::text AS group_code,
     cts.matches_played,
     cts.wins,
@@ -130,6 +149,9 @@ SELECT
     END, '')::text AS performance
 FROM championships_teams ct
 INNER JOIN teams t ON t.code = ct.team_code
+LEFT JOIN team_translations tt
+    ON tt.team_code = t.code
+    AND tt.language = sqlc.arg(language)
 INNER JOIN championships_teams_stats cts ON ct.year = cts.year AND ct.team_code = cts.team_code
 INNER JOIN championships_stats cs ON cs.year = ct.year
 WHERE ct.year = $1
@@ -170,9 +192,14 @@ WHERE css.year = $1
 SELECT
     TRIM(CONCAT_WS(' ', NULLIF(p.first_name, ''), NULLIF(p.last_name, '')))::text AS full_name,
     ss.team_code,
+    COALESCE(tt.name, t.name)::varchar AS name,
     ss.goals
 FROM squads_stats ss
 INNER JOIN players p ON p.id = ss.player_id
+INNER JOIN teams t ON t.code = ss.team_code
+LEFT JOIN team_translations tt
+    ON tt.team_code = t.code
+    AND tt.language = sqlc.arg(language)
 WHERE ss.year = $1
     AND ss.goals > 0
     AND (
@@ -182,7 +209,7 @@ WHERE ss.year = $1
     )
     AND ($3::text = '' OR ss.team_code = $3)
 ORDER BY ss.goals DESC, full_name ASC
-LIMIT $4 OFFSET $5;
+LIMIT sqlc.arg(limit_value) OFFSET sqlc.arg(offset_value);
 
 -- name: CountChampionshipScorersByYear :one
 SELECT COUNT(*)

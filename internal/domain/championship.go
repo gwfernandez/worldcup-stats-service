@@ -28,6 +28,7 @@ type Championship struct {
 	EndDate      string              `json:"endDate"`
 	HostCodes    []string            `json:"hostCodes"`
 	ChampionCode *string             `json:"championCode"`
+	ChampionName *string             `json:"championName,omitempty"`
 	Stats        *ChampionshipsStats `json:"stats,omitempty"`
 }
 
@@ -35,6 +36,7 @@ type Championship struct {
 type ChampionshipFilter struct {
 	Year              int
 	Host              string
+	Language          string
 	ConfederationCode string
 	Page              int
 	Size              int
@@ -44,6 +46,7 @@ type ChampionshipFilter struct {
 type ChampionshipTeam struct {
 	Year              int    `json:"year"`
 	TeamCode          string `json:"teamCode"`
+	Name              string `json:"name"`
 	ConfederationCode string `json:"confederationCode"`
 	GroupCode         string `json:"groupCode"`
 	StageReached      string `json:"stageReached"`
@@ -54,6 +57,7 @@ type ChampionshipTeam struct {
 type ChampionshipTeamFilter struct {
 	Year              int
 	Name              string
+	Language          string
 	ConfederationCode string
 	GroupCode         string
 	Page              int
@@ -82,6 +86,7 @@ type ChampionshipStadiumFilter struct {
 type ChampionshipScorer struct {
 	FullName string `json:"fullName"`
 	TeamCode string `json:"teamCode"`
+	TeamName string `json:"teamName"`
 	Goals    int32  `json:"goals"`
 }
 
@@ -89,6 +94,7 @@ type ChampionshipScorer struct {
 type ChampionshipScorerFilter struct {
 	Year     int
 	Name     string
+	Language string
 	TeamCode string
 	Page     int
 	Size     int
@@ -97,6 +103,7 @@ type ChampionshipScorerFilter struct {
 // ChampionshipStanding represents a team standing in a championship edition.
 type ChampionshipStanding struct {
 	TeamCode       string `json:"teamCode"`
+	TeamName       string `json:"teamName"`
 	GroupCode      string `json:"groupCode"`
 	MatchesPlayed  int32  `json:"matchesPlayed"`
 	Wins           int32  `json:"wins"`
@@ -113,9 +120,10 @@ type ChampionshipStanding struct {
 
 // ChampionshipStandingFilter represents filters for listing championship standings.
 type ChampionshipStandingFilter struct {
-	Year int
-	Page int
-	Size int
+	Year     int
+	Language string
+	Page     int
+	Size     int
 }
 
 // ChampionshipListResponse represents the JSON response for listing championships.

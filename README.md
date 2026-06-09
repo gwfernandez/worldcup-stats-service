@@ -186,7 +186,9 @@ Idiomas soportados inicialmente:
 - `es`: español, idioma por defecto.
 - `en`: inglés.
 
-Cuando falta una traducción para el idioma solicitado, la API responde el valor base almacenado en la tabla principal. Para confederaciones, el campo `confederations.name` funciona como fallback en español.
+Cuando falta una traducción para el idioma solicitado, la API responde el valor base almacenado en la tabla principal. Para confederaciones, el campo `confederations.name` funciona como fallback en español; para selecciones, el fallback es `teams.name`.
+
+Actualmente el header `Accept-Language` localiza nombres de confederaciones y nombres de selecciones en los endpoints que los exponen o filtran: `/api/confederations`, `/api/teams`, `/api/champions`, `/api/standings`, `/api/championships` y `/api/championships/:year/teams`.
 
 **Ejemplo:** `Accept-Language: en`
 
@@ -252,7 +254,7 @@ Los parámetros de una sola palabra se mantienen sin cambios, por ejemplo `name`
 
 Parámetros soportados para `/api/teams`:
 
-- `name`: búsqueda por contiene, case-insensitive.
+- `name`: búsqueda por contiene, case-insensitive, sobre el nombre localizado de la selección según `Accept-Language`.
 - `confederationCode`: filtro por igualdad exacta, case-insensitive.
 - `federationName`: búsqueda por contiene, case-insensitive.
 - `federationCode`: filtro por igualdad exacta, case-insensitive.
@@ -265,6 +267,7 @@ Notas de respuesta:
 - `dissolutionDate` se expone en formato `YYYY-MM-DD` cuando aplica.
 - `code` y `federationCode` se normalizan a mayúsculas.
 - Se incluye el campo calculado `isDissolved`.
+- `name` se resuelve según `Accept-Language` con fallback a `teams.name`.
 
 ### Campeones Mundiales
 
@@ -280,7 +283,8 @@ Parámetros soportados para `/api/champions`:
 Notas de respuesta:
 
 - No soporta filtros.
-- Los resultados se ordenan por `wins` descendente y, ante empates, por `name` ascendente.
+- Los resultados se ordenan por `wins` descendente y, ante empates, por `teamName` localizado ascendente.
+- `teamName` se resuelve según `Accept-Language` con fallback a `teams.name`.
 - `years` se expone como array de números ordenado ascendentemente.
 
 ### Tabla Histórica de Posiciones
@@ -291,7 +295,7 @@ Notas de respuesta:
 
 Parámetros soportados para `/api/standings`:
 
-- `name`: búsqueda por nombre de selección, case-insensitive y por contiene.
+- `name`: búsqueda por nombre de selección localizado según `Accept-Language`, case-insensitive y por contiene.
 - `confederationCode`: filtro por igualdad exacta sobre el código de confederación. La API normaliza el valor a mayúsculas.
 - `page`: número de página (base 1, por defecto `1`).
 - `size`: tamaño de página (por defecto `20`, máximo `100`).
@@ -303,7 +307,7 @@ Ejemplo de respuesta:
   "data": [
     {
       "teamCode": "BRA",
-      "name": "Brasil",
+      "teamName": "Brasil",
       "matchesPlayed": 114,
       "wins": 79,
       "draws": 14,
@@ -347,7 +351,8 @@ Notas de respuesta:
 - Si no hay goleadores asociados a los filtros, responde `200 OK` con `data: []` y metadata de paginación.
 - Los resultados se ordenan por `goals` descendente y `fullName` ascendente.
 - `teamCode`, `listTeams` y `confederationCode` se normalizan a mayúsculas.
-- La respuesta expone `fullName`, `teamCode`, `goals`, `listTeams` y `confederationCode`.
+- La respuesta expone `fullName`, `teamCode`, `teamName`, `goals`, `listTeams` y `confederationCode`.
+- `teamName` corresponde al nombre localizado de la selección principal según `Accept-Language`, con fallback a `teams.name`.
 
 Ejemplo de respuesta:
 
@@ -357,6 +362,7 @@ Ejemplo de respuesta:
     {
       "fullName": "Lionel Messi",
       "teamCode": "ARG",
+      "teamName": "Argentina",
       "goals": 13,
       "listTeams": ["ARG"],
       "confederationCode": "CONMEBOL"
@@ -388,7 +394,7 @@ Ejemplo de respuesta:
 Parámetros soportados para `/api/championships`:
 
 - `year`: filtro exacto por año del campeonato.
-- `host`: búsqueda por nombre del país anfitrión (contiene, case-insensitive, sobre el nombre de la selección en `teams`).
+- `host`: búsqueda por nombre del país anfitrión (contiene, case-insensitive, sobre el nombre localizado de la selección según `Accept-Language`).
 - `confederationCode`: filtro por código de la confederación de los países anfitriones.
 - `page`: número de página (base 1, por defecto `1`).
 - `size`: tamaño de página (por defecto `20`, máximo `100`).
@@ -396,12 +402,15 @@ Parámetros soportados para `/api/championships`:
 Notas de respuesta:
 
 - `hostCodes` y `championCode` se normalizan a mayúsculas.
+- `championName` corresponde al nombre localizado del campeón según `Accept-Language`, con fallback a `teams.name`.
 - Si no hay estadísticas cargadas para una edición, `stats` devuelve valores predeterminados (enteros en `0`, strings vacíos `""` y arrays vacíos `[]`).
 - El fixture agrupa stages de tipo `group` con `groups[].matches` y `groups[].standings`; los stages `knockout` exponen `matches` directamente.
+- En el fixture, cada match expone `homeTeamCode`, `homeTeamName`, `awayTeamCode` y `awayTeamName`; cada standing de grupo expone `teamCode` y `teamName`.
+- Los nombres de selecciones del fixture se resuelven según `Accept-Language` con fallback a `teams.name`.
 
 Parámetros soportados para `/api/championships/:year/teams`:
 
-- `name`: búsqueda por nombre de selección (contiene, case-insensitive, sobre `teams.name`).
+- `name`: búsqueda por nombre de selección localizado según `Accept-Language` (contiene, case-insensitive, con fallback a `teams.name`).
 - `confederationCode`: filtro por igualdad sobre `teams.confederation_code`, normalizado a mayúsculas.
 - `groupCode`: filtro por igualdad sobre `championships_teams_stats.group_code`, normalizado a mayúsculas.
 - `page`: número de página (base 1, por defecto `1`).
@@ -413,6 +422,8 @@ Notas de respuesta:
 - Si `:year` es numérico pero no tiene selecciones asociadas, responde `200 OK` con `data: []` y metadata de paginación.
 - `managers` devuelve string vacío `""` cuando no hay DTs asociados.
 - Los resultados se ordenan por posición ascendente e instancia alcanzada descendente.
+- La respuesta expone `year`, `teamCode`, `name`, `confederationCode`, `groupCode`, `stageReached` y `managers`.
+- `name` se resuelve según `Accept-Language` con fallback a `teams.name`.
 
 Parámetros soportados para `/api/championships/:year/scorers`:
 
@@ -426,7 +437,8 @@ Notas de respuesta:
 - Si `:year` no es numérico, responde `400 Bad Request` con `{"error":"invalid year parameter"}`.
 - Si `:year` es numérico pero no tiene goleadores asociados, responde `200 OK` con `data: []` y metadata de paginación.
 - Los resultados se ordenan por `goals` descendente y `fullName` ascendente.
-- `fullName` y `teamCode` se exponen en `camelCase`; `teamCode` se normaliza a mayúsculas.
+- `fullName`, `teamCode` y `teamName` se exponen en `camelCase`; `teamCode` se normaliza a mayúsculas.
+- `teamName` corresponde al nombre localizado de la selección según `Accept-Language`, con fallback a `teams.name`.
 
 Parámetros soportados para `/api/championships/:year/stadiums`:
 
@@ -453,7 +465,8 @@ Notas de respuesta:
 - No soporta filtros adicionales.
 - Los resultados se ordenan por `position` ascendente e instancia alcanzada.
 - `teamCode` y `groupCode` se normalizan a mayúsculas.
-- La respuesta expone `teamCode`, `groupCode`, `matchesPlayed`, `wins`, `draws`, `losses`, `goalsFor`, `goalsAgainst`, `goalDifference`, `points`, `unifiedPoints`, `position` y `performance`.
+- La respuesta expone `teamCode`, `teamName`, `groupCode`, `matchesPlayed`, `wins`, `draws`, `losses`, `goalsFor`, `goalsAgainst`, `goalDifference`, `points`, `unifiedPoints`, `position` y `performance`.
+- `teamName` se resuelve según `Accept-Language` con fallback a `teams.name`.
 
 ### Ejemplos de request
  
@@ -470,6 +483,11 @@ curl -H "API-Version: 1" "http://localhost:8080/api/teams"
 **Filtrar selecciones por nombre y confederación**
 ```bash
 curl -H "API-Version: 1" "http://localhost:8080/api/teams?name=argen&confederationCode=CONMEBOL&page=1&size=20"
+```
+
+**Listar selecciones en inglés**
+```bash
+curl -H "API-Version: 1" -H "Accept-Language: en" "http://localhost:8080/api/teams"
 ```
 
 **Listar campeones mundiales**
@@ -544,7 +562,7 @@ curl -H "API-Version: 1" "http://localhost:8080/api/championships/1986"
 
 **Obtener selección por código FIFA**
 ```bash
-curl -H "API-Version: 1" "http://localhost:8080/api/teams/code/urs"
+curl -H "API-Version: 1" "http://localhost:8080/api/teams/urs"
 ```
 
 ---

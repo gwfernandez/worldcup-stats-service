@@ -46,6 +46,7 @@ func TestScorerHandler_List(t *testing.T) {
 			Data: []domain.Scorer{{
 				FullName:          "Lionel Messi",
 				TeamCode:          "ARG",
+				TeamName:          "Argentina",
 				Goals:             13,
 				ListTeams:         []string{"ARG"},
 				ConfederationCode: "CONMEBOL",
@@ -59,10 +60,11 @@ func TestScorerHandler_List(t *testing.T) {
 				HasPrevious:   false,
 			},
 		}
-		filter := domain.ScorerFilter{Name: "messi", TeamCode: "arg", ConfederationCode: "conmebol", Page: 1, Size: 10}
+		filter := domain.ScorerFilter{Name: "messi", Language: "en", TeamCode: "arg", ConfederationCode: "conmebol", Page: 1, Size: 10}
 		svc.On("List", mock.Anything, filter).Return(expected, nil)
 
 		req, _ := http.NewRequest(http.MethodGet, "/api/scorers?page=1&size=10&name=messi&teamCode=arg&confederationCode=conmebol", nil)
+		req.Header.Set("Accept-Language", "en")
 		w := httptest.NewRecorder()
 		r.ServeHTTP(w, req)
 
@@ -72,6 +74,7 @@ func TestScorerHandler_List(t *testing.T) {
 			"data": [{
 				"fullName": "Lionel Messi",
 				"teamCode": "ARG",
+				"teamName": "Argentina",
 				"goals": 13,
 				"listTeams": ["ARG"],
 				"confederationCode": "CONMEBOL"
@@ -102,7 +105,7 @@ func TestScorerHandler_List(t *testing.T) {
 				HasPrevious:   false,
 			},
 		}
-		svc.On("List", mock.Anything, domain.ScorerFilter{Page: 1, Size: 20}).Return(expected, nil)
+		svc.On("List", mock.Anything, domain.ScorerFilter{Language: "es", Page: 1, Size: 20}).Return(expected, nil)
 
 		req, _ := http.NewRequest(http.MethodGet, "/api/scorers", nil)
 		w := httptest.NewRecorder()
@@ -174,7 +177,7 @@ func TestScorerHandler_List(t *testing.T) {
 	t.Run("internal error", func(t *testing.T) {
 		svc := new(MockScorerService)
 		r := setupScorerRouter(svc)
-		svc.On("List", mock.Anything, domain.ScorerFilter{Page: 1, Size: 20}).Return(nil, errors.New("db error"))
+		svc.On("List", mock.Anything, domain.ScorerFilter{Language: "es", Page: 1, Size: 20}).Return(nil, errors.New("db error"))
 
 		req, _ := http.NewRequest(http.MethodGet, "/api/scorers", nil)
 		w := httptest.NewRecorder()

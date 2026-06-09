@@ -44,7 +44,7 @@ func TestChampionHandler_List(t *testing.T) {
 		expected := &domain.ChampionListResponse{
 			Data: []domain.Champion{{
 				TeamCode: "BRA",
-				Name:     "Brasil",
+				TeamName: "Brasil",
 				Wins:     5,
 				Years:    []int32{1958, 1962, 1970, 1994, 2002},
 			}},
@@ -57,7 +57,7 @@ func TestChampionHandler_List(t *testing.T) {
 				HasPrevious:   false,
 			},
 		}
-		svc.On("List", mock.Anything, domain.ChampionFilter{Page: 1, Size: 10}).Return(expected, nil)
+		svc.On("List", mock.Anything, domain.ChampionFilter{Language: "es", Page: 1, Size: 10}).Return(expected, nil)
 
 		req, _ := http.NewRequest(http.MethodGet, "/api/champions?page=1&size=10", nil)
 		w := httptest.NewRecorder()
@@ -67,7 +67,7 @@ func TestChampionHandler_List(t *testing.T) {
 		assert.JSONEq(t, `{
 			"data": [{
 				"teamCode": "BRA",
-				"name": "Brasil",
+				"teamName": "Brasil",
 				"wins": 5,
 				"years": [1958, 1962, 1970, 1994, 2002]
 			}],
@@ -97,7 +97,7 @@ func TestChampionHandler_List(t *testing.T) {
 				HasPrevious:   false,
 			},
 		}
-		svc.On("List", mock.Anything, domain.ChampionFilter{Page: 1, Size: 20}).Return(expected, nil)
+		svc.On("List", mock.Anything, domain.ChampionFilter{Language: "es", Page: 1, Size: 20}).Return(expected, nil)
 
 		req, _ := http.NewRequest(http.MethodGet, "/api/champions", nil)
 		w := httptest.NewRecorder()
@@ -111,6 +111,40 @@ func TestChampionHandler_List(t *testing.T) {
 				"size": 20,
 				"totalElements": 0,
 				"totalPages": 0,
+				"hasNext": false,
+				"hasPrevious": false
+			}
+		}`, w.Body.String())
+		svc.AssertExpectations(t)
+	})
+
+	t.Run("uses english accept language", func(t *testing.T) {
+		svc := new(MockChampionService)
+		r := setupChampionRouter(svc)
+		expected := &domain.ChampionListResponse{
+			Data:       []domain.Champion{{TeamCode: "GER", TeamName: "Germany", Wins: 4, Years: []int32{1954, 1974, 1990, 2014}}},
+			Pagination: domain.PaginationInfo{Page: 1, Size: 20, TotalElements: 1, TotalPages: 1},
+		}
+		svc.On("List", mock.Anything, domain.ChampionFilter{Language: "en", Page: 1, Size: 20}).Return(expected, nil)
+
+		req, _ := http.NewRequest(http.MethodGet, "/api/champions", nil)
+		req.Header.Set("Accept-Language", "en")
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		assert.JSONEq(t, `{
+			"data": [{
+				"teamCode": "GER",
+				"teamName": "Germany",
+				"wins": 4,
+				"years": [1954, 1974, 1990, 2014]
+			}],
+			"pagination": {
+				"page": 1,
+				"size": 20,
+				"totalElements": 1,
+				"totalPages": 1,
 				"hasNext": false,
 				"hasPrevious": false
 			}
@@ -169,7 +203,7 @@ func TestChampionHandler_List(t *testing.T) {
 	t.Run("internal error", func(t *testing.T) {
 		svc := new(MockChampionService)
 		r := setupChampionRouter(svc)
-		svc.On("List", mock.Anything, domain.ChampionFilter{Page: 1, Size: 20}).Return(nil, errors.New("db error"))
+		svc.On("List", mock.Anything, domain.ChampionFilter{Language: "es", Page: 1, Size: 20}).Return(nil, errors.New("db error"))
 
 		req, _ := http.NewRequest(http.MethodGet, "/api/champions", nil)
 		w := httptest.NewRecorder()

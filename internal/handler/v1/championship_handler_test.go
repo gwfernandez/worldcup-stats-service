@@ -87,6 +87,7 @@ func TestChampionshipHandler_ListScorersByYear(t *testing.T) {
 			Data: []domain.ChampionshipScorer{{
 				FullName: "Guillermo Stabile",
 				TeamCode: "ARG",
+				TeamName: "Argentina",
 				Goals:    8,
 			}},
 			Pagination: domain.PaginationInfo{
@@ -100,12 +101,14 @@ func TestChampionshipHandler_ListScorersByYear(t *testing.T) {
 		svc.On("ListScorersByYear", mock.Anything, domain.ChampionshipScorerFilter{
 			Year:     1930,
 			Name:     "guille",
+			Language: "en",
 			TeamCode: "ARG",
 			Page:     1,
 			Size:     20,
 		}).Return(expected, nil)
 
 		req, _ := http.NewRequest(http.MethodGet, "/api/championships/1930/scorers?name=guille&teamCode=arg", nil)
+		req.Header.Set("Accept-Language", "en")
 		w := httptest.NewRecorder()
 		r.ServeHTTP(w, req)
 
@@ -114,6 +117,7 @@ func TestChampionshipHandler_ListScorersByYear(t *testing.T) {
 			"data": [{
 				"fullName": "Guillermo Stabile",
 				"teamCode": "ARG",
+				"teamName": "Argentina",
 				"goals": 8
 			}],
 			"pagination": {
@@ -143,9 +147,10 @@ func TestChampionshipHandler_ListScorersByYear(t *testing.T) {
 		}
 
 		svc.On("ListScorersByYear", mock.Anything, domain.ChampionshipScorerFilter{
-			Year: 1930,
-			Page: 2,
-			Size: 10,
+			Year:     1930,
+			Language: "es",
+			Page:     2,
+			Size:     10,
 		}).Return(expected, nil)
 
 		req, _ := http.NewRequest(http.MethodGet, "/api/championships/1930/scorers?page=2&size=10", nil)
@@ -228,6 +233,7 @@ func TestChampionshipHandler_ListTeamsByYear(t *testing.T) {
 			Data: []domain.ChampionshipTeam{{
 				Year:              1930,
 				TeamCode:          "ARG",
+				Name:              "Argentina",
 				ConfederationCode: "CONMEBOL",
 				GroupCode:         "1",
 				StageReached:      "runner_up",
@@ -244,6 +250,7 @@ func TestChampionshipHandler_ListTeamsByYear(t *testing.T) {
 		svc.On("ListTeamsByYear", mock.Anything, domain.ChampionshipTeamFilter{
 			Year:              1930,
 			Name:              "argentina",
+			Language:          "en",
 			ConfederationCode: "CONMEBOL",
 			GroupCode:         "A",
 			Page:              1,
@@ -251,6 +258,7 @@ func TestChampionshipHandler_ListTeamsByYear(t *testing.T) {
 		}).Return(expected, nil)
 
 		req, _ := http.NewRequest(http.MethodGet, "/api/championships/1930/teams?name=argentina&confederationCode=conmebol&groupCode=a", nil)
+		req.Header.Set("Accept-Language", "en")
 		w := httptest.NewRecorder()
 		r.ServeHTTP(w, req)
 
@@ -259,6 +267,7 @@ func TestChampionshipHandler_ListTeamsByYear(t *testing.T) {
 			"data": [{
 				"year": 1930,
 				"teamCode": "ARG",
+				"name": "Argentina",
 				"confederationCode": "CONMEBOL",
 				"groupCode": "1",
 				"stageReached": "runner_up",
@@ -347,6 +356,7 @@ func TestChampionshipHandler_ListStandingsByYear(t *testing.T) {
 		expected := &domain.ChampionshipStandingListResponse{
 			Data: []domain.ChampionshipStanding{{
 				TeamCode:       "URU",
+				TeamName:       "Uruguay",
 				GroupCode:      "3",
 				MatchesPlayed:  4,
 				Wins:           4,
@@ -369,9 +379,10 @@ func TestChampionshipHandler_ListStandingsByYear(t *testing.T) {
 		}
 
 		svc.On("ListStandingsByYear", mock.Anything, domain.ChampionshipStandingFilter{
-			Year: 1930,
-			Page: 1,
-			Size: 20,
+			Year:     1930,
+			Language: "es",
+			Page:     1,
+			Size:     20,
 		}).Return(expected, nil)
 
 		req, _ := http.NewRequest(http.MethodGet, "/api/championships/1930/standings", nil)
@@ -383,6 +394,7 @@ func TestChampionshipHandler_ListStandingsByYear(t *testing.T) {
 		assert.JSONEq(t, `{
 			"data": [{
 				"teamCode": "URU",
+				"teamName": "Uruguay",
 				"groupCode": "3",
 				"matchesPlayed": 4,
 				"wins": 4,
@@ -421,9 +433,10 @@ func TestChampionshipHandler_ListStandingsByYear(t *testing.T) {
 		}
 
 		svc.On("ListStandingsByYear", mock.Anything, domain.ChampionshipStandingFilter{
-			Year: 2026,
-			Page: 2,
-			Size: 100,
+			Year:     2026,
+			Language: "es",
+			Page:     2,
+			Size:     100,
 		}).Return(expected, nil)
 
 		req, _ := http.NewRequest(http.MethodGet, "/api/championships/2026/standings?page=2&size=100", nil)
@@ -650,8 +663,16 @@ func TestChampionshipHandler_List(t *testing.T) {
 		r := setupChampionshipRouter(svc)
 
 		championCode := "URU"
+		championName := "Uruguay"
 		expected := &domain.ChampionshipListResponse{
-			Data: []domain.Championship{{Year: 1930, StartDate: "1930-07-13", EndDate: "1930-07-30", HostCodes: []string{"URU"}, ChampionCode: &championCode}},
+			Data: []domain.Championship{{
+				Year:         1930,
+				StartDate:    "1930-07-13",
+				EndDate:      "1930-07-30",
+				HostCodes:    []string{"URU"},
+				ChampionCode: &championCode,
+				ChampionName: &championName,
+			}},
 			Pagination: domain.PaginationInfo{
 				Page:          1,
 				Size:          20,
@@ -665,6 +686,7 @@ func TestChampionshipHandler_List(t *testing.T) {
 		svc.On("List", mock.Anything, domain.ChampionshipFilter{
 			Year:              1930,
 			Host:              "uru",
+			Language:          "es",
 			ConfederationCode: "CONMEBOL",
 			Page:              1,
 			Size:              20,
@@ -681,7 +703,8 @@ func TestChampionshipHandler_List(t *testing.T) {
 				"startDate": "1930-07-13",
 				"endDate": "1930-07-30",
 				"hostCodes": ["URU"],
-				"championCode": "URU"
+				"championCode": "URU",
+				"championName": "Uruguay"
 			}],
 			"pagination": {
 				"page": 1,

@@ -35,7 +35,7 @@ func TestStandingService_List(t *testing.T) {
 		expectedFilter := domain.StandingFilter{Name: "argen", ConfederationCode: "CONMEBOL", Page: 1, Size: 10}
 		expected := []domain.Standing{{
 			TeamCode:        "ARG",
-			Name:            "Argentina",
+			TeamName:        "Argentina",
 			MatchesPlayed:   88,
 			Wins:            53,
 			Draws:           10,

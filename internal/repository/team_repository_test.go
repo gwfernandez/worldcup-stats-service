@@ -31,11 +31,12 @@ func TestTeamRepository_List(t *testing.T) {
 			IncludeDissolved:  true,
 			Page:              1,
 			Size:              20,
+			Language:          "en",
 		}
 
 		countRows := mock.NewRows([]string{"count"}).AddRow(int64(2))
 		mock.ExpectQuery(`^-- name: CountTeams :one.*`).
-			WithArgs("argen", "CONMEBOL", "futbol", "afa", true).
+			WithArgs("en", "argen", "CONMEBOL", "futbol", "afa", true).
 			WillReturnRows(countRows)
 
 		rows := mock.NewRows([]string{"code", "name", "dissolution_date", "confederation_code", "federation_name", "federation_code"}).
@@ -43,7 +44,7 @@ func TestTeamRepository_List(t *testing.T) {
 			AddRow("urs", "Soviet Union", time.Date(1991, 12, 26, 0, 0, 0, 0, time.UTC), "UEFA", "Football Federation of the Soviet Union", "ffsu")
 
 		mock.ExpectQuery(`^-- name: ListTeams :many.*`).
-			WithArgs("argen", "CONMEBOL", "futbol", "afa", true, int32(20), int32(0)).
+			WithArgs("en", "argen", "CONMEBOL", "futbol", "afa", true, int32(0), int32(20)).
 			WillReturnRows(rows)
 
 		result, total, err := repo.List(context.Background(), filter)
@@ -70,7 +71,7 @@ func TestTeamRepository_List(t *testing.T) {
 		filter := domain.TeamFilter{Page: 1, Size: 20}
 
 		mock.ExpectQuery(`^-- name: CountTeams :one.*`).
-			WithArgs("", "", "", "", false).
+			WithArgs("", "", "", "", "", false).
 			WillReturnError(errors.New("db error"))
 
 		result, total, err := repo.List(context.Background(), filter)
@@ -90,9 +91,9 @@ func TestTeamRepository_GetByCode(t *testing.T) {
 		repo := repository.NewTeamRepository(mock)
 		rows := mock.NewRows([]string{"code", "name", "dissolution_date", "confederation_code", "federation_name", "federation_code"}).
 			AddRow("urs", "Soviet Union", time.Date(1991, 12, 26, 0, 0, 0, 0, time.UTC), "UEFA", "Football Federation of the Soviet Union", "ffsu")
-		mock.ExpectQuery(`^-- name: GetTeamByCode :one.*`).WithArgs("urs").WillReturnRows(rows)
+		mock.ExpectQuery(`^-- name: GetTeamByCode :one.*`).WithArgs("en", "urs").WillReturnRows(rows)
 
-		result, err := repo.GetByCode(context.Background(), "urs")
+		result, err := repo.GetByCode(context.Background(), "urs", "en")
 		assert.NoError(t, err)
 		require.NotNil(t, result)
 		assert.Equal(t, "URS", result.Code)
@@ -107,9 +108,9 @@ func TestTeamRepository_GetByCode(t *testing.T) {
 		defer mock.Close()
 
 		repo := repository.NewTeamRepository(mock)
-		mock.ExpectQuery(`^-- name: GetTeamByCode :one.*`).WithArgs("zzz").WillReturnError(pgx.ErrNoRows)
+		mock.ExpectQuery(`^-- name: GetTeamByCode :one.*`).WithArgs("es", "zzz").WillReturnError(pgx.ErrNoRows)
 
-		result, err := repo.GetByCode(context.Background(), "zzz")
+		result, err := repo.GetByCode(context.Background(), "zzz", "es")
 		assert.NoError(t, err)
 		assert.Nil(t, result)
 		assert.NoError(t, mock.ExpectationsWereMet())

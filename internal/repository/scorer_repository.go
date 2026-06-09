@@ -31,11 +31,12 @@ func (r *scorerRepository) List(ctx context.Context, filter domain.ScorerFilter)
 	limit := int32(filter.Size)
 	offset := int32((filter.Page - 1) * filter.Size)
 	rows, err := r.queries.ListScorers(ctx, sqlc.ListScorersParams{
-		Column1: filter.Name,
-		Column2: filter.TeamCode,
-		Column3: filter.ConfederationCode,
-		Limit:   limit,
-		Offset:  offset,
+		Column1:     filter.Name,
+		Column2:     filter.TeamCode,
+		Column3:     filter.ConfederationCode,
+		Language:    filter.Language,
+		LimitValue:  limit,
+		OffsetValue: offset,
 	})
 	if err != nil {
 		return nil, 0, err
@@ -53,6 +54,7 @@ func toScorerDomain(row sqlc.ListScorersRow) domain.Scorer {
 	return domain.Scorer{
 		FullName:          row.FullName,
 		TeamCode:          strings.ToUpper(row.TeamCode),
+		TeamName:          row.Name,
 		Goals:             row.Goals,
 		ListTeams:         uppercaseSlice(row.ListTeams),
 		ConfederationCode: strings.ToUpper(row.ConfederationCode),

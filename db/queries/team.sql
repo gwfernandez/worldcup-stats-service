@@ -1,38 +1,47 @@
 -- name: ListTeams :many
 SELECT
-    code,
-    name,
-    dissolution_date,
-    confederation_code,
-    federation_name,
-    federation_code
-FROM teams
+    t.code,
+    COALESCE(tt.name, t.name)::varchar AS name,
+    t.dissolution_date,
+    t.confederation_code,
+    t.federation_name,
+    t.federation_code
+FROM teams t
+LEFT JOIN team_translations tt
+    ON tt.team_code = t.code
+    AND tt.language = sqlc.arg(language)
 WHERE
-    ($1::text = '' OR LOWER(name) LIKE '%' || LOWER($1) || '%')
-    AND ($2::text = '' OR LOWER(confederation_code) = LOWER($2))
-    AND ($3::text = '' OR LOWER(federation_name) LIKE '%' || LOWER($3) || '%')
-    AND ($4::text = '' OR LOWER(federation_code) = LOWER($4))
-    AND ($5::boolean OR dissolution_date IS NULL)
-ORDER BY name ASC
-LIMIT $6 OFFSET $7;
+    (sqlc.arg(name_filter)::text = '' OR LOWER(COALESCE(tt.name, t.name)) LIKE '%' || LOWER(sqlc.arg(name_filter)) || '%')
+    AND (sqlc.arg(confederation_code)::text = '' OR LOWER(t.confederation_code) = LOWER(sqlc.arg(confederation_code)))
+    AND (sqlc.arg(federation_name)::text = '' OR LOWER(t.federation_name) LIKE '%' || LOWER(sqlc.arg(federation_name)) || '%')
+    AND (sqlc.arg(federation_code)::text = '' OR LOWER(t.federation_code) = LOWER(sqlc.arg(federation_code)))
+    AND (sqlc.arg(include_dissolved)::boolean OR t.dissolution_date IS NULL)
+ORDER BY COALESCE(tt.name, t.name) ASC
+LIMIT sqlc.arg(limit_value) OFFSET sqlc.arg(offset_value);
 
 -- name: CountTeams :one
 SELECT COUNT(*)
-FROM teams
+FROM teams t
+LEFT JOIN team_translations tt
+    ON tt.team_code = t.code
+    AND tt.language = sqlc.arg(language)
 WHERE
-    ($1::text = '' OR LOWER(name) LIKE '%' || LOWER($1) || '%')
-    AND ($2::text = '' OR LOWER(confederation_code) = LOWER($2))
-    AND ($3::text = '' OR LOWER(federation_name) LIKE '%' || LOWER($3) || '%')
-    AND ($4::text = '' OR LOWER(federation_code) = LOWER($4))
-    AND ($5::boolean OR dissolution_date IS NULL);
+    (sqlc.arg(name_filter)::text = '' OR LOWER(COALESCE(tt.name, t.name)) LIKE '%' || LOWER(sqlc.arg(name_filter)) || '%')
+    AND (sqlc.arg(confederation_code)::text = '' OR LOWER(t.confederation_code) = LOWER(sqlc.arg(confederation_code)))
+    AND (sqlc.arg(federation_name)::text = '' OR LOWER(t.federation_name) LIKE '%' || LOWER(sqlc.arg(federation_name)) || '%')
+    AND (sqlc.arg(federation_code)::text = '' OR LOWER(t.federation_code) = LOWER(sqlc.arg(federation_code)))
+    AND (sqlc.arg(include_dissolved)::boolean OR t.dissolution_date IS NULL);
 
 -- name: GetTeamByCode :one
 SELECT
-    code,
-    name,
-    dissolution_date,
-    confederation_code,
-    federation_name,
-    federation_code
-FROM teams
-WHERE LOWER(code) = LOWER($1);
+    t.code,
+    COALESCE(tt.name, t.name)::varchar AS name,
+    t.dissolution_date,
+    t.confederation_code,
+    t.federation_name,
+    t.federation_code
+FROM teams t
+LEFT JOIN team_translations tt
+    ON tt.team_code = t.code
+    AND tt.language = sqlc.arg(language)
+WHERE LOWER(t.code) = LOWER(sqlc.arg(code));

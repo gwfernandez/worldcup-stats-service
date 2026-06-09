@@ -8,5 +8,5 @@ import (
 
 // FixtureService defines the contract for fixture business logic.
 type FixtureService interface {
-	GetByYear(ctx context.Context, year int) (*domain.Fixture, error)
+	GetByYear(ctx context.Context, year int, language string) (*domain.Fixture, error)
 }

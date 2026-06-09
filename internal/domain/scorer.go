@@ -4,6 +4,7 @@ package domain
 type Scorer struct {
 	FullName          string   `json:"fullName"`
 	TeamCode          string   `json:"teamCode"`
+	TeamName          string   `json:"teamName"`
 	Goals             int32    `json:"goals"`
 	ListTeams         []string `json:"listTeams"`
 	ConfederationCode string   `json:"confederationCode"`
@@ -12,6 +13,7 @@ type Scorer struct {
 // ScorerFilter defines filters and pagination for listing historical scorers.
 type ScorerFilter struct {
 	Name              string
+	Language          string
 	TeamCode          string
 	ConfederationCode string
 	Page              int

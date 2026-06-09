@@ -13,18 +13,22 @@ const countStandings = `-- name: CountStandings :one
 SELECT COUNT(*)
 FROM standings s
 INNER JOIN teams t ON t.code = s.team_code
+LEFT JOIN team_translations tt
+    ON tt.team_code = t.code
+    AND tt.language = $1
 WHERE
-    ($1::text = '' OR LOWER(t.name) LIKE '%' || LOWER($1) || '%')
-    AND ($2::text = '' OR t.confederation_code = $2)
+    ($2::text = '' OR LOWER(COALESCE(tt.name, t.name)) LIKE '%' || LOWER($2) || '%')
+    AND ($3::text = '' OR t.confederation_code = $3)
 `
 
 type CountStandingsParams struct {
-	Column1 string
-	Column2 string
+	Language          string
+	NameFilter        string
+	ConfederationCode string
 }
 
 func (q *Queries) CountStandings(ctx context.Context, arg CountStandingsParams) (int64, error) {
-	row := q.db.QueryRow(ctx, countStandings, arg.Column1, arg.Column2)
+	row := q.db.QueryRow(ctx, countStandings, arg.Language, arg.NameFilter, arg.ConfederationCode)
 	var count int64
 	err := row.Scan(&count)
 	return count, err
@@ -33,7 +37,7 @@ func (q *Queries) CountStandings(ctx context.Context, arg CountStandingsParams) 
 const listStandings = `-- name: ListStandings :many
 SELECT
     s.team_code,
-    t.name,
+    COALESCE(tt.name, t.name)::varchar AS name,
     s.matches_played,
     s.wins,
     s.draws,
@@ -47,18 +51,22 @@ SELECT
     s.unified_position
 FROM standings s
 INNER JOIN teams t ON t.code = s.team_code
+LEFT JOIN team_translations tt
+    ON tt.team_code = t.code
+    AND tt.language = $1
 WHERE
-    ($1::text = '' OR LOWER(t.name) LIKE '%' || LOWER($1) || '%')
-    AND ($2::text = '' OR t.confederation_code = $2)
+    ($2::text = '' OR LOWER(COALESCE(tt.name, t.name)) LIKE '%' || LOWER($2) || '%')
+    AND ($3::text = '' OR t.confederation_code = $3)
 ORDER BY s.position ASC
-LIMIT $3 OFFSET $4
+LIMIT $5 OFFSET $4
 `
 
 type ListStandingsParams struct {
-	Column1 string
-	Column2 string
-	Limit   int32
-	Offset  int32
+	Language          string
+	NameFilter        string
+	ConfederationCode string
+	OffsetValue       int32
+	LimitValue        int32
 }
 
 type ListStandingsRow struct {
@@ -79,10 +87,11 @@ type ListStandingsRow struct {
 
 func (q *Queries) ListStandings(ctx context.Context, arg ListStandingsParams) ([]ListStandingsRow, error) {
 	rows, err := q.db.Query(ctx, listStandings,
-		arg.Column1,
-		arg.Column2,
-		arg.Limit,
-		arg.Offset,
+		arg.Language,
+		arg.NameFilter,
+		arg.ConfederationCode,
+		arg.OffsetValue,
+		arg.LimitValue,
 	)
 	if err != nil {
 		return nil, err

@@ -39,6 +39,7 @@ func (h *ScorerHandler) List(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	filter.Language = resolveLanguage(c.Request)
 
 	scorers, err := h.service.List(c.Request.Context(), filter)
 	if err != nil {
@@ -52,6 +53,7 @@ func (h *ScorerHandler) List(c *gin.Context) {
 func parseScorerFilter(c *gin.Context) (domain.ScorerFilter, error) {
 	filter := domain.ScorerFilter{
 		Name:              c.Query("name"),
+		Language:          defaultLanguage,
 		TeamCode:          c.Query("teamCode"),
 		ConfederationCode: c.Query("confederationCode"),
 		Page:              defaultPage,

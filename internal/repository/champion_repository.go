@@ -27,8 +27,9 @@ func (r *championRepository) List(ctx context.Context, filter domain.ChampionFil
 	limit := int32(filter.Size)
 	offset := int32((filter.Page - 1) * filter.Size)
 	rows, err := r.queries.ListChampions(ctx, sqlc.ListChampionsParams{
-		Limit:  limit,
-		Offset: offset,
+		Language:    filter.Language,
+		LimitValue:  limit,
+		OffsetValue: offset,
 	})
 	if err != nil {
 		return nil, 0, err
@@ -45,7 +46,7 @@ func (r *championRepository) List(ctx context.Context, filter domain.ChampionFil
 func toChampionDomain(row sqlc.ListChampionsRow) domain.Champion {
 	return domain.Champion{
 		TeamCode: strings.ToUpper(row.TeamCode),
-		Name:     row.Name,
+		TeamName: row.Name,
 		Wins:     row.Wins,
 		Years:    row.Years,
 	}

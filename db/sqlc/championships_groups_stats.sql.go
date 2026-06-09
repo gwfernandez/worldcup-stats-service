@@ -13,30 +13,41 @@ import (
 
 const listGroupsStatsByYear = `-- name: ListGroupsStatsByYear :many
 SELECT
-    year,
-    stage::text AS stage,
-    group_code,
-    team_code,
-    matches_played,
-    wins,
-    draws,
-    losses,
-    goals_for,
-    goals_against,
-    goal_difference,
-    points,
-    unified_points,
-    position
+    championships_groups_stats.year,
+    championships_groups_stats.stage::text AS stage,
+    championships_groups_stats.group_code,
+    championships_groups_stats.team_code,
+    COALESCE(tt.name, t.name)::varchar AS name,
+    championships_groups_stats.matches_played,
+    championships_groups_stats.wins,
+    championships_groups_stats.draws,
+    championships_groups_stats.losses,
+    championships_groups_stats.goals_for,
+    championships_groups_stats.goals_against,
+    championships_groups_stats.goal_difference,
+    championships_groups_stats.points,
+    championships_groups_stats.unified_points,
+    championships_groups_stats.position
 FROM championships_groups_stats
+INNER JOIN teams t ON t.code = championships_groups_stats.team_code
+LEFT JOIN team_translations tt
+    ON tt.team_code = t.code
+    AND tt.language = $2
 WHERE year = $1
 ORDER BY championships_groups_stats.stage, group_code, position
 `
+
+type ListGroupsStatsByYearParams struct {
+	Year     int32
+	Language string
+}
 
 type ListGroupsStatsByYearRow struct {
 	Year           int32
 	Stage          string
 	GroupCode      string
 	TeamCode       string
+	Name           string
 	MatchesPlayed  int32
 	Wins           int32
 	Draws          int32
@@ -49,8 +60,8 @@ type ListGroupsStatsByYearRow struct {
 	Position       pgtype.Int4
 }
 
-func (q *Queries) ListGroupsStatsByYear(ctx context.Context, year int32) ([]ListGroupsStatsByYearRow, error) {
-	rows, err := q.db.Query(ctx, listGroupsStatsByYear, year)
+func (q *Queries) ListGroupsStatsByYear(ctx context.Context, arg ListGroupsStatsByYearParams) ([]ListGroupsStatsByYearRow, error) {
+	rows, err := q.db.Query(ctx, listGroupsStatsByYear, arg.Year, arg.Language)
 	if err != nil {
 		return nil, err
 	}
@@ -63,6 +74,7 @@ func (q *Queries) ListGroupsStatsByYear(ctx context.Context, year int32) ([]List
 			&i.Stage,
 			&i.GroupCode,
 			&i.TeamCode,
+			&i.Name,
 			&i.MatchesPlayed,
 			&i.Wins,
 			&i.Draws,

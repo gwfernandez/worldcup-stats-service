@@ -20,8 +20,9 @@ func NewStandingRepository(db sqlc.DBTX) StandingRepository {
 
 func (r *standingRepository) List(ctx context.Context, filter domain.StandingFilter) ([]domain.Standing, int64, error) {
 	total, err := r.queries.CountStandings(ctx, sqlc.CountStandingsParams{
-		Column1: filter.Name,
-		Column2: filter.ConfederationCode,
+		Language:          filter.Language,
+		NameFilter:        filter.Name,
+		ConfederationCode: filter.ConfederationCode,
 	})
 	if err != nil {
 		return nil, 0, err
@@ -30,10 +31,11 @@ func (r *standingRepository) List(ctx context.Context, filter domain.StandingFil
 	limit := int32(filter.Size)
 	offset := int32((filter.Page - 1) * filter.Size)
 	rows, err := r.queries.ListStandings(ctx, sqlc.ListStandingsParams{
-		Column1: filter.Name,
-		Column2: filter.ConfederationCode,
-		Limit:   limit,
-		Offset:  offset,
+		Language:          filter.Language,
+		NameFilter:        filter.Name,
+		ConfederationCode: filter.ConfederationCode,
+		LimitValue:        limit,
+		OffsetValue:       offset,
 	})
 	if err != nil {
 		return nil, 0, err
@@ -50,7 +52,7 @@ func (r *standingRepository) List(ctx context.Context, filter domain.StandingFil
 func toStandingDomain(row sqlc.ListStandingsRow) domain.Standing {
 	return domain.Standing{
 		TeamCode:        strings.ToUpper(row.TeamCode),
-		Name:            row.Name,
+		TeamName:        row.Name,
 		MatchesPlayed:   row.MatchesPlayed,
 		Wins:            row.Wins,
 		Draws:           row.Draws,

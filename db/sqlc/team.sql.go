@@ -13,30 +13,35 @@ import (
 
 const countTeams = `-- name: CountTeams :one
 SELECT COUNT(*)
-FROM teams
+FROM teams t
+LEFT JOIN team_translations tt
+    ON tt.team_code = t.code
+    AND tt.language = $1
 WHERE
-    ($1::text = '' OR LOWER(name) LIKE '%' || LOWER($1) || '%')
-    AND ($2::text = '' OR LOWER(confederation_code) = LOWER($2))
-    AND ($3::text = '' OR LOWER(federation_name) LIKE '%' || LOWER($3) || '%')
-    AND ($4::text = '' OR LOWER(federation_code) = LOWER($4))
-    AND ($5::boolean OR dissolution_date IS NULL)
+    ($2::text = '' OR LOWER(COALESCE(tt.name, t.name)) LIKE '%' || LOWER($2) || '%')
+    AND ($3::text = '' OR LOWER(t.confederation_code) = LOWER($3))
+    AND ($4::text = '' OR LOWER(t.federation_name) LIKE '%' || LOWER($4) || '%')
+    AND ($5::text = '' OR LOWER(t.federation_code) = LOWER($5))
+    AND ($6::boolean OR t.dissolution_date IS NULL)
 `
 
 type CountTeamsParams struct {
-	Column1 string
-	Column2 string
-	Column3 string
-	Column4 string
-	Column5 bool
+	Language          string
+	NameFilter        string
+	ConfederationCode string
+	FederationName    string
+	FederationCode    string
+	IncludeDissolved  bool
 }
 
 func (q *Queries) CountTeams(ctx context.Context, arg CountTeamsParams) (int64, error) {
 	row := q.db.QueryRow(ctx, countTeams,
-		arg.Column1,
-		arg.Column2,
-		arg.Column3,
-		arg.Column4,
-		arg.Column5,
+		arg.Language,
+		arg.NameFilter,
+		arg.ConfederationCode,
+		arg.FederationName,
+		arg.FederationCode,
+		arg.IncludeDissolved,
 	)
 	var count int64
 	err := row.Scan(&count)
@@ -45,15 +50,23 @@ func (q *Queries) CountTeams(ctx context.Context, arg CountTeamsParams) (int64, 
 
 const getTeamByCode = `-- name: GetTeamByCode :one
 SELECT
-    code,
-    name,
-    dissolution_date,
-    confederation_code,
-    federation_name,
-    federation_code
-FROM teams
-WHERE LOWER(code) = LOWER($1)
+    t.code,
+    COALESCE(tt.name, t.name)::varchar AS name,
+    t.dissolution_date,
+    t.confederation_code,
+    t.federation_name,
+    t.federation_code
+FROM teams t
+LEFT JOIN team_translations tt
+    ON tt.team_code = t.code
+    AND tt.language = $1
+WHERE LOWER(t.code) = LOWER($2)
 `
+
+type GetTeamByCodeParams struct {
+	Language string
+	Code     string
+}
 
 type GetTeamByCodeRow struct {
 	Code              string
@@ -64,8 +77,8 @@ type GetTeamByCodeRow struct {
 	FederationCode    string
 }
 
-func (q *Queries) GetTeamByCode(ctx context.Context, lower string) (GetTeamByCodeRow, error) {
-	row := q.db.QueryRow(ctx, getTeamByCode, lower)
+func (q *Queries) GetTeamByCode(ctx context.Context, arg GetTeamByCodeParams) (GetTeamByCodeRow, error) {
+	row := q.db.QueryRow(ctx, getTeamByCode, arg.Language, arg.Code)
 	var i GetTeamByCodeRow
 	err := row.Scan(
 		&i.Code,
@@ -80,31 +93,35 @@ func (q *Queries) GetTeamByCode(ctx context.Context, lower string) (GetTeamByCod
 
 const listTeams = `-- name: ListTeams :many
 SELECT
-    code,
-    name,
-    dissolution_date,
-    confederation_code,
-    federation_name,
-    federation_code
-FROM teams
+    t.code,
+    COALESCE(tt.name, t.name)::varchar AS name,
+    t.dissolution_date,
+    t.confederation_code,
+    t.federation_name,
+    t.federation_code
+FROM teams t
+LEFT JOIN team_translations tt
+    ON tt.team_code = t.code
+    AND tt.language = $1
 WHERE
-    ($1::text = '' OR LOWER(name) LIKE '%' || LOWER($1) || '%')
-    AND ($2::text = '' OR LOWER(confederation_code) = LOWER($2))
-    AND ($3::text = '' OR LOWER(federation_name) LIKE '%' || LOWER($3) || '%')
-    AND ($4::text = '' OR LOWER(federation_code) = LOWER($4))
-    AND ($5::boolean OR dissolution_date IS NULL)
-ORDER BY name ASC
-LIMIT $6 OFFSET $7
+    ($2::text = '' OR LOWER(COALESCE(tt.name, t.name)) LIKE '%' || LOWER($2) || '%')
+    AND ($3::text = '' OR LOWER(t.confederation_code) = LOWER($3))
+    AND ($4::text = '' OR LOWER(t.federation_name) LIKE '%' || LOWER($4) || '%')
+    AND ($5::text = '' OR LOWER(t.federation_code) = LOWER($5))
+    AND ($6::boolean OR t.dissolution_date IS NULL)
+ORDER BY COALESCE(tt.name, t.name) ASC
+LIMIT $8 OFFSET $7
 `
 
 type ListTeamsParams struct {
-	Column1 string
-	Column2 string
-	Column3 string
-	Column4 string
-	Column5 bool
-	Limit   int32
-	Offset  int32
+	Language          string
+	NameFilter        string
+	ConfederationCode string
+	FederationName    string
+	FederationCode    string
+	IncludeDissolved  bool
+	OffsetValue       int32
+	LimitValue        int32
 }
 
 type ListTeamsRow struct {
@@ -118,13 +135,14 @@ type ListTeamsRow struct {
 
 func (q *Queries) ListTeams(ctx context.Context, arg ListTeamsParams) ([]ListTeamsRow, error) {
 	rows, err := q.db.Query(ctx, listTeams,
-		arg.Column1,
-		arg.Column2,
-		arg.Column3,
-		arg.Column4,
-		arg.Column5,
-		arg.Limit,
-		arg.Offset,
+		arg.Language,
+		arg.NameFilter,
+		arg.ConfederationCode,
+		arg.FederationName,
+		arg.FederationCode,
+		arg.IncludeDissolved,
+		arg.OffsetValue,
+		arg.LimitValue,
 	)
 	if err != nil {
 		return nil, err

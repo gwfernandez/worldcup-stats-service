@@ -46,6 +46,7 @@ func (h *TeamHandler) List(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	filter.Language = resolveLanguage(c.Request)
 
 	teams, err := h.service.List(c.Request.Context(), filter)
 	if err != nil {
@@ -63,7 +64,7 @@ func (h *TeamHandler) List(c *gin.Context) {
 // @Router /api/teams/{code} [get]
 func (h *TeamHandler) GetByCode(c *gin.Context) {
 	code := c.Param("code")
-	team, err := h.service.GetByCode(c.Request.Context(), code)
+	team, err := h.service.GetByCode(c.Request.Context(), code, resolveLanguage(c.Request))
 	if err != nil {
 		if isTeamNotFoundError(err) {
 			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
@@ -79,6 +80,7 @@ func (h *TeamHandler) GetByCode(c *gin.Context) {
 func parseTeamFilter(c *gin.Context) (domain.TeamFilter, error) {
 	filter := domain.TeamFilter{
 		Name:           c.Query("name"),
+		Language:       defaultLanguage,
 		FederationName: c.Query("federationName"),
 		FederationCode: c.Query("federationCode"),
 		Page:           defaultPage,

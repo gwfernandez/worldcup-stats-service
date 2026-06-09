@@ -44,7 +44,7 @@ func TestStandingHandler_List(t *testing.T) {
 		expected := &domain.StandingListResponse{
 			Data: []domain.Standing{{
 				TeamCode:        "BRA",
-				Name:            "Brasil",
+				TeamName:        "Brasil",
 				MatchesPlayed:   114,
 				Wins:            79,
 				Draws:           14,
@@ -66,7 +66,7 @@ func TestStandingHandler_List(t *testing.T) {
 				HasPrevious:   false,
 			},
 		}
-		filter := domain.StandingFilter{Name: "bra", ConfederationCode: "CONMEBOL", Page: 1, Size: 10}
+		filter := domain.StandingFilter{Name: "bra", Language: "es", ConfederationCode: "CONMEBOL", Page: 1, Size: 10}
 		svc.On("List", mock.Anything, filter).Return(expected, nil)
 
 		req, _ := http.NewRequest(http.MethodGet, "/api/standings?page=1&size=10&name=bra&confederationCode=CONMEBOL", nil)
@@ -77,7 +77,7 @@ func TestStandingHandler_List(t *testing.T) {
 		assert.JSONEq(t, `{
 			"data": [{
 				"teamCode": "BRA",
-				"name": "Brasil",
+				"teamName": "Brasil",
 				"matchesPlayed": 114,
 				"wins": 79,
 				"draws": 14,
@@ -116,7 +116,7 @@ func TestStandingHandler_List(t *testing.T) {
 				HasPrevious:   false,
 			},
 		}
-		svc.On("List", mock.Anything, domain.StandingFilter{Page: 1, Size: 20}).Return(expected, nil)
+		svc.On("List", mock.Anything, domain.StandingFilter{Language: "es", Page: 1, Size: 20}).Return(expected, nil)
 
 		req, _ := http.NewRequest(http.MethodGet, "/api/standings", nil)
 		w := httptest.NewRecorder()
@@ -130,6 +130,49 @@ func TestStandingHandler_List(t *testing.T) {
 				"size": 20,
 				"totalElements": 0,
 				"totalPages": 0,
+				"hasNext": false,
+				"hasPrevious": false
+			}
+		}`, w.Body.String())
+		svc.AssertExpectations(t)
+	})
+
+	t.Run("uses english accept language", func(t *testing.T) {
+		svc := new(MockStandingService)
+		r := setupStandingRouter(svc)
+		expected := &domain.StandingListResponse{
+			Data:       []domain.Standing{{TeamCode: "GER", TeamName: "Germany", Position: 2}},
+			Pagination: domain.PaginationInfo{Page: 1, Size: 20, TotalElements: 1, TotalPages: 1},
+		}
+		svc.On("List", mock.Anything, domain.StandingFilter{Name: "ger", Language: "en", Page: 1, Size: 20}).Return(expected, nil)
+
+		req, _ := http.NewRequest(http.MethodGet, "/api/standings?name=ger", nil)
+		req.Header.Set("Accept-Language", "en")
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		assert.JSONEq(t, `{
+			"data": [{
+				"teamCode": "GER",
+				"teamName": "Germany",
+				"matchesPlayed": 0,
+				"wins": 0,
+				"draws": 0,
+				"losses": 0,
+				"goalsFor": 0,
+				"goalsAgainst": 0,
+				"goalDifference": 0,
+				"points": 0,
+				"unifiedPoints": 0,
+				"position": 2,
+				"unifiedPosition": 0
+			}],
+			"pagination": {
+				"page": 1,
+				"size": 20,
+				"totalElements": 1,
+				"totalPages": 1,
 				"hasNext": false,
 				"hasPrevious": false
 			}
@@ -188,7 +231,7 @@ func TestStandingHandler_List(t *testing.T) {
 	t.Run("internal error", func(t *testing.T) {
 		svc := new(MockStandingService)
 		r := setupStandingRouter(svc)
-		svc.On("List", mock.Anything, domain.StandingFilter{Page: 1, Size: 20}).Return(nil, errors.New("db error"))
+		svc.On("List", mock.Anything, domain.StandingFilter{Language: "es", Page: 1, Size: 20}).Return(nil, errors.New("db error"))
 
 		req, _ := http.NewRequest(http.MethodGet, "/api/standings", nil)
 		w := httptest.NewRecorder()

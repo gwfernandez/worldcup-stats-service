@@ -14,6 +14,7 @@ type Team struct {
 // TeamFilter defines supported filters for listing teams.
 type TeamFilter struct {
 	Name              string
+	Language          string
 	ConfederationCode *string
 	FederationName    string
 	FederationCode    string

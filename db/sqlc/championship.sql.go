@@ -78,18 +78,22 @@ const countChampionshipTeamsByYear = `-- name: CountChampionshipTeamsByYear :one
 SELECT COUNT(*)
 FROM championships_teams ct
 INNER JOIN teams t ON t.code = ct.team_code
+LEFT JOIN team_translations tt
+    ON tt.team_code = t.code
+    AND tt.language = $5
 INNER JOIN championships_teams_stats cts ON ct.year = cts.year AND ct.team_code = cts.team_code
 WHERE ct.year = $1
-    AND ($2::text = '' OR LOWER(t.name) LIKE '%' || LOWER($2) || '%')
+    AND ($2::text = '' OR LOWER(COALESCE(tt.name, t.name)) LIKE '%' || LOWER($2) || '%')
     AND ($3::text = '' OR t.confederation_code = $3)
     AND ($4::text = '' OR cts.group_code = $4)
 `
 
 type CountChampionshipTeamsByYearParams struct {
-	Year    int32
-	Column2 string
-	Column3 string
-	Column4 string
+	Year     int32
+	Column2  string
+	Column3  string
+	Column4  string
+	Language string
 }
 
 func (q *Queries) CountChampionshipTeamsByYear(ctx context.Context, arg CountChampionshipTeamsByYearParams) (int64, error) {
@@ -98,6 +102,7 @@ func (q *Queries) CountChampionshipTeamsByYear(ctx context.Context, arg CountCha
 		arg.Column2,
 		arg.Column3,
 		arg.Column4,
+		arg.Language,
 	)
 	var count int64
 	err := row.Scan(&count)
@@ -112,8 +117,11 @@ WHERE
     AND ($2::text = '' OR EXISTS (
         SELECT 1
         FROM teams t
+        LEFT JOIN team_translations tt
+            ON tt.team_code = t.code
+            AND tt.language = $4
         WHERE t.code = ANY(c.host_codes)
-          AND LOWER(t.name) LIKE '%' || LOWER($2) || '%'
+          AND LOWER(COALESCE(tt.name, t.name)) LIKE '%' || LOWER($2) || '%'
     ))
     AND ($3::text = '' OR EXISTS (
         SELECT 1
@@ -124,13 +132,19 @@ WHERE
 `
 
 type CountChampionshipsParams struct {
-	Column1 int32
-	Column2 string
-	Column3 string
+	Column1  int32
+	Column2  string
+	Column3  string
+	Language string
 }
 
 func (q *Queries) CountChampionships(ctx context.Context, arg CountChampionshipsParams) (int64, error) {
-	row := q.db.QueryRow(ctx, countChampionships, arg.Column1, arg.Column2, arg.Column3)
+	row := q.db.QueryRow(ctx, countChampionships,
+		arg.Column1,
+		arg.Column2,
+		arg.Column3,
+		arg.Language,
+	)
 	var count int64
 	err := row.Scan(&count)
 	return count, err
@@ -206,9 +220,14 @@ const listChampionshipScorersByYear = `-- name: ListChampionshipScorersByYear :m
 SELECT
     TRIM(CONCAT_WS(' ', NULLIF(p.first_name, ''), NULLIF(p.last_name, '')))::text AS full_name,
     ss.team_code,
+    COALESCE(tt.name, t.name)::varchar AS name,
     ss.goals
 FROM squads_stats ss
 INNER JOIN players p ON p.id = ss.player_id
+INNER JOIN teams t ON t.code = ss.team_code
+LEFT JOIN team_translations tt
+    ON tt.team_code = t.code
+    AND tt.language = $4
 WHERE ss.year = $1
     AND ss.goals > 0
     AND (
@@ -218,20 +237,22 @@ WHERE ss.year = $1
     )
     AND ($3::text = '' OR ss.team_code = $3)
 ORDER BY ss.goals DESC, full_name ASC
-LIMIT $4 OFFSET $5
+LIMIT $6 OFFSET $5
 `
 
 type ListChampionshipScorersByYearParams struct {
-	Year    int32
-	Column2 string
-	Column3 string
-	Limit   int32
-	Offset  int32
+	Year        int32
+	Column2     string
+	Column3     string
+	Language    string
+	OffsetValue int32
+	LimitValue  int32
 }
 
 type ListChampionshipScorersByYearRow struct {
 	FullName string
 	TeamCode string
+	Name     string
 	Goals    int32
 }
 
@@ -240,8 +261,9 @@ func (q *Queries) ListChampionshipScorersByYear(ctx context.Context, arg ListCha
 		arg.Year,
 		arg.Column2,
 		arg.Column3,
-		arg.Limit,
-		arg.Offset,
+		arg.Language,
+		arg.OffsetValue,
+		arg.LimitValue,
 	)
 	if err != nil {
 		return nil, err
@@ -250,7 +272,12 @@ func (q *Queries) ListChampionshipScorersByYear(ctx context.Context, arg ListCha
 	var items []ListChampionshipScorersByYearRow
 	for rows.Next() {
 		var i ListChampionshipScorersByYearRow
-		if err := rows.Scan(&i.FullName, &i.TeamCode, &i.Goals); err != nil {
+		if err := rows.Scan(
+			&i.FullName,
+			&i.TeamCode,
+			&i.Name,
+			&i.Goals,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -328,6 +355,7 @@ func (q *Queries) ListChampionshipStadiumsByYear(ctx context.Context, arg ListCh
 const listChampionshipStandingsByYear = `-- name: ListChampionshipStandingsByYear :many
 SELECT
     cts.team_code,
+    COALESCE(tt.name, t.name)::varchar AS name,
     COALESCE(cts.group_code, '')::text AS group_code,
     cts.matches_played,
     cts.wins,
@@ -348,6 +376,9 @@ SELECT
     END, '')::text AS performance
 FROM championships_teams ct
 INNER JOIN teams t ON t.code = ct.team_code
+LEFT JOIN team_translations tt
+    ON tt.team_code = t.code
+    AND tt.language = $4
 INNER JOIN championships_teams_stats cts ON ct.year = cts.year AND ct.team_code = cts.team_code
 INNER JOIN championships_stats cs ON cs.year = ct.year
 WHERE ct.year = $1
@@ -356,13 +387,15 @@ LIMIT $2 OFFSET $3
 `
 
 type ListChampionshipStandingsByYearParams struct {
-	Year   int32
-	Limit  int32
-	Offset int32
+	Year     int32
+	Limit    int32
+	Offset   int32
+	Language string
 }
 
 type ListChampionshipStandingsByYearRow struct {
 	TeamCode       string
+	Name           string
 	GroupCode      string
 	MatchesPlayed  int32
 	Wins           int32
@@ -378,7 +411,12 @@ type ListChampionshipStandingsByYearRow struct {
 }
 
 func (q *Queries) ListChampionshipStandingsByYear(ctx context.Context, arg ListChampionshipStandingsByYearParams) ([]ListChampionshipStandingsByYearRow, error) {
-	rows, err := q.db.Query(ctx, listChampionshipStandingsByYear, arg.Year, arg.Limit, arg.Offset)
+	rows, err := q.db.Query(ctx, listChampionshipStandingsByYear,
+		arg.Year,
+		arg.Limit,
+		arg.Offset,
+		arg.Language,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -388,6 +426,7 @@ func (q *Queries) ListChampionshipStandingsByYear(ctx context.Context, arg ListC
 		var i ListChampionshipStandingsByYearRow
 		if err := rows.Scan(
 			&i.TeamCode,
+			&i.Name,
 			&i.GroupCode,
 			&i.MatchesPlayed,
 			&i.Wins,
@@ -415,6 +454,7 @@ const listChampionshipTeamsByYear = `-- name: ListChampionshipTeamsByYear :many
 SELECT
     ct.year,
     ct.team_code,
+    COALESCE(tt.name, t.name)::varchar AS name,
     t.confederation_code,
     cts.group_code,
     COALESCE(CASE
@@ -427,6 +467,9 @@ SELECT
     COALESCE(m.managers, '')::text AS managers
 FROM championships_teams ct
 INNER JOIN teams t ON t.code = ct.team_code
+LEFT JOIN team_translations tt
+    ON tt.team_code = t.code
+    AND tt.language = $7
 INNER JOIN championships_teams_stats cts ON ct.year = cts.year AND ct.team_code = cts.team_code
 INNER JOIN championships_stats cs ON cs.year = ct.year
 LEFT JOIN (
@@ -439,7 +482,7 @@ LEFT JOIN (
     GROUP BY cm.team_code
 ) m ON m.team_code = ct.team_code
 WHERE ct.year = $1
-    AND ($2::text = '' OR LOWER(t.name) LIKE '%' || LOWER($2) || '%')
+    AND ($2::text = '' OR LOWER(COALESCE(tt.name, t.name)) LIKE '%' || LOWER($2) || '%')
     AND ($3::text = '' OR t.confederation_code = $3)
     AND ($4::text = '' OR cts.group_code = $4)
 ORDER BY cts.position ASC, cts.stage_reached DESC
@@ -447,17 +490,19 @@ LIMIT $5 OFFSET $6
 `
 
 type ListChampionshipTeamsByYearParams struct {
-	Year    int32
-	Column2 string
-	Column3 string
-	Column4 string
-	Limit   int32
-	Offset  int32
+	Year     int32
+	Column2  string
+	Column3  string
+	Column4  string
+	Limit    int32
+	Offset   int32
+	Language string
 }
 
 type ListChampionshipTeamsByYearRow struct {
 	Year              int32
 	TeamCode          string
+	Name              string
 	ConfederationCode string
 	GroupCode         pgtype.Text
 	StageReached      string
@@ -472,6 +517,7 @@ func (q *Queries) ListChampionshipTeamsByYear(ctx context.Context, arg ListChamp
 		arg.Column4,
 		arg.Limit,
 		arg.Offset,
+		arg.Language,
 	)
 	if err != nil {
 		return nil, err
@@ -483,6 +529,7 @@ func (q *Queries) ListChampionshipTeamsByYear(ctx context.Context, arg ListChamp
 		if err := rows.Scan(
 			&i.Year,
 			&i.TeamCode,
+			&i.Name,
 			&i.ConfederationCode,
 			&i.GroupCode,
 			&i.StageReached,
@@ -504,15 +551,23 @@ SELECT
     start_date,
     end_date,
     host_codes,
-    champion_code
+    champion_code,
+    COALESCE(champion_translation.name, champion_team.name, '')::varchar AS champion_name
 FROM championships c
+LEFT JOIN teams champion_team ON champion_team.code = c.champion_code
+LEFT JOIN team_translations champion_translation
+    ON champion_translation.team_code = champion_team.code
+    AND champion_translation.language = $6
 WHERE
     ($1::integer = 0 OR c.year = $1)
     AND ($2::text = '' OR EXISTS (
         SELECT 1
         FROM teams t
+        LEFT JOIN team_translations tt
+            ON tt.team_code = t.code
+            AND tt.language = $6
         WHERE t.code = ANY(c.host_codes)
-          AND LOWER(t.name) LIKE '%' || LOWER($2) || '%'
+          AND LOWER(COALESCE(tt.name, t.name)) LIKE '%' || LOWER($2) || '%'
     ))
     AND ($3::text = '' OR EXISTS (
         SELECT 1
@@ -525,34 +580,46 @@ LIMIT $4 OFFSET $5
 `
 
 type ListChampionshipsParams struct {
-	Column1 int32
-	Column2 string
-	Column3 string
-	Limit   int32
-	Offset  int32
+	Column1  int32
+	Column2  string
+	Column3  string
+	Limit    int32
+	Offset   int32
+	Language string
 }
 
-func (q *Queries) ListChampionships(ctx context.Context, arg ListChampionshipsParams) ([]Championship, error) {
+type ListChampionshipsRow struct {
+	Year         int32
+	StartDate    pgtype.Date
+	EndDate      pgtype.Date
+	HostCodes    []string
+	ChampionCode pgtype.Text
+	ChampionName string
+}
+
+func (q *Queries) ListChampionships(ctx context.Context, arg ListChampionshipsParams) ([]ListChampionshipsRow, error) {
 	rows, err := q.db.Query(ctx, listChampionships,
 		arg.Column1,
 		arg.Column2,
 		arg.Column3,
 		arg.Limit,
 		arg.Offset,
+		arg.Language,
 	)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Championship
+	var items []ListChampionshipsRow
 	for rows.Next() {
-		var i Championship
+		var i ListChampionshipsRow
 		if err := rows.Scan(
 			&i.Year,
 			&i.StartDate,
 			&i.EndDate,
 			&i.HostCodes,
 			&i.ChampionCode,
+			&i.ChampionName,
 		); err != nil {
 			return nil, err
 		}

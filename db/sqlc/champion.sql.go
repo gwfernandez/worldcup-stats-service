@@ -29,7 +29,7 @@ func (q *Queries) CountChampions(ctx context.Context) (int64, error) {
 const listChampions = `-- name: ListChampions :many
 SELECT
     c.unified_code AS team_code,
-    t.name,
+    COALESCE(tt.name, t.name)::varchar AS name,
     c.wins,
     c.years
 FROM (
@@ -42,13 +42,17 @@ FROM (
     GROUP BY t.unified_code
 ) c
 INNER JOIN teams t ON t.code = c.unified_code
-ORDER BY c.wins DESC, t.name ASC
-LIMIT $1 OFFSET $2
+LEFT JOIN team_translations tt
+    ON tt.team_code = t.code
+    AND tt.language = $1
+ORDER BY c.wins DESC, COALESCE(tt.name, t.name) ASC
+LIMIT $3 OFFSET $2
 `
 
 type ListChampionsParams struct {
-	Limit  int32
-	Offset int32
+	Language    string
+	OffsetValue int32
+	LimitValue  int32
 }
 
 type ListChampionsRow struct {
@@ -59,7 +63,7 @@ type ListChampionsRow struct {
 }
 
 func (q *Queries) ListChampions(ctx context.Context, arg ListChampionsParams) ([]ListChampionsRow, error) {
-	rows, err := q.db.Query(ctx, listChampions, arg.Limit, arg.Offset)
+	rows, err := q.db.Query(ctx, listChampions, arg.Language, arg.OffsetValue, arg.LimitValue)
 	if err != nil {
 		return nil, err
 	}
