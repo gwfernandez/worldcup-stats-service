@@ -35,7 +35,7 @@ func (h *ConfederationHandler) RegisterRoutes(rg *gin.RouterGroup) {
 // @Success 200 {array} domain.Confederation
 // @Router /api/confederations [get]
 func (h *ConfederationHandler) List(c *gin.Context) {
-	confederations, err := h.service.List(c.Request.Context())
+	confederations, err := h.service.List(c.Request.Context(), resolveLanguage(c.Request))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to retrieve confederations"})
 		return
@@ -51,7 +51,7 @@ func (h *ConfederationHandler) List(c *gin.Context) {
 // @Router /api/confederations/{code} [get]
 func (h *ConfederationHandler) GetByCode(c *gin.Context) {
 	code := c.Param("code")
-	confederation, err := h.service.GetByCode(c.Request.Context(), code)
+	confederation, err := h.service.GetByCode(c.Request.Context(), code, resolveLanguage(c.Request))
 	if err != nil {
 		if isNotFoundError(err) {
 			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})

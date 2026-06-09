@@ -22,21 +22,24 @@ func NewConfederationRepository(db sqlc.DBTX) ConfederationRepository {
 	}
 }
 
-func (r *confederationRepository) List(ctx context.Context) ([]domain.Confederation, error) {
-	rows, err := r.queries.ListConfederations(ctx)
+func (r *confederationRepository) List(ctx context.Context, language string) ([]domain.Confederation, error) {
+	rows, err := r.queries.ListConfederations(ctx, language)
 	if err != nil {
 		return nil, err
 	}
 
 	confederations := make([]domain.Confederation, len(rows))
 	for i, row := range rows {
-		confederations[i] = toDomain(row)
+		confederations[i] = toDomain(row.Code, row.Name)
 	}
 	return confederations, nil
 }
 
-func (r *confederationRepository) GetByCode(ctx context.Context, code string) (*domain.Confederation, error) {
-	row, err := r.queries.GetConfederationByCode(ctx, code)
+func (r *confederationRepository) GetByCode(ctx context.Context, code, language string) (*domain.Confederation, error) {
+	row, err := r.queries.GetConfederationByCode(ctx, sqlc.GetConfederationByCodeParams{
+		Language: language,
+		Code:     code,
+	})
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, nil
@@ -44,14 +47,14 @@ func (r *confederationRepository) GetByCode(ctx context.Context, code string) (*
 		return nil, err
 	}
 
-	c := toDomain(row)
+	c := toDomain(row.Code, row.Name)
 	return &c, nil
 }
 
-// toDomain converts a sqlc model to a domain entity.
-func toDomain(row sqlc.Confederation) domain.Confederation {
+// toDomain builds a domain entity from sqlc row values.
+func toDomain(code, name string) domain.Confederation {
 	return domain.Confederation{
-		Code: row.Code,
-		Name: row.Name,
+		Code: code,
+		Name: name,
 	}
 }

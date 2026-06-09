@@ -18,12 +18,12 @@ func NewConfederationService(repo repository.ConfederationRepository) Confederat
 	return &confederationService{repo: repo}
 }
 
-func (s *confederationService) List(ctx context.Context) ([]domain.Confederation, error) {
-	return s.repo.List(ctx)
+func (s *confederationService) List(ctx context.Context, language string) ([]domain.Confederation, error) {
+	return s.repo.List(ctx, language)
 }
 
-func (s *confederationService) GetByCode(ctx context.Context, code string) (*domain.Confederation, error) {
-	confederation, err := s.repo.GetByCode(ctx, code)
+func (s *confederationService) GetByCode(ctx context.Context, code, language string) (*domain.Confederation, error) {
+	confederation, err := s.repo.GetByCode(ctx, code, language)
 	if err != nil {
 		return nil, err
 	}

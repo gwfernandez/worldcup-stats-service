@@ -87,6 +87,12 @@ type Confederation struct {
 	Name string
 }
 
+type ConfederationTranslation struct {
+	ConfederationCode string
+	Language          string
+	Name              string
+}
+
 type Manager struct {
 	ID          int64
 	FirstName   pgtype.Text

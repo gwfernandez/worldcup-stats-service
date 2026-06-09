@@ -8,6 +8,6 @@ import (
 
 // ConfederationRepository defines the contract for confederation data access.
 type ConfederationRepository interface {
-	List(ctx context.Context) ([]domain.Confederation, error)
-	GetByCode(ctx context.Context, code string) (*domain.Confederation, error)
+	List(ctx context.Context, language string) ([]domain.Confederation, error)
+	GetByCode(ctx context.Context, code, language string) (*domain.Confederation, error)
 }
