@@ -314,6 +314,51 @@ Ejemplo de respuesta:
 }
 ```
 
+### Tabla Histórica de Goleadores
+
+ | Método | Ruta | Descripción |
+ |--------|------|-------------|
+ | `GET` | `/api/scorers` | Listar tabla histórica de goleadores de todos los mundiales con filtros y paginación |
+
+Parámetros soportados para `/api/scorers`:
+
+- `name`: búsqueda por nombre o apellido de jugador, case-insensitive y por contiene.
+- `teamCode`: filtro por igualdad exacta sobre `teams.unified_code`, normalizado a mayúsculas.
+- `confederationCode`: filtro por igualdad exacta sobre `teams.confederation_code`, normalizado a mayúsculas.
+- `page`: número de página (base 1, por defecto `1`).
+- `size`: tamaño de página (por defecto `20`, máximo `100`).
+
+Notas de respuesta:
+
+- Si no hay goleadores asociados a los filtros, responde `200 OK` con `data: []` y metadata de paginación.
+- Los resultados se ordenan por `goals` descendente y `fullName` ascendente.
+- `teamCode`, `listTeams` y `confederationCode` se normalizan a mayúsculas.
+- La respuesta expone `fullName`, `teamCode`, `goals`, `listTeams` y `confederationCode`.
+
+Ejemplo de respuesta:
+
+```json
+{
+  "data": [
+    {
+      "fullName": "Lionel Messi",
+      "teamCode": "ARG",
+      "goals": 13,
+      "listTeams": ["ARG"],
+      "confederationCode": "CONMEBOL"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "size": 20,
+    "totalElements": 1,
+    "totalPages": 1,
+    "hasNext": false,
+    "hasPrevious": false
+  }
+}
+```
+
 ### Campeonatos Mundiales
 
  | Método | Ruta | Descripción |
@@ -416,6 +461,16 @@ curl -H "API-Version: 1" "http://localhost:8080/api/teams?name=argen&confederati
 **Listar campeones mundiales**
 ```bash
 curl -H "API-Version: 1" "http://localhost:8080/api/champions?page=1&size=10"
+```
+
+**Listar tabla histórica de goleadores**
+```bash
+curl -H "API-Version: 1" "http://localhost:8080/api/scorers?page=1&size=10"
+```
+
+**Filtrar tabla histórica de goleadores**
+```bash
+curl -H "API-Version: 1" "http://localhost:8080/api/scorers?name=messi&teamCode=ARG&confederationCode=CONMEBOL"
 ```
 
 **Listar campeonatos mundiales (orden cronológico ascendente)**

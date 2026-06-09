@@ -1,0 +1,7 @@
+ALTER TABLE players
+ADD COLUMN IF NOT EXISTS list_teams VARCHAR(3)[] NOT NULL DEFAULT '{}';
+
+CREATE TABLE players_stats (
+    id BIGINT PRIMARY KEY REFERENCES players(id),
+    goals INTEGER DEFAULT 0 NOT NULL
+);
