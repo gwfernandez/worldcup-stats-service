@@ -417,6 +417,8 @@ Notas de respuesta:
 - Si `:year` es numérico pero no tiene selecciones asociadas, responde `200 OK` con `data: []` y metadata de paginación.
 - `managers` devuelve string vacío `""` cuando no hay DTs asociados.
 - Los resultados se ordenan por posición ascendente e instancia alcanzada descendente.
+- La respuesta expone `year`, `teamCode`, `name`, `confederationCode`, `groupCode`, `stageReached` y `managers`.
+- `name` se resuelve según `Accept-Language` con fallback a `teams.name`.
 
 Parámetros soportados para `/api/championships/:year/scorers`:
 
@@ -457,7 +459,8 @@ Notas de respuesta:
 - No soporta filtros adicionales.
 - Los resultados se ordenan por `position` ascendente e instancia alcanzada.
 - `teamCode` y `groupCode` se normalizan a mayúsculas.
-- La respuesta expone `teamCode`, `groupCode`, `matchesPlayed`, `wins`, `draws`, `losses`, `goalsFor`, `goalsAgainst`, `goalDifference`, `points`, `unifiedPoints`, `position` y `performance`.
+- La respuesta expone `teamCode`, `name`, `groupCode`, `matchesPlayed`, `wins`, `draws`, `losses`, `goalsFor`, `goalsAgainst`, `goalDifference`, `points`, `unifiedPoints`, `position` y `performance`.
+- `name` se resuelve según `Accept-Language` con fallback a `teams.name`.
 
 ### Ejemplos de request
  

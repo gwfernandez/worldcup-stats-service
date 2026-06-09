@@ -342,6 +342,7 @@ func (q *Queries) ListChampionshipStadiumsByYear(ctx context.Context, arg ListCh
 const listChampionshipStandingsByYear = `-- name: ListChampionshipStandingsByYear :many
 SELECT
     cts.team_code,
+    COALESCE(tt.name, t.name)::varchar AS name,
     COALESCE(cts.group_code, '')::text AS group_code,
     cts.matches_played,
     cts.wins,
@@ -362,6 +363,9 @@ SELECT
     END, '')::text AS performance
 FROM championships_teams ct
 INNER JOIN teams t ON t.code = ct.team_code
+LEFT JOIN team_translations tt
+    ON tt.team_code = t.code
+    AND tt.language = $4
 INNER JOIN championships_teams_stats cts ON ct.year = cts.year AND ct.team_code = cts.team_code
 INNER JOIN championships_stats cs ON cs.year = ct.year
 WHERE ct.year = $1
@@ -370,13 +374,15 @@ LIMIT $2 OFFSET $3
 `
 
 type ListChampionshipStandingsByYearParams struct {
-	Year   int32
-	Limit  int32
-	Offset int32
+	Year     int32
+	Limit    int32
+	Offset   int32
+	Language string
 }
 
 type ListChampionshipStandingsByYearRow struct {
 	TeamCode       string
+	Name           string
 	GroupCode      string
 	MatchesPlayed  int32
 	Wins           int32
@@ -392,7 +398,12 @@ type ListChampionshipStandingsByYearRow struct {
 }
 
 func (q *Queries) ListChampionshipStandingsByYear(ctx context.Context, arg ListChampionshipStandingsByYearParams) ([]ListChampionshipStandingsByYearRow, error) {
-	rows, err := q.db.Query(ctx, listChampionshipStandingsByYear, arg.Year, arg.Limit, arg.Offset)
+	rows, err := q.db.Query(ctx, listChampionshipStandingsByYear,
+		arg.Year,
+		arg.Limit,
+		arg.Offset,
+		arg.Language,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -402,6 +413,7 @@ func (q *Queries) ListChampionshipStandingsByYear(ctx context.Context, arg ListC
 		var i ListChampionshipStandingsByYearRow
 		if err := rows.Scan(
 			&i.TeamCode,
+			&i.Name,
 			&i.GroupCode,
 			&i.MatchesPlayed,
 			&i.Wins,
@@ -429,6 +441,7 @@ const listChampionshipTeamsByYear = `-- name: ListChampionshipTeamsByYear :many
 SELECT
     ct.year,
     ct.team_code,
+    COALESCE(tt.name, t.name)::varchar AS name,
     t.confederation_code,
     cts.group_code,
     COALESCE(CASE
@@ -476,6 +489,7 @@ type ListChampionshipTeamsByYearParams struct {
 type ListChampionshipTeamsByYearRow struct {
 	Year              int32
 	TeamCode          string
+	Name              string
 	ConfederationCode string
 	GroupCode         pgtype.Text
 	StageReached      string
@@ -502,6 +516,7 @@ func (q *Queries) ListChampionshipTeamsByYear(ctx context.Context, arg ListChamp
 		if err := rows.Scan(
 			&i.Year,
 			&i.TeamCode,
+			&i.Name,
 			&i.ConfederationCode,
 			&i.GroupCode,
 			&i.StageReached,

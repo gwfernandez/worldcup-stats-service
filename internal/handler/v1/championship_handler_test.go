@@ -228,6 +228,7 @@ func TestChampionshipHandler_ListTeamsByYear(t *testing.T) {
 			Data: []domain.ChampionshipTeam{{
 				Year:              1930,
 				TeamCode:          "ARG",
+				Name:              "Argentina",
 				ConfederationCode: "CONMEBOL",
 				GroupCode:         "1",
 				StageReached:      "runner_up",
@@ -261,6 +262,7 @@ func TestChampionshipHandler_ListTeamsByYear(t *testing.T) {
 			"data": [{
 				"year": 1930,
 				"teamCode": "ARG",
+				"name": "Argentina",
 				"confederationCode": "CONMEBOL",
 				"groupCode": "1",
 				"stageReached": "runner_up",
@@ -349,6 +351,7 @@ func TestChampionshipHandler_ListStandingsByYear(t *testing.T) {
 		expected := &domain.ChampionshipStandingListResponse{
 			Data: []domain.ChampionshipStanding{{
 				TeamCode:       "URU",
+				Name:           "Uruguay",
 				GroupCode:      "3",
 				MatchesPlayed:  4,
 				Wins:           4,
@@ -371,9 +374,10 @@ func TestChampionshipHandler_ListStandingsByYear(t *testing.T) {
 		}
 
 		svc.On("ListStandingsByYear", mock.Anything, domain.ChampionshipStandingFilter{
-			Year: 1930,
-			Page: 1,
-			Size: 20,
+			Year:     1930,
+			Language: "es",
+			Page:     1,
+			Size:     20,
 		}).Return(expected, nil)
 
 		req, _ := http.NewRequest(http.MethodGet, "/api/championships/1930/standings", nil)
@@ -385,6 +389,7 @@ func TestChampionshipHandler_ListStandingsByYear(t *testing.T) {
 		assert.JSONEq(t, `{
 			"data": [{
 				"teamCode": "URU",
+				"name": "Uruguay",
 				"groupCode": "3",
 				"matchesPlayed": 4,
 				"wins": 4,
@@ -423,9 +428,10 @@ func TestChampionshipHandler_ListStandingsByYear(t *testing.T) {
 		}
 
 		svc.On("ListStandingsByYear", mock.Anything, domain.ChampionshipStandingFilter{
-			Year: 2026,
-			Page: 2,
-			Size: 100,
+			Year:     2026,
+			Language: "es",
+			Page:     2,
+			Size:     100,
 		}).Return(expected, nil)
 
 		req, _ := http.NewRequest(http.MethodGet, "/api/championships/2026/standings?page=2&size=100", nil)

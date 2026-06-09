@@ -73,6 +73,7 @@ WHERE c.year = $1;
 SELECT
     ct.year,
     ct.team_code,
+    COALESCE(tt.name, t.name)::varchar AS name,
     t.confederation_code,
     cts.group_code,
     COALESCE(CASE
@@ -122,6 +123,7 @@ WHERE ct.year = $1
 -- name: ListChampionshipStandingsByYear :many
 SELECT
     cts.team_code,
+    COALESCE(tt.name, t.name)::varchar AS name,
     COALESCE(cts.group_code, '')::text AS group_code,
     cts.matches_played,
     cts.wins,
@@ -142,6 +144,9 @@ SELECT
     END, '')::text AS performance
 FROM championships_teams ct
 INNER JOIN teams t ON t.code = ct.team_code
+LEFT JOIN team_translations tt
+    ON tt.team_code = t.code
+    AND tt.language = sqlc.arg(language)
 INNER JOIN championships_teams_stats cts ON ct.year = cts.year AND ct.team_code = cts.team_code
 INNER JOIN championships_stats cs ON cs.year = ct.year
 WHERE ct.year = $1

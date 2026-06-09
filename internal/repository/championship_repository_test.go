@@ -126,9 +126,9 @@ func TestChampionshipRepository_ListTeamsByYear(t *testing.T) {
 			WithArgs(int32(1930), "argentina", "CONMEBOL", "1", "en").
 			WillReturnRows(countRows)
 
-		rows := mock.NewRows([]string{"year", "team_code", "confederation_code", "group_code", "stage_reached", "managers"}).
-			AddRow(int32(1930), "arg", "conmebol", pgtype.Text{String: "1", Valid: true}, "runner_up", "Francisco Olazar").
-			AddRow(int32(1930), "uru", "conmebol", pgtype.Text{Valid: false}, "champion", "")
+		rows := mock.NewRows([]string{"year", "team_code", "name", "confederation_code", "group_code", "stage_reached", "managers"}).
+			AddRow(int32(1930), "arg", "Argentina", "conmebol", pgtype.Text{String: "1", Valid: true}, "runner_up", "Francisco Olazar").
+			AddRow(int32(1930), "uru", "Uruguay", "conmebol", pgtype.Text{Valid: false}, "champion", "")
 
 		mock.ExpectQuery(`^-- name: ListChampionshipTeamsByYear :many.*`).
 			WithArgs(int32(1930), "argentina", "CONMEBOL", "1", int32(10), int32(0), "en").
@@ -141,6 +141,7 @@ func TestChampionshipRepository_ListTeamsByYear(t *testing.T) {
 		assert.Equal(t, domain.ChampionshipTeam{
 			Year:              1930,
 			TeamCode:          "ARG",
+			Name:              "Argentina",
 			ConfederationCode: "CONMEBOL",
 			GroupCode:         "1",
 			StageReached:      "runner_up",
@@ -294,9 +295,10 @@ func TestChampionshipRepository_ListStandingsByYear(t *testing.T) {
 
 		repo := repository.NewChampionshipRepository(mock)
 		filter := domain.ChampionshipStandingFilter{
-			Year: 1930,
-			Page: 2,
-			Size: 10,
+			Year:     1930,
+			Language: "en",
+			Page:     2,
+			Size:     10,
 		}
 
 		countRows := mock.NewRows([]string{"count"}).AddRow(int64(13))
@@ -305,15 +307,15 @@ func TestChampionshipRepository_ListStandingsByYear(t *testing.T) {
 			WillReturnRows(countRows)
 
 		rows := mock.NewRows([]string{
-			"team_code", "group_code", "matches_played", "wins", "draws", "losses",
+			"team_code", "name", "group_code", "matches_played", "wins", "draws", "losses",
 			"goals_for", "goals_against", "goal_difference", "points", "unified_points",
 			"position", "performance",
 		}).
-			AddRow("uru", "3", int32(4), int32(4), int32(0), int32(0), int32(15), int32(3), pgtype.Int4{Int32: 12, Valid: true}, int32(8), int32(12), pgtype.Int4{Int32: 1, Valid: true}, "champion").
-			AddRow("arg", "1", int32(5), int32(4), int32(0), int32(1), int32(18), int32(9), pgtype.Int4{Int32: 9, Valid: true}, int32(8), int32(12), pgtype.Int4{Int32: 2, Valid: true}, "runner_up")
+			AddRow("uru", "Uruguay", "3", int32(4), int32(4), int32(0), int32(0), int32(15), int32(3), pgtype.Int4{Int32: 12, Valid: true}, int32(8), int32(12), pgtype.Int4{Int32: 1, Valid: true}, "champion").
+			AddRow("arg", "Argentina", "1", int32(5), int32(4), int32(0), int32(1), int32(18), int32(9), pgtype.Int4{Int32: 9, Valid: true}, int32(8), int32(12), pgtype.Int4{Int32: 2, Valid: true}, "runner_up")
 
 		mock.ExpectQuery(`^-- name: ListChampionshipStandingsByYear :many.*`).
-			WithArgs(int32(1930), int32(10), int32(10)).
+			WithArgs(int32(1930), int32(10), int32(10), "en").
 			WillReturnRows(rows)
 
 		result, total, err := repo.ListStandingsByYear(context.Background(), filter)
@@ -322,6 +324,7 @@ func TestChampionshipRepository_ListStandingsByYear(t *testing.T) {
 		require.Len(t, result, 2)
 		assert.Equal(t, domain.ChampionshipStanding{
 			TeamCode:       "URU",
+			Name:           "Uruguay",
 			GroupCode:      "3",
 			MatchesPlayed:  4,
 			Wins:           4,
@@ -374,7 +377,7 @@ func TestChampionshipRepository_ListStandingsByYear(t *testing.T) {
 			WillReturnRows(countRows)
 
 		mock.ExpectQuery(`^-- name: ListChampionshipStandingsByYear :many.*`).
-			WithArgs(int32(1930), int32(10), int32(0)).
+			WithArgs(int32(1930), int32(10), int32(0), "").
 			WillReturnError(errors.New("db error"))
 
 		result, total, err := repo.ListStandingsByYear(context.Background(), filter)

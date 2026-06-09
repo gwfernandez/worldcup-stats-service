@@ -173,6 +173,7 @@ func (h *ChampionshipHandler) ListStandingsByYear(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	filter.Language = resolveLanguage(c.Request)
 
 	response, err := h.service.ListStandingsByYear(c.Request.Context(), filter)
 	if err != nil {
@@ -237,9 +238,10 @@ func parseChampionshipStandingFilter(c *gin.Context) (domain.ChampionshipStandin
 	}
 
 	filter := domain.ChampionshipStandingFilter{
-		Year: year,
-		Page: defaultPage,
-		Size: defaultSize,
+		Year:     year,
+		Language: defaultLanguage,
+		Page:     defaultPage,
+		Size:     defaultSize,
 	}
 
 	if rawPage := c.Query("page"); rawPage != "" {
