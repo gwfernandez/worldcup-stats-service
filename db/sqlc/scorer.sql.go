@@ -41,12 +41,16 @@ const listScorers = `-- name: ListScorers :many
 SELECT
     TRIM(CONCAT_WS(' ', NULLIF(p.first_name, ''), NULLIF(p.last_name, '')))::text AS full_name,
     t.unified_code AS team_code,
+    COALESCE(tt.name, t.name)::varchar AS name,
     ps.goals,
     p.list_teams,
     t.confederation_code
 FROM players_stats ps
 INNER JOIN players p ON p.id = ps.id
 INNER JOIN teams t ON cardinality(p.list_teams) > 0 AND p.list_teams[1] = t.code
+LEFT JOIN team_translations tt
+    ON tt.team_code = t.code
+    AND tt.language = $4
 WHERE ps.goals > 0
     AND (
         $1::text = ''
@@ -56,20 +60,22 @@ WHERE ps.goals > 0
     AND ($2::text = '' OR t.unified_code = $2)
     AND ($3::text = '' OR t.confederation_code = $3)
 ORDER BY ps.goals DESC, full_name ASC
-LIMIT $4 OFFSET $5
+LIMIT $6 OFFSET $5
 `
 
 type ListScorersParams struct {
-	Column1 string
-	Column2 string
-	Column3 string
-	Limit   int32
-	Offset  int32
+	Column1     string
+	Column2     string
+	Column3     string
+	Language    string
+	OffsetValue int32
+	LimitValue  int32
 }
 
 type ListScorersRow struct {
 	FullName          string
 	TeamCode          string
+	Name              string
 	Goals             int32
 	ListTeams         []string
 	ConfederationCode string
@@ -80,8 +86,9 @@ func (q *Queries) ListScorers(ctx context.Context, arg ListScorersParams) ([]Lis
 		arg.Column1,
 		arg.Column2,
 		arg.Column3,
-		arg.Limit,
-		arg.Offset,
+		arg.Language,
+		arg.OffsetValue,
+		arg.LimitValue,
 	)
 	if err != nil {
 		return nil, err
@@ -93,6 +100,7 @@ func (q *Queries) ListScorers(ctx context.Context, arg ListScorersParams) ([]Lis
 		if err := rows.Scan(
 			&i.FullName,
 			&i.TeamCode,
+			&i.Name,
 			&i.Goals,
 			&i.ListTeams,
 			&i.ConfederationCode,

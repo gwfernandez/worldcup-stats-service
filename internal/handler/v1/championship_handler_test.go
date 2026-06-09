@@ -87,6 +87,7 @@ func TestChampionshipHandler_ListScorersByYear(t *testing.T) {
 			Data: []domain.ChampionshipScorer{{
 				FullName: "Guillermo Stabile",
 				TeamCode: "ARG",
+				TeamName: "Argentina",
 				Goals:    8,
 			}},
 			Pagination: domain.PaginationInfo{
@@ -100,12 +101,14 @@ func TestChampionshipHandler_ListScorersByYear(t *testing.T) {
 		svc.On("ListScorersByYear", mock.Anything, domain.ChampionshipScorerFilter{
 			Year:     1930,
 			Name:     "guille",
+			Language: "en",
 			TeamCode: "ARG",
 			Page:     1,
 			Size:     20,
 		}).Return(expected, nil)
 
 		req, _ := http.NewRequest(http.MethodGet, "/api/championships/1930/scorers?name=guille&teamCode=arg", nil)
+		req.Header.Set("Accept-Language", "en")
 		w := httptest.NewRecorder()
 		r.ServeHTTP(w, req)
 
@@ -114,6 +117,7 @@ func TestChampionshipHandler_ListScorersByYear(t *testing.T) {
 			"data": [{
 				"fullName": "Guillermo Stabile",
 				"teamCode": "ARG",
+				"teamName": "Argentina",
 				"goals": 8
 			}],
 			"pagination": {
@@ -143,9 +147,10 @@ func TestChampionshipHandler_ListScorersByYear(t *testing.T) {
 		}
 
 		svc.On("ListScorersByYear", mock.Anything, domain.ChampionshipScorerFilter{
-			Year: 1930,
-			Page: 2,
-			Size: 10,
+			Year:     1930,
+			Language: "es",
+			Page:     2,
+			Size:     10,
 		}).Return(expected, nil)
 
 		req, _ := http.NewRequest(http.MethodGet, "/api/championships/1930/scorers?page=2&size=10", nil)

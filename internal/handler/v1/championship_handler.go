@@ -46,6 +46,7 @@ func (h *ChampionshipHandler) List(c *gin.Context) {
 		return
 	}
 	filter.Language = resolveLanguage(c.Request)
+	filter.Language = resolveLanguage(c.Request)
 
 	response, err := h.service.List(c.Request.Context(), filter)
 	if err != nil {
@@ -148,6 +149,7 @@ func (h *ChampionshipHandler) ListScorersByYear(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	filter.Language = resolveLanguage(c.Request)
 
 	response, err := h.service.ListScorersByYear(c.Request.Context(), filter)
 	if err != nil {
@@ -318,6 +320,7 @@ func parseChampionshipScorerFilter(c *gin.Context) (domain.ChampionshipScorerFil
 	filter := domain.ChampionshipScorerFilter{
 		Year:     year,
 		Name:     c.Query("name"),
+		Language: defaultLanguage,
 		TeamCode: strings.ToUpper(c.Query("teamCode")),
 		Page:     defaultPage,
 		Size:     defaultSize,

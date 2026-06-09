@@ -351,7 +351,8 @@ Notas de respuesta:
 - Si no hay goleadores asociados a los filtros, responde `200 OK` con `data: []` y metadata de paginación.
 - Los resultados se ordenan por `goals` descendente y `fullName` ascendente.
 - `teamCode`, `listTeams` y `confederationCode` se normalizan a mayúsculas.
-- La respuesta expone `fullName`, `teamCode`, `goals`, `listTeams` y `confederationCode`.
+- La respuesta expone `fullName`, `teamCode`, `teamName`, `goals`, `listTeams` y `confederationCode`.
+- `teamName` corresponde al nombre localizado de la selección principal según `Accept-Language`, con fallback a `teams.name`.
 
 Ejemplo de respuesta:
 
@@ -361,6 +362,7 @@ Ejemplo de respuesta:
     {
       "fullName": "Lionel Messi",
       "teamCode": "ARG",
+      "teamName": "Argentina",
       "goals": 13,
       "listTeams": ["ARG"],
       "confederationCode": "CONMEBOL"
@@ -434,7 +436,8 @@ Notas de respuesta:
 - Si `:year` no es numérico, responde `400 Bad Request` con `{"error":"invalid year parameter"}`.
 - Si `:year` es numérico pero no tiene goleadores asociados, responde `200 OK` con `data: []` y metadata de paginación.
 - Los resultados se ordenan por `goals` descendente y `fullName` ascendente.
-- `fullName` y `teamCode` se exponen en `camelCase`; `teamCode` se normaliza a mayúsculas.
+- `fullName`, `teamCode` y `teamName` se exponen en `camelCase`; `teamCode` se normaliza a mayúsculas.
+- `teamName` corresponde al nombre localizado de la selección según `Accept-Language`, con fallback a `teams.name`.
 
 Parámetros soportados para `/api/championships/:year/stadiums`:
 

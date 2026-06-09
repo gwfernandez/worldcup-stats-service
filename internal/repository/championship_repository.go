@@ -154,11 +154,12 @@ func (r *championshipRepository) ListScorersByYear(ctx context.Context, filter d
 	offset := int32((filter.Page - 1) * filter.Size)
 
 	rows, err := r.queries.ListChampionshipScorersByYear(ctx, sqlc.ListChampionshipScorersByYearParams{
-		Year:    int32(filter.Year),
-		Column2: filter.Name,
-		Column3: filter.TeamCode,
-		Limit:   limit,
-		Offset:  offset,
+		Year:        int32(filter.Year),
+		Column2:     filter.Name,
+		Column3:     filter.TeamCode,
+		Language:    filter.Language,
+		LimitValue:  limit,
+		OffsetValue: offset,
 	})
 	if err != nil {
 		return nil, 0, err
@@ -297,6 +298,7 @@ func toChampionshipScorerDomain(row sqlc.ListChampionshipScorersByYearRow) domai
 	return domain.ChampionshipScorer{
 		FullName: row.FullName,
 		TeamCode: strings.ToUpper(row.TeamCode),
+		TeamName: row.Name,
 		Goals:    row.Goals,
 	}
 }

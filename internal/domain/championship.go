@@ -85,6 +85,7 @@ type ChampionshipStadiumFilter struct {
 type ChampionshipScorer struct {
 	FullName string `json:"fullName"`
 	TeamCode string `json:"teamCode"`
+	TeamName string `json:"teamName"`
 	Goals    int32  `json:"goals"`
 }
 
@@ -92,6 +93,7 @@ type ChampionshipScorer struct {
 type ChampionshipScorerFilter struct {
 	Year     int
 	Name     string
+	Language string
 	TeamCode string
 	Page     int
 	Size     int

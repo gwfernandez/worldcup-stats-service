@@ -398,6 +398,7 @@ func TestChampionshipRepository_ListScorersByYear(t *testing.T) {
 		filter := domain.ChampionshipScorerFilter{
 			Year:     1930,
 			Name:     "guille",
+			Language: "en",
 			TeamCode: "ARG",
 			Page:     2,
 			Size:     10,
@@ -408,12 +409,12 @@ func TestChampionshipRepository_ListScorersByYear(t *testing.T) {
 			WithArgs(int32(1930), "guille", "ARG").
 			WillReturnRows(countRows)
 
-		rows := mock.NewRows([]string{"full_name", "team_code", "goals"}).
-			AddRow("Guillermo Stabile", "arg", int32(8)).
-			AddRow("Carlos Peucelle", "arg", int32(3))
+		rows := mock.NewRows([]string{"full_name", "team_code", "name", "goals"}).
+			AddRow("Guillermo Stabile", "arg", "Argentina", int32(8)).
+			AddRow("Carlos Peucelle", "arg", "Argentina", int32(3))
 
 		mock.ExpectQuery(`^-- name: ListChampionshipScorersByYear :many.*`).
-			WithArgs(int32(1930), "guille", "ARG", int32(10), int32(10)).
+			WithArgs(int32(1930), "guille", "ARG", "en", int32(10), int32(10)).
 			WillReturnRows(rows)
 
 		result, total, err := repo.ListScorersByYear(context.Background(), filter)
@@ -423,6 +424,7 @@ func TestChampionshipRepository_ListScorersByYear(t *testing.T) {
 		assert.Equal(t, domain.ChampionshipScorer{
 			FullName: "Guillermo Stabile",
 			TeamCode: "ARG",
+			TeamName: "Argentina",
 			Goals:    8,
 		}, result[0])
 		assert.Equal(t, "ARG", result[1].TeamCode)
@@ -463,7 +465,7 @@ func TestChampionshipRepository_ListScorersByYear(t *testing.T) {
 			WillReturnRows(countRows)
 
 		mock.ExpectQuery(`^-- name: ListChampionshipScorersByYear :many.*`).
-			WithArgs(int32(1930), "", "", int32(10), int32(0)).
+			WithArgs(int32(1930), "", "", "", int32(0), int32(10)).
 			WillReturnError(errors.New("db error"))
 
 		result, total, err := repo.ListScorersByYear(context.Background(), filter)

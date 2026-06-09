@@ -2,12 +2,16 @@
 SELECT
     TRIM(CONCAT_WS(' ', NULLIF(p.first_name, ''), NULLIF(p.last_name, '')))::text AS full_name,
     t.unified_code AS team_code,
+    COALESCE(tt.name, t.name)::varchar AS name,
     ps.goals,
     p.list_teams,
     t.confederation_code
 FROM players_stats ps
 INNER JOIN players p ON p.id = ps.id
 INNER JOIN teams t ON cardinality(p.list_teams) > 0 AND p.list_teams[1] = t.code
+LEFT JOIN team_translations tt
+    ON tt.team_code = t.code
+    AND tt.language = sqlc.arg(language)
 WHERE ps.goals > 0
     AND (
         $1::text = ''
@@ -17,7 +21,7 @@ WHERE ps.goals > 0
     AND ($2::text = '' OR t.unified_code = $2)
     AND ($3::text = '' OR t.confederation_code = $3)
 ORDER BY ps.goals DESC, full_name ASC
-LIMIT $4 OFFSET $5;
+LIMIT sqlc.arg(limit_value) OFFSET sqlc.arg(offset_value);
 
 -- name: CountScorers :one
 SELECT COUNT(*)

@@ -220,9 +220,14 @@ const listChampionshipScorersByYear = `-- name: ListChampionshipScorersByYear :m
 SELECT
     TRIM(CONCAT_WS(' ', NULLIF(p.first_name, ''), NULLIF(p.last_name, '')))::text AS full_name,
     ss.team_code,
+    COALESCE(tt.name, t.name)::varchar AS name,
     ss.goals
 FROM squads_stats ss
 INNER JOIN players p ON p.id = ss.player_id
+INNER JOIN teams t ON t.code = ss.team_code
+LEFT JOIN team_translations tt
+    ON tt.team_code = t.code
+    AND tt.language = $4
 WHERE ss.year = $1
     AND ss.goals > 0
     AND (
@@ -232,20 +237,22 @@ WHERE ss.year = $1
     )
     AND ($3::text = '' OR ss.team_code = $3)
 ORDER BY ss.goals DESC, full_name ASC
-LIMIT $4 OFFSET $5
+LIMIT $6 OFFSET $5
 `
 
 type ListChampionshipScorersByYearParams struct {
-	Year    int32
-	Column2 string
-	Column3 string
-	Limit   int32
-	Offset  int32
+	Year        int32
+	Column2     string
+	Column3     string
+	Language    string
+	OffsetValue int32
+	LimitValue  int32
 }
 
 type ListChampionshipScorersByYearRow struct {
 	FullName string
 	TeamCode string
+	Name     string
 	Goals    int32
 }
 
@@ -254,8 +261,9 @@ func (q *Queries) ListChampionshipScorersByYear(ctx context.Context, arg ListCha
 		arg.Year,
 		arg.Column2,
 		arg.Column3,
-		arg.Limit,
-		arg.Offset,
+		arg.Language,
+		arg.OffsetValue,
+		arg.LimitValue,
 	)
 	if err != nil {
 		return nil, err
@@ -264,7 +272,12 @@ func (q *Queries) ListChampionshipScorersByYear(ctx context.Context, arg ListCha
 	var items []ListChampionshipScorersByYearRow
 	for rows.Next() {
 		var i ListChampionshipScorersByYearRow
-		if err := rows.Scan(&i.FullName, &i.TeamCode, &i.Goals); err != nil {
+		if err := rows.Scan(
+			&i.FullName,
+			&i.TeamCode,
+			&i.Name,
+			&i.Goals,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
