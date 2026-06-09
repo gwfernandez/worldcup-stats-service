@@ -39,6 +39,7 @@ func (h *StandingHandler) List(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	filter.Language = resolveLanguage(c.Request)
 
 	standings, err := h.service.List(c.Request.Context(), filter)
 	if err != nil {
@@ -52,6 +53,7 @@ func (h *StandingHandler) List(c *gin.Context) {
 func parseStandingFilter(c *gin.Context) (domain.StandingFilter, error) {
 	filter := domain.StandingFilter{
 		Name:              c.Query("name"),
+		Language:          defaultLanguage,
 		ConfederationCode: c.Query("confederationCode"),
 		Page:              defaultPage,
 		Size:              defaultSize,

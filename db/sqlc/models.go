@@ -194,3 +194,9 @@ type Team struct {
 	FederationCode    string
 	UnifiedCode       string
 }
+
+type TeamTranslation struct {
+	TeamCode string
+	Language string
+	Name     string
+}

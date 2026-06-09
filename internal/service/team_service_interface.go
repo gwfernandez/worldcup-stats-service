@@ -9,5 +9,5 @@ import (
 // TeamService defines the contract for team business logic.
 type TeamService interface {
 	List(ctx context.Context, filter domain.TeamFilter) (*domain.TeamListResponse, error)
-	GetByCode(ctx context.Context, code string) (*domain.Team, error)
+	GetByCode(ctx context.Context, code, language string) (*domain.Team, error)
 }

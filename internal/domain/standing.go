@@ -20,6 +20,7 @@ type Standing struct {
 // StandingFilter defines filters and pagination for listing historical standings.
 type StandingFilter struct {
 	Name              string
+	Language          string
 	ConfederationCode string
 	Page              int
 	Size              int

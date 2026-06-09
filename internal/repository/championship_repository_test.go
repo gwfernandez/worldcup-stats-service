@@ -26,6 +26,7 @@ func TestChampionshipRepository_List(t *testing.T) {
 		filter := domain.ChampionshipFilter{
 			Year:              1978,
 			Host:              "arg",
+			Language:          "en",
 			ConfederationCode: "CONMEBOL",
 			Page:              1,
 			Size:              10,
@@ -33,7 +34,7 @@ func TestChampionshipRepository_List(t *testing.T) {
 
 		countRows := mock.NewRows([]string{"count"}).AddRow(int64(1))
 		mock.ExpectQuery(`^-- name: CountChampionships :one.*`).
-			WithArgs(int32(1978), "arg", "CONMEBOL").
+			WithArgs(int32(1978), "arg", "CONMEBOL", "en").
 			WillReturnRows(countRows)
 
 		startDate := time.Date(1978, 6, 1, 0, 0, 0, 0, time.UTC)
@@ -42,7 +43,7 @@ func TestChampionshipRepository_List(t *testing.T) {
 			AddRow(int32(1978), startDate, endDate, []string{"arg"}, pgtype.Text{String: "ARG", Valid: true})
 
 		mock.ExpectQuery(`^-- name: ListChampionships :many.*`).
-			WithArgs(int32(1978), "arg", "CONMEBOL", int32(10), int32(0)).
+			WithArgs(int32(1978), "arg", "CONMEBOL", int32(10), int32(0), "en").
 			WillReturnRows(rows)
 
 		result, total, err := repo.List(context.Background(), filter)
@@ -68,7 +69,7 @@ func TestChampionshipRepository_List(t *testing.T) {
 		filter := domain.ChampionshipFilter{Page: 1, Size: 10}
 
 		mock.ExpectQuery(`^-- name: CountChampionships :one.*`).
-			WithArgs(int32(0), "", "").
+			WithArgs(int32(0), "", "", "").
 			WillReturnError(errors.New("db error"))
 
 		result, total, err := repo.List(context.Background(), filter)
@@ -88,11 +89,11 @@ func TestChampionshipRepository_List(t *testing.T) {
 
 		countRows := mock.NewRows([]string{"count"}).AddRow(int64(5))
 		mock.ExpectQuery(`^-- name: CountChampionships :one.*`).
-			WithArgs(int32(0), "", "").
+			WithArgs(int32(0), "", "", "").
 			WillReturnRows(countRows)
 
 		mock.ExpectQuery(`^-- name: ListChampionships :many.*`).
-			WithArgs(int32(0), "", "", int32(10), int32(0)).
+			WithArgs(int32(0), "", "", int32(10), int32(0), "").
 			WillReturnError(errors.New("db error"))
 
 		result, total, err := repo.List(context.Background(), filter)
@@ -113,6 +114,7 @@ func TestChampionshipRepository_ListTeamsByYear(t *testing.T) {
 		filter := domain.ChampionshipTeamFilter{
 			Year:              1930,
 			Name:              "argentina",
+			Language:          "en",
 			ConfederationCode: "CONMEBOL",
 			GroupCode:         "1",
 			Page:              1,
@@ -121,7 +123,7 @@ func TestChampionshipRepository_ListTeamsByYear(t *testing.T) {
 
 		countRows := mock.NewRows([]string{"count"}).AddRow(int64(2))
 		mock.ExpectQuery(`^-- name: CountChampionshipTeamsByYear :one.*`).
-			WithArgs(int32(1930), "argentina", "CONMEBOL", "1").
+			WithArgs(int32(1930), "argentina", "CONMEBOL", "1", "en").
 			WillReturnRows(countRows)
 
 		rows := mock.NewRows([]string{"year", "team_code", "confederation_code", "group_code", "stage_reached", "managers"}).
@@ -129,7 +131,7 @@ func TestChampionshipRepository_ListTeamsByYear(t *testing.T) {
 			AddRow(int32(1930), "uru", "conmebol", pgtype.Text{Valid: false}, "champion", "")
 
 		mock.ExpectQuery(`^-- name: ListChampionshipTeamsByYear :many.*`).
-			WithArgs(int32(1930), "argentina", "CONMEBOL", "1", int32(10), int32(0)).
+			WithArgs(int32(1930), "argentina", "CONMEBOL", "1", int32(10), int32(0), "en").
 			WillReturnRows(rows)
 
 		result, total, err := repo.ListTeamsByYear(context.Background(), filter)
@@ -159,7 +161,7 @@ func TestChampionshipRepository_ListTeamsByYear(t *testing.T) {
 		filter := domain.ChampionshipTeamFilter{Year: 1930, Page: 1, Size: 10}
 
 		mock.ExpectQuery(`^-- name: CountChampionshipTeamsByYear :one.*`).
-			WithArgs(int32(1930), "", "", "").
+			WithArgs(int32(1930), "", "", "", "").
 			WillReturnError(errors.New("db error"))
 
 		result, total, err := repo.ListTeamsByYear(context.Background(), filter)
@@ -179,11 +181,11 @@ func TestChampionshipRepository_ListTeamsByYear(t *testing.T) {
 
 		countRows := mock.NewRows([]string{"count"}).AddRow(int64(5))
 		mock.ExpectQuery(`^-- name: CountChampionshipTeamsByYear :one.*`).
-			WithArgs(int32(1930), "", "", "").
+			WithArgs(int32(1930), "", "", "", "").
 			WillReturnRows(countRows)
 
 		mock.ExpectQuery(`^-- name: ListChampionshipTeamsByYear :many.*`).
-			WithArgs(int32(1930), "", "", "", int32(10), int32(0)).
+			WithArgs(int32(1930), "", "", "", int32(10), int32(0), "").
 			WillReturnError(errors.New("db error"))
 
 		result, total, err := repo.ListTeamsByYear(context.Background(), filter)

@@ -25,9 +25,10 @@ func NewChampionshipRepository(db sqlc.DBTX) ChampionshipRepository {
 // List retrieves a paginated list of championships based on the given filters.
 func (r *championshipRepository) List(ctx context.Context, filter domain.ChampionshipFilter) ([]domain.Championship, int64, error) {
 	total, err := r.queries.CountChampionships(ctx, sqlc.CountChampionshipsParams{
-		Column1: int32(filter.Year),
-		Column2: filter.Host,
-		Column3: filter.ConfederationCode,
+		Column1:  int32(filter.Year),
+		Column2:  filter.Host,
+		Column3:  filter.ConfederationCode,
+		Language: filter.Language,
 	})
 	if err != nil {
 		return nil, 0, err
@@ -37,11 +38,12 @@ func (r *championshipRepository) List(ctx context.Context, filter domain.Champio
 	offset := int32((filter.Page - 1) * filter.Size)
 
 	rows, err := r.queries.ListChampionships(ctx, sqlc.ListChampionshipsParams{
-		Column1: int32(filter.Year),
-		Column2: filter.Host,
-		Column3: filter.ConfederationCode,
-		Limit:   limit,
-		Offset:  offset,
+		Column1:  int32(filter.Year),
+		Column2:  filter.Host,
+		Column3:  filter.ConfederationCode,
+		Limit:    limit,
+		Offset:   offset,
+		Language: filter.Language,
 	})
 	if err != nil {
 		return nil, 0, err
@@ -72,10 +74,11 @@ func (r *championshipRepository) GetByYear(ctx context.Context, year int) (*doma
 // ListTeamsByYear retrieves a paginated list of teams that participated in a championship year.
 func (r *championshipRepository) ListTeamsByYear(ctx context.Context, filter domain.ChampionshipTeamFilter) ([]domain.ChampionshipTeam, int64, error) {
 	total, err := r.queries.CountChampionshipTeamsByYear(ctx, sqlc.CountChampionshipTeamsByYearParams{
-		Year:    int32(filter.Year),
-		Column2: filter.Name,
-		Column3: filter.ConfederationCode,
-		Column4: filter.GroupCode,
+		Year:     int32(filter.Year),
+		Column2:  filter.Name,
+		Column3:  filter.ConfederationCode,
+		Column4:  filter.GroupCode,
+		Language: filter.Language,
 	})
 	if err != nil {
 		return nil, 0, err
@@ -85,12 +88,13 @@ func (r *championshipRepository) ListTeamsByYear(ctx context.Context, filter dom
 	offset := int32((filter.Page - 1) * filter.Size)
 
 	rows, err := r.queries.ListChampionshipTeamsByYear(ctx, sqlc.ListChampionshipTeamsByYearParams{
-		Year:    int32(filter.Year),
-		Column2: filter.Name,
-		Column3: filter.ConfederationCode,
-		Column4: filter.GroupCode,
-		Limit:   limit,
-		Offset:  offset,
+		Year:     int32(filter.Year),
+		Column2:  filter.Name,
+		Column3:  filter.ConfederationCode,
+		Column4:  filter.GroupCode,
+		Limit:    limit,
+		Offset:   offset,
+		Language: filter.Language,
 	})
 	if err != nil {
 		return nil, 0, err

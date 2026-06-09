@@ -1,7 +1,7 @@
 -- name: ListChampions :many
 SELECT
     c.unified_code AS team_code,
-    t.name,
+    COALESCE(tt.name, t.name)::varchar AS name,
     c.wins,
     c.years
 FROM (
@@ -14,8 +14,11 @@ FROM (
     GROUP BY t.unified_code
 ) c
 INNER JOIN teams t ON t.code = c.unified_code
-ORDER BY c.wins DESC, t.name ASC
-LIMIT $1 OFFSET $2;
+LEFT JOIN team_translations tt
+    ON tt.team_code = t.code
+    AND tt.language = sqlc.arg(language)
+ORDER BY c.wins DESC, COALESCE(tt.name, t.name) ASC
+LIMIT sqlc.arg(limit_value) OFFSET sqlc.arg(offset_value);
 
 -- name: CountChampions :one
 SELECT COUNT(1)

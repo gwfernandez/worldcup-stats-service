@@ -20,11 +20,11 @@ func TestStandingRepository_List(t *testing.T) {
 		defer mock.Close()
 
 		repo := repository.NewStandingRepository(mock)
-		filter := domain.StandingFilter{Name: "arg", ConfederationCode: "CONMEBOL", Page: 2, Size: 10}
+		filter := domain.StandingFilter{Name: "arg", Language: "en", ConfederationCode: "CONMEBOL", Page: 2, Size: 10}
 
 		countRows := mock.NewRows([]string{"count"}).AddRow(int64(11))
 		mock.ExpectQuery(`^-- name: CountStandings :one.*`).
-			WithArgs("arg", "CONMEBOL").
+			WithArgs("en", "arg", "CONMEBOL").
 			WillReturnRows(countRows)
 
 		rows := mock.NewRows([]string{
@@ -44,7 +44,7 @@ func TestStandingRepository_List(t *testing.T) {
 		}).AddRow("arg", "Argentina", int32(88), int32(53), int32(10), int32(25), int32(152), int32(101), int32(51), int32(133), int32(159), int32(3), int32(3))
 
 		mock.ExpectQuery(`^-- name: ListStandings :many.*`).
-			WithArgs("arg", "CONMEBOL", int32(10), int32(10)).
+			WithArgs("en", "arg", "CONMEBOL", int32(10), int32(10)).
 			WillReturnRows(rows)
 
 		result, total, err := repo.List(context.Background(), filter)
@@ -74,7 +74,7 @@ func TestStandingRepository_List(t *testing.T) {
 
 		repo := repository.NewStandingRepository(mock)
 		mock.ExpectQuery(`^-- name: CountStandings :one.*`).
-			WithArgs("", "").
+			WithArgs("", "", "").
 			WillReturnError(errors.New("db error"))
 
 		result, total, err := repo.List(context.Background(), domain.StandingFilter{Page: 1, Size: 20})
@@ -92,10 +92,10 @@ func TestStandingRepository_List(t *testing.T) {
 		repo := repository.NewStandingRepository(mock)
 		countRows := mock.NewRows([]string{"count"}).AddRow(int64(1))
 		mock.ExpectQuery(`^-- name: CountStandings :one.*`).
-			WithArgs("", "").
+			WithArgs("", "", "").
 			WillReturnRows(countRows)
 		mock.ExpectQuery(`^-- name: ListStandings :many.*`).
-			WithArgs("", "", int32(20), int32(20)).
+			WithArgs("", "", "", int32(20), int32(20)).
 			WillReturnError(errors.New("db error"))
 
 		result, total, err := repo.List(context.Background(), domain.StandingFilter{Page: 2, Size: 20})

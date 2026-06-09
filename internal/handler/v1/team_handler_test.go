@@ -28,8 +28,8 @@ func (m *MockTeamService) List(ctx context.Context, filter domain.TeamFilter) (*
 	return args.Get(0).(*domain.TeamListResponse), args.Error(1)
 }
 
-func (m *MockTeamService) GetByCode(ctx context.Context, code string) (*domain.Team, error) {
-	args := m.Called(ctx, code)
+func (m *MockTeamService) GetByCode(ctx context.Context, code, language string) (*domain.Team, error) {
+	args := m.Called(ctx, code, language)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
@@ -65,6 +65,7 @@ func TestTeamHandler_List(t *testing.T) {
 		}
 		svc.On("List", mock.Anything, domain.TeamFilter{
 			Name:           "argen",
+			Language:       "es",
 			FederationName: "",
 			FederationCode: "",
 			Page:           1,
@@ -127,6 +128,7 @@ func TestTeamHandler_List(t *testing.T) {
 		expected := &domain.TeamListResponse{Data: []domain.Team{}, Pagination: domain.PaginationInfo{Page: 1, Size: 20, TotalElements: 1, TotalPages: 1, HasNext: false, HasPrevious: false}}
 		svc.On("List", mock.Anything, domain.TeamFilter{
 			Name:              "",
+			Language:          "es",
 			ConfederationCode: &confederationCode,
 			FederationName:    "Asociación",
 			FederationCode:    "AFA",
@@ -153,6 +155,51 @@ func TestTeamHandler_List(t *testing.T) {
 		}`, w.Body.String())
 	})
 
+	t.Run("uses english accept language", func(t *testing.T) {
+		svc := new(MockTeamService)
+		r := setupTeamRouter(svc)
+
+		expected := &domain.TeamListResponse{
+			Data:       []domain.Team{{Code: "GER", Name: "Germany", ConfederationCode: "UEFA", FederationCode: "DFB"}},
+			Pagination: domain.PaginationInfo{Page: 1, Size: 20, TotalElements: 1, TotalPages: 1},
+		}
+		svc.On("List", mock.Anything, domain.TeamFilter{
+			Name:           "ger",
+			Language:       "en",
+			FederationName: "",
+			FederationCode: "",
+			Page:           1,
+			Size:           20,
+		}).Return(expected, nil)
+
+		req, _ := http.NewRequest(http.MethodGet, "/api/teams?name=ger", nil)
+		req.Header.Set("Accept-Language", "en-US")
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		assert.JSONEq(t, `{
+			"data": [{
+				"code": "GER",
+				"name": "Germany",
+				"isDissolved": false,
+				"confederationCode": "UEFA",
+				"federationName": "",
+				"federationCode": "DFB",
+				"dissolutionDate": null
+			}],
+			"pagination": {
+				"page": 1,
+				"size": 20,
+				"totalElements": 1,
+				"totalPages": 1,
+				"hasNext": false,
+				"hasPrevious": false
+			}
+		}`, w.Body.String())
+		svc.AssertExpectations(t)
+	})
+
 	t.Run("bad request invalid includeDissolved", func(t *testing.T) {
 		svc := new(MockTeamService)
 		r := setupTeamRouter(svc)
@@ -171,6 +218,7 @@ func TestTeamHandler_List(t *testing.T) {
 
 		svc.On("List", mock.Anything, domain.TeamFilter{
 			Name:           "",
+			Language:       "es",
 			FederationName: "",
 			FederationCode: "",
 			Page:           1,
@@ -198,7 +246,7 @@ func TestTeamHandler_GetByCode(t *testing.T) {
 			FederationName:    "Football Federation of the USSR",
 			FederationCode:    "FFUSSR",
 		}
-		svc.On("GetByCode", mock.Anything, "urs").Return(expected, nil)
+		svc.On("GetByCode", mock.Anything, "urs", "es").Return(expected, nil)
 
 		req, _ := http.NewRequest(http.MethodGet, "/api/teams/urs", nil)
 		w := httptest.NewRecorder()
@@ -220,7 +268,7 @@ func TestTeamHandler_GetByCode(t *testing.T) {
 		svc := new(MockTeamService)
 		r := setupTeamRouter(svc)
 
-		svc.On("GetByCode", mock.Anything, "zzz").Return(nil, domain.ErrNotFound)
+		svc.On("GetByCode", mock.Anything, "zzz", "es").Return(nil, domain.ErrNotFound)
 
 		req, _ := http.NewRequest(http.MethodGet, "/api/teams/zzz", nil)
 		w := httptest.NewRecorder()
@@ -229,11 +277,36 @@ func TestTeamHandler_GetByCode(t *testing.T) {
 		assert.Equal(t, http.StatusNotFound, w.Code)
 	})
 
+	t.Run("uses english accept language", func(t *testing.T) {
+		svc := new(MockTeamService)
+		r := setupTeamRouter(svc)
+
+		expected := &domain.Team{Code: "GER", Name: "Germany", ConfederationCode: "UEFA", FederationCode: "DFB"}
+		svc.On("GetByCode", mock.Anything, "ger", "en").Return(expected, nil)
+
+		req, _ := http.NewRequest(http.MethodGet, "/api/teams/ger", nil)
+		req.Header.Set("Accept-Language", "en")
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		assert.JSONEq(t, `{
+			"code": "GER",
+			"name": "Germany",
+			"isDissolved": false,
+			"confederationCode": "UEFA",
+			"federationName": "",
+			"federationCode": "DFB",
+			"dissolutionDate": null
+		}`, w.Body.String())
+		svc.AssertExpectations(t)
+	})
+
 	t.Run("internal error", func(t *testing.T) {
 		svc := new(MockTeamService)
 		r := setupTeamRouter(svc)
 
-		svc.On("GetByCode", mock.Anything, "zzz").Return(nil, errors.New("db error"))
+		svc.On("GetByCode", mock.Anything, "zzz", "es").Return(nil, errors.New("db error"))
 
 		req, _ := http.NewRequest(http.MethodGet, "/api/teams/zzz", nil)
 		w := httptest.NewRecorder()

@@ -29,11 +29,12 @@ func (r *teamRepository) List(ctx context.Context, filter domain.TeamFilter) ([]
 	}
 
 	total, err := r.queries.CountTeams(ctx, sqlc.CountTeamsParams{
-		Column1: filter.Name,
-		Column2: confederationCode,
-		Column3: filter.FederationName,
-		Column4: filter.FederationCode,
-		Column5: filter.IncludeDissolved,
+		Language:          filter.Language,
+		NameFilter:        filter.Name,
+		ConfederationCode: confederationCode,
+		FederationName:    filter.FederationName,
+		FederationCode:    filter.FederationCode,
+		IncludeDissolved:  filter.IncludeDissolved,
 	})
 	if err != nil {
 		return nil, 0, err
@@ -42,13 +43,14 @@ func (r *teamRepository) List(ctx context.Context, filter domain.TeamFilter) ([]
 	limit := int32(filter.Size)
 	offset := int32((filter.Page - 1) * filter.Size)
 	rows, err := r.queries.ListTeams(ctx, sqlc.ListTeamsParams{
-		Column1: filter.Name,
-		Column2: confederationCode,
-		Column3: filter.FederationName,
-		Column4: filter.FederationCode,
-		Column5: filter.IncludeDissolved,
-		Limit:   limit,
-		Offset:  offset,
+		Language:          filter.Language,
+		NameFilter:        filter.Name,
+		ConfederationCode: confederationCode,
+		FederationName:    filter.FederationName,
+		FederationCode:    filter.FederationCode,
+		IncludeDissolved:  filter.IncludeDissolved,
+		LimitValue:        limit,
+		OffsetValue:       offset,
 	})
 	if err != nil {
 		return nil, 0, err
@@ -62,8 +64,11 @@ func (r *teamRepository) List(ctx context.Context, filter domain.TeamFilter) ([]
 	return teams, total, nil
 }
 
-func (r *teamRepository) GetByCode(ctx context.Context, code string) (*domain.Team, error) {
-	row, err := r.queries.GetTeamByCode(ctx, code)
+func (r *teamRepository) GetByCode(ctx context.Context, code, language string) (*domain.Team, error) {
+	row, err := r.queries.GetTeamByCode(ctx, sqlc.GetTeamByCodeParams{
+		Code:     code,
+		Language: language,
+	})
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, nil

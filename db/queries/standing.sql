@@ -1,7 +1,7 @@
 -- name: ListStandings :many
 SELECT
     s.team_code,
-    t.name,
+    COALESCE(tt.name, t.name)::varchar AS name,
     s.matches_played,
     s.wins,
     s.draws,
@@ -15,16 +15,22 @@ SELECT
     s.unified_position
 FROM standings s
 INNER JOIN teams t ON t.code = s.team_code
+LEFT JOIN team_translations tt
+    ON tt.team_code = t.code
+    AND tt.language = sqlc.arg(language)
 WHERE
-    ($1::text = '' OR LOWER(t.name) LIKE '%' || LOWER($1) || '%')
-    AND ($2::text = '' OR t.confederation_code = $2)
+    (sqlc.arg(name_filter)::text = '' OR LOWER(COALESCE(tt.name, t.name)) LIKE '%' || LOWER(sqlc.arg(name_filter)) || '%')
+    AND (sqlc.arg(confederation_code)::text = '' OR t.confederation_code = sqlc.arg(confederation_code))
 ORDER BY s.position ASC
-LIMIT $3 OFFSET $4;
+LIMIT sqlc.arg(limit_value) OFFSET sqlc.arg(offset_value);
 
 -- name: CountStandings :one
 SELECT COUNT(*)
 FROM standings s
 INNER JOIN teams t ON t.code = s.team_code
+LEFT JOIN team_translations tt
+    ON tt.team_code = t.code
+    AND tt.language = sqlc.arg(language)
 WHERE
-    ($1::text = '' OR LOWER(t.name) LIKE '%' || LOWER($1) || '%')
-    AND ($2::text = '' OR t.confederation_code = $2);
+    (sqlc.arg(name_filter)::text = '' OR LOWER(COALESCE(tt.name, t.name)) LIKE '%' || LOWER(sqlc.arg(name_filter)) || '%')
+    AND (sqlc.arg(confederation_code)::text = '' OR t.confederation_code = sqlc.arg(confederation_code));

@@ -244,6 +244,7 @@ func TestChampionshipHandler_ListTeamsByYear(t *testing.T) {
 		svc.On("ListTeamsByYear", mock.Anything, domain.ChampionshipTeamFilter{
 			Year:              1930,
 			Name:              "argentina",
+			Language:          "en",
 			ConfederationCode: "CONMEBOL",
 			GroupCode:         "A",
 			Page:              1,
@@ -251,6 +252,7 @@ func TestChampionshipHandler_ListTeamsByYear(t *testing.T) {
 		}).Return(expected, nil)
 
 		req, _ := http.NewRequest(http.MethodGet, "/api/championships/1930/teams?name=argentina&confederationCode=conmebol&groupCode=a", nil)
+		req.Header.Set("Accept-Language", "en")
 		w := httptest.NewRecorder()
 		r.ServeHTTP(w, req)
 
@@ -665,6 +667,7 @@ func TestChampionshipHandler_List(t *testing.T) {
 		svc.On("List", mock.Anything, domain.ChampionshipFilter{
 			Year:              1930,
 			Host:              "uru",
+			Language:          "es",
 			ConfederationCode: "CONMEBOL",
 			Page:              1,
 			Size:              20,

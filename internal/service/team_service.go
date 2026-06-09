@@ -44,8 +44,8 @@ func (s *teamService) List(ctx context.Context, filter domain.TeamFilter) (*doma
 	}, nil
 }
 
-func (s *teamService) GetByCode(ctx context.Context, code string) (*domain.Team, error) {
-	team, err := s.repo.GetByCode(ctx, code)
+func (s *teamService) GetByCode(ctx context.Context, code, language string) (*domain.Team, error) {
+	team, err := s.repo.GetByCode(ctx, code, language)
 	if err != nil {
 		return nil, err
 	}

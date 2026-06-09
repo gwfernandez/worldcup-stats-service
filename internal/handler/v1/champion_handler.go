@@ -39,6 +39,7 @@ func (h *ChampionHandler) List(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	filter.Language = resolveLanguage(c.Request)
 
 	champions, err := h.service.List(c.Request.Context(), filter)
 	if err != nil {
@@ -51,8 +52,9 @@ func (h *ChampionHandler) List(c *gin.Context) {
 
 func parseChampionFilter(c *gin.Context) (domain.ChampionFilter, error) {
 	filter := domain.ChampionFilter{
-		Page: defaultPage,
-		Size: defaultSize,
+		Language: defaultLanguage,
+		Page:     defaultPage,
+		Size:     defaultSize,
 	}
 
 	if rawPage := c.Query("page"); rawPage != "" {

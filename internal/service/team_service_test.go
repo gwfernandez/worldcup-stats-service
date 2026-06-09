@@ -25,8 +25,8 @@ func (m *MockTeamRepository) List(ctx context.Context, filter domain.TeamFilter)
 	return args.Get(0).([]domain.Team), args.Get(1).(int64), args.Error(2)
 }
 
-func (m *MockTeamRepository) GetByCode(ctx context.Context, code string) (*domain.Team, error) {
-	args := m.Called(ctx, code)
+func (m *MockTeamRepository) GetByCode(ctx context.Context, code, language string) (*domain.Team, error) {
+	args := m.Called(ctx, code, language)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
@@ -92,9 +92,9 @@ func TestTeamService_GetByCode(t *testing.T) {
 		mockRepo := new(MockTeamRepository)
 		svc := service.NewTeamService(mockRepo)
 		expected := &domain.Team{Code: "urs", FederationCode: "ffsu"}
-		mockRepo.On("GetByCode", ctx, "urs").Return(expected, nil)
+		mockRepo.On("GetByCode", ctx, "urs", "en").Return(expected, nil)
 
-		result, err := svc.GetByCode(ctx, "urs")
+		result, err := svc.GetByCode(ctx, "urs", "en")
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
 		assert.Equal(t, "URS", result.Code)
@@ -105,9 +105,9 @@ func TestTeamService_GetByCode(t *testing.T) {
 	t.Run("not found", func(t *testing.T) {
 		mockRepo := new(MockTeamRepository)
 		svc := service.NewTeamService(mockRepo)
-		mockRepo.On("GetByCode", ctx, "zzz").Return(nil, nil)
+		mockRepo.On("GetByCode", ctx, "zzz", "es").Return(nil, nil)
 
-		result, err := svc.GetByCode(ctx, "zzz")
+		result, err := svc.GetByCode(ctx, "zzz", "es")
 		assert.Error(t, err)
 		assert.True(t, errors.Is(err, domain.ErrNotFound))
 		assert.Nil(t, result)
@@ -117,9 +117,9 @@ func TestTeamService_GetByCode(t *testing.T) {
 	t.Run("repository error", func(t *testing.T) {
 		mockRepo := new(MockTeamRepository)
 		svc := service.NewTeamService(mockRepo)
-		mockRepo.On("GetByCode", ctx, "urs").Return(nil, errors.New("db error"))
+		mockRepo.On("GetByCode", ctx, "urs", "es").Return(nil, errors.New("db error"))
 
-		result, err := svc.GetByCode(ctx, "urs")
+		result, err := svc.GetByCode(ctx, "urs", "es")
 		assert.Error(t, err)
 		assert.Nil(t, result)
 		mockRepo.AssertExpectations(t)

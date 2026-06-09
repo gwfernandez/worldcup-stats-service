@@ -11,8 +11,11 @@ WHERE
     AND ($2::text = '' OR EXISTS (
         SELECT 1
         FROM teams t
+        LEFT JOIN team_translations tt
+            ON tt.team_code = t.code
+            AND tt.language = sqlc.arg(language)
         WHERE t.code = ANY(c.host_codes)
-          AND LOWER(t.name) LIKE '%' || LOWER($2) || '%'
+          AND LOWER(COALESCE(tt.name, t.name)) LIKE '%' || LOWER($2) || '%'
     ))
     AND ($3::text = '' OR EXISTS (
         SELECT 1
@@ -31,8 +34,11 @@ WHERE
     AND ($2::text = '' OR EXISTS (
         SELECT 1
         FROM teams t
+        LEFT JOIN team_translations tt
+            ON tt.team_code = t.code
+            AND tt.language = sqlc.arg(language)
         WHERE t.code = ANY(c.host_codes)
-          AND LOWER(t.name) LIKE '%' || LOWER($2) || '%'
+          AND LOWER(COALESCE(tt.name, t.name)) LIKE '%' || LOWER($2) || '%'
     ))
     AND ($3::text = '' OR EXISTS (
         SELECT 1
@@ -79,6 +85,9 @@ SELECT
     COALESCE(m.managers, '')::text AS managers
 FROM championships_teams ct
 INNER JOIN teams t ON t.code = ct.team_code
+LEFT JOIN team_translations tt
+    ON tt.team_code = t.code
+    AND tt.language = sqlc.arg(language)
 INNER JOIN championships_teams_stats cts ON ct.year = cts.year AND ct.team_code = cts.team_code
 INNER JOIN championships_stats cs ON cs.year = ct.year
 LEFT JOIN (
@@ -91,7 +100,7 @@ LEFT JOIN (
     GROUP BY cm.team_code
 ) m ON m.team_code = ct.team_code
 WHERE ct.year = $1
-    AND ($2::text = '' OR LOWER(t.name) LIKE '%' || LOWER($2) || '%')
+    AND ($2::text = '' OR LOWER(COALESCE(tt.name, t.name)) LIKE '%' || LOWER($2) || '%')
     AND ($3::text = '' OR t.confederation_code = $3)
     AND ($4::text = '' OR cts.group_code = $4)
 ORDER BY cts.position ASC, cts.stage_reached DESC
@@ -101,9 +110,12 @@ LIMIT $5 OFFSET $6;
 SELECT COUNT(*)
 FROM championships_teams ct
 INNER JOIN teams t ON t.code = ct.team_code
+LEFT JOIN team_translations tt
+    ON tt.team_code = t.code
+    AND tt.language = sqlc.arg(language)
 INNER JOIN championships_teams_stats cts ON ct.year = cts.year AND ct.team_code = cts.team_code
 WHERE ct.year = $1
-    AND ($2::text = '' OR LOWER(t.name) LIKE '%' || LOWER($2) || '%')
+    AND ($2::text = '' OR LOWER(COALESCE(tt.name, t.name)) LIKE '%' || LOWER($2) || '%')
     AND ($3::text = '' OR t.confederation_code = $3)
     AND ($4::text = '' OR cts.group_code = $4);
 

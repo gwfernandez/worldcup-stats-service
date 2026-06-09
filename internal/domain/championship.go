@@ -35,6 +35,7 @@ type Championship struct {
 type ChampionshipFilter struct {
 	Year              int
 	Host              string
+	Language          string
 	ConfederationCode string
 	Page              int
 	Size              int
@@ -54,6 +55,7 @@ type ChampionshipTeam struct {
 type ChampionshipTeamFilter struct {
 	Year              int
 	Name              string
+	Language          string
 	ConfederationCode string
 	GroupCode         string
 	Page              int

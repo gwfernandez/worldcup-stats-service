@@ -10,8 +10,9 @@ type Champion struct {
 
 // ChampionFilter defines pagination for listing champions.
 type ChampionFilter struct {
-	Page int
-	Size int
+	Language string
+	Page     int
+	Size     int
 }
 
 // ChampionListResponse represents paginated champions response.
