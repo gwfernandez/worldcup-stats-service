@@ -89,12 +89,15 @@ Listo para continuar con la Fase 1.
 
 1. Leer el issue de GitHub completo usando las herramientas de búsqueda/lectura y entender el requerimiento
 2. Asignarme el issue usando la herramienta de actualización de issues de GitHub
-3. Leer el campo "Rama sugerida" del issue
+3. Cambiar el estado del issue en GitHub a **In Progress** usando la integración de GitHub
+   - Si el issue pertenece a un GitHub Project, actualizar el campo de estado del item a `In Progress`
+   - Si no hay Project/status disponible, publicar un comentario explícito indicando que el issue queda en curso
+4. Leer el campo "Rama sugerida" del issue
    - Si existe → usar ese nombre
    - Si no existe → solicitarme el nombre antes de continuar
-4. Crear el branch localmente con ese nombre desde `main`
-5. Hacer checkout al branch creado
-6. Cambiar el estado del issue a **En curso** publicando un comentario en el issue de GitHub mediante la integración
+5. Crear el branch localmente con ese nombre desde `main`
+6. Hacer checkout al branch creado
+7. Publicar el comentario de inicio en el issue de GitHub mediante la integración
 
 ---
 
@@ -252,3 +255,9 @@ EOF
 
 <URL del PR> — listo para review de @gwfernandez
 ```
+
+4. Luego de que el PR sea mergeado en `main`, finalizar el issue de GitHub:
+   - Verificar que el PR esté mergeado antes de cerrar o mover el issue
+   - Si el issue pertenece a un GitHub Project, actualizar el campo de estado a `Done` o `Finalizado`
+   - Cerrar el issue si no fue cerrado automáticamente por `Closes #<número-de-issue>`
+   - Publicar un comentario final indicando el PR mergeado y el cierre del issue

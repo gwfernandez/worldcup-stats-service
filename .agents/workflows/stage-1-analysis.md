@@ -35,7 +35,10 @@ Del body del issue, extraer y registrar el campo **"Rama sugerida"**:
 A continuación, ejecutar las siguientes acciones de trazabilidad en GitHub:
 
 1. **Asignarme el issue** usando la integración de GitHub
-2. **Publicar el comentario de inicio** en el issue:
+2. **Cambiar el estado del issue a `In Progress`** usando la integración de GitHub:
+   - Si el issue pertenece a un GitHub Project, actualizar el campo de estado del item a `In Progress`
+   - Si no hay Project/status disponible, dejar constancia en el comentario de inicio
+3. **Publicar el comentario de inicio** en el issue:
 
 ```
 🔄 Issue tomado — comenzando análisis y planificación.

@@ -6,7 +6,7 @@ description: Stage 4 — Commit y Pull Request
 
 ## Propósito
 
-Commitear los cambios siguiendo Conventional Commits con descripciones en español, hacer push de la rama y abrir el Pull Request contra `main` con toda la información necesaria para el reviewer.
+Commitear los cambios siguiendo Conventional Commits con descripciones en español, hacer push de la rama y abrir el Pull Request contra `main` con toda la información necesaria para el reviewer. Luego de que el PR sea mergeado, finalizar el issue asociado en GitHub.
 
 ---
 
@@ -230,7 +230,27 @@ trabajo ha concluido:
 
 ---
 
-### 11. Reportar al usuario
+### 11. Finalizar el issue luego del merge del PR
+
+Una vez que el PR haya sido mergeado en `main`, cerrar/finalizar el issue asociado:
+
+1. Verificar que el PR esté mergeado antes de modificar el estado final del issue.
+2. Si el issue pertenece a un GitHub Project, actualizar el campo de estado del item a `Done` o `Finalizado`.
+3. Cerrar el issue si no fue cerrado automáticamente por `Closes #<número-de-issue>`.
+4. Publicar un comentario final en el issue:
+
+```
+✅ Issue finalizado
+
+El PR <URL del PR> fue mergeado en `main`.
+El issue queda cerrado/finalizado.
+```
+
+Si el PR todavía no fue mergeado, **no cerrar ni finalizar el issue**. Reportar que queda pendiente de merge/review.
+
+---
+
+### 12. Reportar al usuario
 
 ```
 ✅ Stage 4 completado
