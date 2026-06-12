@@ -9,6 +9,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
@@ -70,6 +71,7 @@ func main() {
 
 	// Set up Gin router
 	router := gin.Default()
+	configureCORS(router, cfg.CORSAllowedOrigins)
 
 	// Health check endpoint
 	router.GET("/health", func(c *gin.Context) {
@@ -119,4 +121,30 @@ func main() {
 	}
 
 	log.Println("Server exited gracefully")
+}
+
+func configureCORS(router *gin.Engine, allowedOrigins []string) {
+	if len(allowedOrigins) == 0 {
+		return
+	}
+
+	router.Use(cors.New(cors.Config{
+		AllowOrigins: allowedOrigins,
+		AllowMethods: []string{
+			http.MethodGet,
+			http.MethodOptions,
+		},
+		AllowHeaders: []string{
+			"Accept",
+			"Accept-Language",
+			"Content-Type",
+			"Origin",
+			middleware.VersionHeader,
+			middleware.VersionUsedHeader,
+		},
+		ExposeHeaders: []string{
+			middleware.VersionUsedHeader,
+		},
+		MaxAge: 12 * time.Hour,
+	}))
 }

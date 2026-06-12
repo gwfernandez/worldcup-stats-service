@@ -3,13 +3,17 @@ package config
 import (
 	"fmt"
 	"os"
+	"strings"
 )
 
+// Config contains the runtime configuration loaded from environment variables.
 type Config struct {
-	DatabaseURL string
-	Port        string
+	DatabaseURL        string
+	Port               string
+	CORSAllowedOrigins []string
 }
 
+// Load reads and validates the application configuration from environment variables.
 func Load() (*Config, error) {
 	dbURL := os.Getenv("DATABASE_URL")
 	if dbURL == "" {
@@ -22,7 +26,21 @@ func Load() (*Config, error) {
 	}
 
 	return &Config{
-		DatabaseURL: dbURL,
-		Port:        port,
+		DatabaseURL:        dbURL,
+		Port:               port,
+		CORSAllowedOrigins: parseCORSAllowedOrigins(os.Getenv("CORS_ALLOWED_ORIGINS")),
 	}, nil
+}
+
+func parseCORSAllowedOrigins(value string) []string {
+	origins := make([]string, 0)
+	for _, origin := range strings.Split(value, ",") {
+		origin = strings.TrimSpace(origin)
+		if origin == "" {
+			continue
+		}
+		origins = append(origins, origin)
+	}
+
+	return origins
 }
