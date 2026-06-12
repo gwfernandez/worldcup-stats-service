@@ -39,8 +39,8 @@ func TestChampionshipRepository_List(t *testing.T) {
 
 		startDate := time.Date(1978, 6, 1, 0, 0, 0, 0, time.UTC)
 		endDate := time.Date(1978, 6, 25, 0, 0, 0, 0, time.UTC)
-		rows := mock.NewRows([]string{"year", "start_date", "end_date", "host_codes", "champion_code", "champion_name"}).
-			AddRow(int32(1978), startDate, endDate, []string{"arg"}, pgtype.Text{String: "ARG", Valid: true}, "Argentina")
+		rows := mock.NewRows([]string{"year", "start_date", "end_date", "host_codes", "champion_code"}).
+			AddRow(int32(1978), startDate, endDate, []string{"arg"}, pgtype.Text{String: "ARG", Valid: true})
 
 		mock.ExpectQuery(`^-- name: ListChampionships :many.*`).
 			WithArgs(int32(1978), "arg", "CONMEBOL", int32(10), int32(0), "en").
@@ -56,8 +56,6 @@ func TestChampionshipRepository_List(t *testing.T) {
 		assert.Equal(t, []string{"ARG"}, result[0].HostCodes)
 		require.NotNil(t, result[0].ChampionCode)
 		assert.Equal(t, "ARG", *result[0].ChampionCode)
-		require.NotNil(t, result[0].ChampionName)
-		assert.Equal(t, "Argentina", *result[0].ChampionName)
 
 		assert.NoError(t, mock.ExpectationsWereMet())
 	})
@@ -102,6 +100,46 @@ func TestChampionshipRepository_List(t *testing.T) {
 		assert.Error(t, err)
 		assert.Nil(t, result)
 		assert.Equal(t, int64(0), total)
+		assert.NoError(t, mock.ExpectationsWereMet())
+	})
+}
+
+func TestChampionshipRepository_ListTeamTranslations(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		mock, err := pgxmock.NewPool()
+		require.NoError(t, err)
+		defer mock.Close()
+
+		repo := repository.NewChampionshipRepository(mock)
+
+		rows := mock.NewRows([]string{"team_code", "language", "name"}).
+			AddRow("arg", "es", "Argentina").
+			AddRow("KOR", "en", "South Korea")
+		mock.ExpectQuery(`^-- name: ListTeamTranslations :many.*`).
+			WillReturnRows(rows)
+
+		result, err := repo.ListTeamTranslations(context.Background())
+		assert.NoError(t, err)
+		assert.Equal(t, []domain.TeamTranslation{
+			{TeamCode: "ARG", Language: "es", Name: "Argentina"},
+			{TeamCode: "KOR", Language: "en", Name: "South Korea"},
+		}, result)
+		assert.NoError(t, mock.ExpectationsWereMet())
+	})
+
+	t.Run("db error", func(t *testing.T) {
+		mock, err := pgxmock.NewPool()
+		require.NoError(t, err)
+		defer mock.Close()
+
+		repo := repository.NewChampionshipRepository(mock)
+
+		mock.ExpectQuery(`^-- name: ListTeamTranslations :many.*`).
+			WillReturnError(errors.New("db error"))
+
+		result, err := repo.ListTeamTranslations(context.Background())
+		assert.Error(t, err)
+		assert.Nil(t, result)
 		assert.NoError(t, mock.ExpectationsWereMet())
 	})
 }

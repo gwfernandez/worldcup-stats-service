@@ -551,13 +551,8 @@ SELECT
     start_date,
     end_date,
     host_codes,
-    champion_code,
-    COALESCE(champion_translation.name, champion_team.name, '')::varchar AS champion_name
+    champion_code
 FROM championships c
-LEFT JOIN teams champion_team ON champion_team.code = c.champion_code
-LEFT JOIN team_translations champion_translation
-    ON champion_translation.team_code = champion_team.code
-    AND champion_translation.language = $6
 WHERE
     ($1::integer = 0 OR c.year = $1)
     AND ($2::text = '' OR EXISTS (
@@ -588,16 +583,7 @@ type ListChampionshipsParams struct {
 	Language string
 }
 
-type ListChampionshipsRow struct {
-	Year         int32
-	StartDate    pgtype.Date
-	EndDate      pgtype.Date
-	HostCodes    []string
-	ChampionCode pgtype.Text
-	ChampionName string
-}
-
-func (q *Queries) ListChampionships(ctx context.Context, arg ListChampionshipsParams) ([]ListChampionshipsRow, error) {
+func (q *Queries) ListChampionships(ctx context.Context, arg ListChampionshipsParams) ([]Championship, error) {
 	rows, err := q.db.Query(ctx, listChampionships,
 		arg.Column1,
 		arg.Column2,
@@ -610,16 +596,15 @@ func (q *Queries) ListChampionships(ctx context.Context, arg ListChampionshipsPa
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ListChampionshipsRow
+	var items []Championship
 	for rows.Next() {
-		var i ListChampionshipsRow
+		var i Championship
 		if err := rows.Scan(
 			&i.Year,
 			&i.StartDate,
 			&i.EndDate,
 			&i.HostCodes,
 			&i.ChampionCode,
-			&i.ChampionName,
 		); err != nil {
 			return nil, err
 		}

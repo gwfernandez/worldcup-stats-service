@@ -34,6 +34,14 @@ func (m *MockChampionshipRepository) GetByYear(ctx context.Context, year int) (*
 	return args.Get(0).(*domain.Championship), args.Error(1)
 }
 
+func (m *MockChampionshipRepository) ListTeamTranslations(ctx context.Context) ([]domain.TeamTranslation, error) {
+	args := m.Called(ctx)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]domain.TeamTranslation), args.Error(1)
+}
+
 func (m *MockChampionshipRepository) ListTeamsByYear(ctx context.Context, filter domain.ChampionshipTeamFilter) ([]domain.ChampionshipTeam, int64, error) {
 	args := m.Called(ctx, filter)
 	if args.Get(0) == nil {
@@ -72,10 +80,20 @@ func TestChampionshipService_List(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		mockRepo := new(MockChampionshipRepository)
 		svc := service.NewChampionshipService(mockRepo)
-		filter := domain.ChampionshipFilter{Page: 1, Size: 20}
+		filter := domain.ChampionshipFilter{Page: 1, Size: 20, Language: "en"}
 
-		expected := []domain.Championship{{Year: 1930, HostCodes: []string{"URU"}}, {Year: 1934, HostCodes: []string{"ITA"}}}
+		expected := []domain.Championship{
+			{Year: 1930, HostCodes: []string{"URU"}, ChampionCode: stringPtr("URU")},
+			{Year: 1934, HostCodes: []string{"ITA"}, ChampionCode: stringPtr("ITA")},
+			{Year: 2002, HostCodes: []string{"KOR", "JPN", "XXX"}},
+		}
 		mockRepo.On("List", ctx, filter).Return(expected, int64(22), nil)
+		mockRepo.On("ListTeamTranslations", ctx).Return([]domain.TeamTranslation{
+			{TeamCode: "URU", Language: "en", Name: "Uruguay"},
+			{TeamCode: "ITA", Language: "en", Name: "Italy"},
+			{TeamCode: "KOR", Language: "en", Name: "South Korea"},
+			{TeamCode: "JPN", Language: "es", Name: "Japon"},
+		}, nil)
 
 		res, err := svc.List(ctx, filter)
 		assert.NoError(t, err)
@@ -83,7 +101,17 @@ func TestChampionshipService_List(t *testing.T) {
 		assert.Equal(t, 1, res.Pagination.Page)
 		assert.Equal(t, 20, res.Pagination.Size)
 		assert.Equal(t, int64(22), res.Pagination.TotalElements)
-		assert.Len(t, res.Data, 2)
+		assert.Len(t, res.Data, 3)
+		assert.Equal(t, []domain.Host{{Code: "URU", Name: "Uruguay"}}, res.Data[0].Hosts)
+		assert.Equal(t, &domain.ChampionshipChampion{Code: "URU", Name: "Uruguay"}, res.Data[0].Champion)
+		assert.Equal(t, []domain.Host{{Code: "ITA", Name: "Italy"}}, res.Data[1].Hosts)
+		assert.Equal(t, &domain.ChampionshipChampion{Code: "ITA", Name: "Italy"}, res.Data[1].Champion)
+		assert.Equal(t, []domain.Host{
+			{Code: "KOR", Name: "South Korea"},
+			{Code: "JPN", Name: "Japon"},
+			{Code: "XXX", Name: "XXX"},
+		}, res.Data[2].Hosts)
+		assert.Nil(t, res.Data[2].Champion)
 		mockRepo.AssertExpectations(t)
 	})
 
@@ -126,6 +154,20 @@ func TestChampionshipService_List(t *testing.T) {
 		filter := domain.ChampionshipFilter{Page: 1, Size: 20}
 
 		mockRepo.On("List", ctx, filter).Return(nil, int64(0), errors.New("db error"))
+
+		res, err := svc.List(ctx, filter)
+		assert.Error(t, err)
+		assert.Nil(t, res)
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("host cache error", func(t *testing.T) {
+		mockRepo := new(MockChampionshipRepository)
+		svc := service.NewChampionshipService(mockRepo)
+		filter := domain.ChampionshipFilter{Page: 1, Size: 20, Language: "es"}
+
+		mockRepo.On("List", ctx, filter).Return([]domain.Championship{{Year: 1930, HostCodes: []string{"URU"}}}, int64(1), nil)
+		mockRepo.On("ListTeamTranslations", ctx).Return(nil, errors.New("db error"))
 
 		res, err := svc.List(ctx, filter)
 		assert.Error(t, err)
@@ -538,19 +580,33 @@ func TestChampionshipService_GetByYear(t *testing.T) {
 		svc := service.NewChampionshipService(mockRepo)
 
 		expectedStats := &domain.ChampionshipsStats{
-			TotalTeams: 13,
-			TotalGoals: 70,
+			TotalTeams:      13,
+			TotalGoals:      70,
+			RunnerUpCode:    "NED",
+			ThirdPlaceCode:  "BRA",
+			FourthPlaceCode: "ITA",
 		}
-		expected := &domain.Championship{Year: 1930, Stats: expectedStats}
+		expected := &domain.Championship{Year: 1930, HostCodes: []string{"URU"}, ChampionCode: stringPtr("URU"), Stats: expectedStats}
 		mockRepo.On("GetByYear", ctx, 1930).Return(expected, nil)
+		mockRepo.On("ListTeamTranslations", ctx).Return([]domain.TeamTranslation{
+			{TeamCode: "URU", Language: "es", Name: "Uruguay"},
+			{TeamCode: "NED", Language: "es", Name: "Paises Bajos"},
+			{TeamCode: "BRA", Language: "es", Name: "Brasil"},
+			{TeamCode: "ITA", Language: "es", Name: "Italia"},
+		}, nil)
 
-		res, err := svc.GetByYear(ctx, 1930)
+		res, err := svc.GetByYear(ctx, 1930, "es")
 		assert.NoError(t, err)
 		require.NotNil(t, res)
 		assert.Equal(t, 1930, res.Year)
+		assert.Equal(t, []domain.Host{{Code: "URU", Name: "Uruguay"}}, res.Hosts)
+		assert.Equal(t, &domain.ChampionshipChampion{Code: "URU", Name: "Uruguay"}, res.Champion)
 		require.NotNil(t, res.Stats)
 		assert.Equal(t, int32(13), res.Stats.TotalTeams)
 		assert.Equal(t, int32(70), res.Stats.TotalGoals)
+		assert.Equal(t, &domain.PodiumTeam{Code: "NED", Name: "Paises Bajos"}, res.Stats.RunnerUp)
+		assert.Equal(t, &domain.PodiumTeam{Code: "BRA", Name: "Brasil"}, res.Stats.ThirdPlace)
+		assert.Equal(t, &domain.PodiumTeam{Code: "ITA", Name: "Italia"}, res.Stats.FourthPlace)
 		mockRepo.AssertExpectations(t)
 	})
 
@@ -558,17 +614,31 @@ func TestChampionshipService_GetByYear(t *testing.T) {
 		mockRepo := new(MockChampionshipRepository)
 		svc := service.NewChampionshipService(mockRepo)
 
-		expected := &domain.Championship{Year: 2026, Stats: nil}
+		expected := &domain.Championship{Year: 2026, HostCodes: []string{"usa", "CAN", "MEX"}, ChampionCode: stringPtr(""), Stats: nil}
 		mockRepo.On("GetByYear", ctx, 2026).Return(expected, nil)
+		mockRepo.On("ListTeamTranslations", ctx).Return([]domain.TeamTranslation{
+			{TeamCode: "USA", Language: "es", Name: "Estados Unidos"},
+			{TeamCode: "CAN", Language: "es", Name: "Canada"},
+			{TeamCode: "MEX", Language: "es", Name: "Mexico"},
+		}, nil)
 
-		res, err := svc.GetByYear(ctx, 2026)
+		res, err := svc.GetByYear(ctx, 2026, "")
 		assert.NoError(t, err)
 		require.NotNil(t, res)
 		assert.Equal(t, 2026, res.Year)
+		assert.Equal(t, []domain.Host{
+			{Code: "USA", Name: "Estados Unidos"},
+			{Code: "CAN", Name: "Canada"},
+			{Code: "MEX", Name: "Mexico"},
+		}, res.Hosts)
+		assert.Nil(t, res.Champion)
 		require.NotNil(t, res.Stats)
 		assert.Equal(t, int32(0), res.Stats.TotalTeams)
 		assert.Equal(t, int32(0), res.Stats.TotalMatches)
 		assert.Equal(t, "", res.Stats.RunnerUpCode)
+		assert.Nil(t, res.Stats.RunnerUp)
+		assert.Nil(t, res.Stats.ThirdPlace)
+		assert.Nil(t, res.Stats.FourthPlace)
 		assert.Len(t, res.Stats.TopScorers, 0)
 		mockRepo.AssertExpectations(t)
 	})
@@ -579,7 +649,7 @@ func TestChampionshipService_GetByYear(t *testing.T) {
 
 		mockRepo.On("GetByYear", ctx, 1999).Return(nil, nil)
 
-		res, err := svc.GetByYear(ctx, 1999)
+		res, err := svc.GetByYear(ctx, 1999, "es")
 		assert.Error(t, err)
 		assert.True(t, errors.Is(err, domain.ErrNotFound))
 		assert.Nil(t, res)
@@ -592,9 +662,13 @@ func TestChampionshipService_GetByYear(t *testing.T) {
 
 		mockRepo.On("GetByYear", ctx, 2022).Return(nil, errors.New("db error"))
 
-		res, err := svc.GetByYear(ctx, 2022)
+		res, err := svc.GetByYear(ctx, 2022, "es")
 		assert.Error(t, err)
 		assert.Nil(t, res)
 		mockRepo.AssertExpectations(t)
 	})
+}
+
+func stringPtr(value string) *string {
+	return &value
 }

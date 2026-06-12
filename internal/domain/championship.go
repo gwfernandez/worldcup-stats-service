@@ -14,22 +14,44 @@ type ChampionshipsStats struct {
 	TotalStadiums   int32       `json:"totalStadiums"`
 	TotalPlayers    int32       `json:"totalPlayers"`
 	TotalGoals      int32       `json:"totalGoals"`
-	RunnerUpCode    string      `json:"runnerUpCode"`
-	ThirdPlaceCode  string      `json:"thirdPlaceCode"`
-	FourthPlaceCode string      `json:"fourthPlaceCode"`
+	RunnerUpCode    string      `json:"-"`
+	RunnerUp        *PodiumTeam `json:"runnerUp"`
+	ThirdPlaceCode  string      `json:"-"`
+	ThirdPlace      *PodiumTeam `json:"thirdPlace"`
+	FourthPlaceCode string      `json:"-"`
+	FourthPlace     *PodiumTeam `json:"fourthPlace"`
 	TopScorers      []TopScorer `json:"topScorers"`
 	TopScorerGoals  int32       `json:"topScorerGoals"`
 }
 
+// PodiumTeam represents a translated team in the championship podium.
+type PodiumTeam struct {
+	Code string `json:"code"`
+	Name string `json:"name"`
+}
+
+// Host represents a translated host team for a championship edition.
+type Host struct {
+	Code string `json:"code"`
+	Name string `json:"name"`
+}
+
+// ChampionshipChampion represents a translated champion team for a championship edition.
+type ChampionshipChampion struct {
+	Code string `json:"code"`
+	Name string `json:"name"`
+}
+
 // Championship represents a football world cup championship edition.
 type Championship struct {
-	Year         int                 `json:"year"`
-	StartDate    string              `json:"startDate"`
-	EndDate      string              `json:"endDate"`
-	HostCodes    []string            `json:"hostCodes"`
-	ChampionCode *string             `json:"championCode"`
-	ChampionName *string             `json:"championName,omitempty"`
-	Stats        *ChampionshipsStats `json:"stats,omitempty"`
+	Year         int                   `json:"year"`
+	StartDate    string                `json:"startDate"`
+	EndDate      string                `json:"endDate"`
+	HostCodes    []string              `json:"-"`
+	Hosts        []Host                `json:"hosts"`
+	ChampionCode *string               `json:"-"`
+	Champion     *ChampionshipChampion `json:"champion"`
+	Stats        *ChampionshipsStats   `json:"stats,omitempty"`
 }
 
 // ChampionshipFilter represents filters for listing championships.

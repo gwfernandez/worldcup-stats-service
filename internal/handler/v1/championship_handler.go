@@ -46,7 +46,6 @@ func (h *ChampionshipHandler) List(c *gin.Context) {
 		return
 	}
 	filter.Language = resolveLanguage(c.Request)
-	filter.Language = resolveLanguage(c.Request)
 
 	response, err := h.service.List(c.Request.Context(), filter)
 	if err != nil {
@@ -74,7 +73,7 @@ func (h *ChampionshipHandler) GetByYear(c *gin.Context) {
 		return
 	}
 
-	championship, err := h.service.GetByYear(c.Request.Context(), year)
+	championship, err := h.service.GetByYear(c.Request.Context(), year, resolveLanguage(c.Request))
 	if err != nil {
 		if errors.Is(err, domain.ErrNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})

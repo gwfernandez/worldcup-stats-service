@@ -401,8 +401,10 @@ Parámetros soportados para `/api/championships`:
 
 Notas de respuesta:
 
-- `hostCodes` y `championCode` se normalizan a mayúsculas.
-- `championName` corresponde al nombre localizado del campeón según `Accept-Language`, con fallback a `teams.name`.
+- `hosts[].code` y `champion.code` se normalizan a mayúsculas.
+- `hosts[].name` corresponde al nombre localizado del anfitrión según `Accept-Language`, con fallback a español y luego al código.
+- `champion.name` corresponde al nombre localizado del campeón según `Accept-Language`, con fallback a español y luego al código.
+- `stats.runnerUp`, `stats.thirdPlace` y `stats.fourthPlace` exponen `code` y `name` localizados desde la caché de selecciones.
 - Si no hay estadísticas cargadas para una edición, `stats` devuelve valores predeterminados (enteros en `0`, strings vacíos `""` y arrays vacíos `[]`).
 - El fixture agrupa stages de tipo `group` con `groups[].matches` y `groups[].standings`; los stages `knockout` exponen `matches` directamente.
 - En el fixture, cada match expone `homeTeamCode`, `homeTeamName`, `awayTeamCode` y `awayTeamName`; cada standing de grupo expone `teamCode` y `teamName`.
