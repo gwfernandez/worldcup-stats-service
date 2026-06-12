@@ -580,13 +580,19 @@ func TestChampionshipService_GetByYear(t *testing.T) {
 		svc := service.NewChampionshipService(mockRepo)
 
 		expectedStats := &domain.ChampionshipsStats{
-			TotalTeams: 13,
-			TotalGoals: 70,
+			TotalTeams:      13,
+			TotalGoals:      70,
+			RunnerUpCode:    "NED",
+			ThirdPlaceCode:  "BRA",
+			FourthPlaceCode: "ITA",
 		}
 		expected := &domain.Championship{Year: 1930, HostCodes: []string{"URU"}, ChampionCode: stringPtr("URU"), Stats: expectedStats}
 		mockRepo.On("GetByYear", ctx, 1930).Return(expected, nil)
 		mockRepo.On("ListTeamTranslations", ctx).Return([]domain.TeamTranslation{
 			{TeamCode: "URU", Language: "es", Name: "Uruguay"},
+			{TeamCode: "NED", Language: "es", Name: "Paises Bajos"},
+			{TeamCode: "BRA", Language: "es", Name: "Brasil"},
+			{TeamCode: "ITA", Language: "es", Name: "Italia"},
 		}, nil)
 
 		res, err := svc.GetByYear(ctx, 1930, "es")
@@ -598,6 +604,9 @@ func TestChampionshipService_GetByYear(t *testing.T) {
 		require.NotNil(t, res.Stats)
 		assert.Equal(t, int32(13), res.Stats.TotalTeams)
 		assert.Equal(t, int32(70), res.Stats.TotalGoals)
+		assert.Equal(t, &domain.PodiumTeam{Code: "NED", Name: "Paises Bajos"}, res.Stats.RunnerUp)
+		assert.Equal(t, &domain.PodiumTeam{Code: "BRA", Name: "Brasil"}, res.Stats.ThirdPlace)
+		assert.Equal(t, &domain.PodiumTeam{Code: "ITA", Name: "Italia"}, res.Stats.FourthPlace)
 		mockRepo.AssertExpectations(t)
 	})
 
@@ -627,6 +636,9 @@ func TestChampionshipService_GetByYear(t *testing.T) {
 		assert.Equal(t, int32(0), res.Stats.TotalTeams)
 		assert.Equal(t, int32(0), res.Stats.TotalMatches)
 		assert.Equal(t, "", res.Stats.RunnerUpCode)
+		assert.Nil(t, res.Stats.RunnerUp)
+		assert.Nil(t, res.Stats.ThirdPlace)
+		assert.Nil(t, res.Stats.FourthPlace)
 		assert.Len(t, res.Stats.TopScorers, 0)
 		mockRepo.AssertExpectations(t)
 	})

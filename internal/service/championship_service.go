@@ -234,6 +234,7 @@ func (s *championshipService) GetByYear(ctx context.Context, year int, language 
 	}
 	championship.Hosts = s.resolveHosts(championship.HostCodes, language)
 	championship.Champion = s.resolveChampion(championship.ChampionCode, language)
+	s.hydrateChampionshipStats(championship.Stats, language)
 
 	return championship, nil
 }
@@ -309,6 +310,26 @@ func (s *championshipService) resolveChampion(championCode *string, language str
 		return nil
 	}
 	return &domain.ChampionshipChampion{
+		Code: code,
+		Name: s.resolveTeamName(code, language),
+	}
+}
+
+func (s *championshipService) hydrateChampionshipStats(stats *domain.ChampionshipsStats, language string) {
+	if stats == nil {
+		return
+	}
+	stats.RunnerUp = s.resolvePodiumTeam(stats.RunnerUpCode, language)
+	stats.ThirdPlace = s.resolvePodiumTeam(stats.ThirdPlaceCode, language)
+	stats.FourthPlace = s.resolvePodiumTeam(stats.FourthPlaceCode, language)
+}
+
+func (s *championshipService) resolvePodiumTeam(teamCode string, language string) *domain.PodiumTeam {
+	code := strings.ToUpper(strings.TrimSpace(teamCode))
+	if code == "" {
+		return nil
+	}
+	return &domain.PodiumTeam{
 		Code: code,
 		Name: s.resolveTeamName(code, language),
 	}

@@ -14,11 +14,20 @@ type ChampionshipsStats struct {
 	TotalStadiums   int32       `json:"totalStadiums"`
 	TotalPlayers    int32       `json:"totalPlayers"`
 	TotalGoals      int32       `json:"totalGoals"`
-	RunnerUpCode    string      `json:"runnerUpCode"`
-	ThirdPlaceCode  string      `json:"thirdPlaceCode"`
-	FourthPlaceCode string      `json:"fourthPlaceCode"`
+	RunnerUpCode    string      `json:"-"`
+	RunnerUp        *PodiumTeam `json:"runnerUp"`
+	ThirdPlaceCode  string      `json:"-"`
+	ThirdPlace      *PodiumTeam `json:"thirdPlace"`
+	FourthPlaceCode string      `json:"-"`
+	FourthPlace     *PodiumTeam `json:"fourthPlace"`
 	TopScorers      []TopScorer `json:"topScorers"`
 	TopScorerGoals  int32       `json:"topScorerGoals"`
+}
+
+// PodiumTeam represents a translated team in the championship podium.
+type PodiumTeam struct {
+	Code string `json:"code"`
+	Name string `json:"name"`
 }
 
 // Host represents a translated host team for a championship edition.
