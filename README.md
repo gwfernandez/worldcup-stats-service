@@ -59,6 +59,7 @@ cp .env.example .env
 | `DATABASE_URL` | Connection string de PostgreSQL | `postgresql://user:pass@host/worldcups_dev` |
 | `PORT` | Puerto donde corre la API | `8080` |
 | `GIN_MODE` | Modo de Gin | `debug` / `release` |
+| `CORS_ALLOWED_ORIGINS` | Origenes permitidos para CORS, separados por coma | `http://localhost:5173,https://app.example.com` |
 
 ---
 

@@ -11,6 +11,7 @@ import (
 func TestLoad_Success(t *testing.T) {
 	t.Setenv("DATABASE_URL", "postgres://user:pass@localhost:5432/db")
 	t.Setenv("PORT", "9090")
+	t.Setenv("CORS_ALLOWED_ORIGINS", "http://localhost:5173, https://example.com")
 
 	cfg, err := config.Load()
 
@@ -18,6 +19,7 @@ func TestLoad_Success(t *testing.T) {
 	assert.NotNil(t, cfg)
 	assert.Equal(t, "postgres://user:pass@localhost:5432/db", cfg.DatabaseURL)
 	assert.Equal(t, "9090", cfg.Port)
+	assert.Equal(t, []string{"http://localhost:5173", "https://example.com"}, cfg.CORSAllowedOrigins)
 }
 
 func TestLoad_SuccessDefaultPort(t *testing.T) {
@@ -30,6 +32,18 @@ func TestLoad_SuccessDefaultPort(t *testing.T) {
 	assert.NotNil(t, cfg)
 	assert.Equal(t, "postgres://user:pass@localhost:5432/db", cfg.DatabaseURL)
 	assert.Equal(t, "8080", cfg.Port)
+	assert.Empty(t, cfg.CORSAllowedOrigins)
+}
+
+func TestLoad_SuccessSanitizesCORSAllowedOrigins(t *testing.T) {
+	t.Setenv("DATABASE_URL", "postgres://user:pass@localhost:5432/db")
+	t.Setenv("CORS_ALLOWED_ORIGINS", " http://localhost:5173, ,https://app.example.com,, ")
+
+	cfg, err := config.Load()
+
+	assert.NoError(t, err)
+	assert.NotNil(t, cfg)
+	assert.Equal(t, []string{"http://localhost:5173", "https://app.example.com"}, cfg.CORSAllowedOrigins)
 }
 
 func TestLoad_ErrorMissingDatabaseURL(t *testing.T) {
