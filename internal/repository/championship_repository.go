@@ -71,6 +71,25 @@ func (r *championshipRepository) GetByYear(ctx context.Context, year int) (*doma
 	return &championship, nil
 }
 
+// ListTeamTranslations retrieves all team translations used to hydrate championship hosts.
+func (r *championshipRepository) ListTeamTranslations(ctx context.Context) ([]domain.TeamTranslation, error) {
+	rows, err := r.queries.ListTeamTranslations(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	translations := make([]domain.TeamTranslation, len(rows))
+	for i, row := range rows {
+		translations[i] = domain.TeamTranslation{
+			TeamCode: strings.ToUpper(row.TeamCode),
+			Language: row.Language,
+			Name:     row.Name,
+		}
+	}
+
+	return translations, nil
+}
+
 // ListTeamsByYear retrieves a paginated list of teams that participated in a championship year.
 func (r *championshipRepository) ListTeamsByYear(ctx context.Context, filter domain.ChampionshipTeamFilter) ([]domain.ChampionshipTeam, int64, error) {
 	total, err := r.queries.CountChampionshipTeamsByYear(ctx, sqlc.CountChampionshipTeamsByYearParams{
@@ -201,16 +220,11 @@ func (r *championshipRepository) ListStandingsByYear(ctx context.Context, filter
 	return standings, total, nil
 }
 
-func toChampionshipDomain(row sqlc.ListChampionshipsRow) domain.Championship {
+func toChampionshipDomain(row sqlc.Championship) domain.Championship {
 	var championCode *string
 	if row.ChampionCode.Valid {
 		val := strings.ToUpper(row.ChampionCode.String)
 		championCode = &val
-	}
-
-	var championName *string
-	if row.ChampionName != "" {
-		championName = &row.ChampionName
 	}
 
 	return domain.Championship{
@@ -219,7 +233,6 @@ func toChampionshipDomain(row sqlc.ListChampionshipsRow) domain.Championship {
 		EndDate:      dateToString(row.EndDate),
 		HostCodes:    uppercaseSlice(row.HostCodes),
 		ChampionCode: championCode,
-		ChampionName: championName,
 	}
 }
 

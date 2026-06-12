@@ -29,8 +29,8 @@ func (m *MockChampionshipService) List(ctx context.Context, filter domain.Champi
 	return args.Get(0).(*domain.ChampionshipListResponse), args.Error(1)
 }
 
-func (m *MockChampionshipService) GetByYear(ctx context.Context, year int) (*domain.Championship, error) {
-	args := m.Called(ctx, year)
+func (m *MockChampionshipService) GetByYear(ctx context.Context, year int, language string) (*domain.Championship, error) {
+	args := m.Called(ctx, year, language)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
@@ -662,16 +662,13 @@ func TestChampionshipHandler_List(t *testing.T) {
 		svc := new(MockChampionshipService)
 		r := setupChampionshipRouter(svc)
 
-		championCode := "URU"
-		championName := "Uruguay"
 		expected := &domain.ChampionshipListResponse{
 			Data: []domain.Championship{{
-				Year:         1930,
-				StartDate:    "1930-07-13",
-				EndDate:      "1930-07-30",
-				HostCodes:    []string{"URU"},
-				ChampionCode: &championCode,
-				ChampionName: &championName,
+				Year:      1930,
+				StartDate: "1930-07-13",
+				EndDate:   "1930-07-30",
+				Hosts:     []domain.Host{{Code: "URU", Name: "Uruguay"}},
+				Champion:  &domain.ChampionshipChampion{Code: "URU", Name: "Uruguay"},
 			}},
 			Pagination: domain.PaginationInfo{
 				Page:          1,
@@ -702,9 +699,8 @@ func TestChampionshipHandler_List(t *testing.T) {
 				"year": 1930,
 				"startDate": "1930-07-13",
 				"endDate": "1930-07-30",
-				"hostCodes": ["URU"],
-				"championCode": "URU",
-				"championName": "Uruguay"
+				"hosts": [{"code": "URU", "name": "Uruguay"}],
+				"champion": {"code": "URU", "name": "Uruguay"}
 			}],
 			"pagination": {
 				"page": 1,
@@ -787,7 +783,8 @@ func TestChampionshipHandler_GetByYear(t *testing.T) {
 			Year:      1930,
 			StartDate: "1930-07-13",
 			EndDate:   "1930-07-30",
-			HostCodes: []string{"URU"},
+			Hosts:     []domain.Host{{Code: "URU", Name: "Uruguay"}},
+			Champion:  &domain.ChampionshipChampion{Code: "URU", Name: "Uruguay"},
 			Stats: &domain.ChampionshipsStats{
 				TotalTeams:      13,
 				TotalMatches:    18,
@@ -806,9 +803,10 @@ func TestChampionshipHandler_GetByYear(t *testing.T) {
 			},
 		}
 
-		svc.On("GetByYear", mock.Anything, 1930).Return(expected, nil)
+		svc.On("GetByYear", mock.Anything, 1930, "en").Return(expected, nil)
 
 		req, _ := http.NewRequest(http.MethodGet, "/api/championships/1930", nil)
+		req.Header.Set("Accept-Language", "en")
 		w := httptest.NewRecorder()
 		r.ServeHTTP(w, req)
 
@@ -817,8 +815,8 @@ func TestChampionshipHandler_GetByYear(t *testing.T) {
 			"year": 1930,
 			"startDate": "1930-07-13",
 			"endDate": "1930-07-30",
-			"hostCodes": ["URU"],
-			"championCode": null,
+			"hosts": [{"code": "URU", "name": "Uruguay"}],
+			"champion": {"code": "URU", "name": "Uruguay"},
 			"stats": {
 				"totalTeams": 13,
 				"totalMatches": 18,
@@ -854,7 +852,7 @@ func TestChampionshipHandler_GetByYear(t *testing.T) {
 		svc := new(MockChampionshipService)
 		r := setupChampionshipRouter(svc)
 
-		svc.On("GetByYear", mock.Anything, 1999).Return(nil, domain.ErrNotFound)
+		svc.On("GetByYear", mock.Anything, 1999, "es").Return(nil, domain.ErrNotFound)
 
 		req, _ := http.NewRequest(http.MethodGet, "/api/championships/1999", nil)
 		w := httptest.NewRecorder()
@@ -868,7 +866,7 @@ func TestChampionshipHandler_GetByYear(t *testing.T) {
 		svc := new(MockChampionshipService)
 		r := setupChampionshipRouter(svc)
 
-		svc.On("GetByYear", mock.Anything, 2022).Return(nil, errors.New("db error"))
+		svc.On("GetByYear", mock.Anything, 2022, "es").Return(nil, errors.New("db error"))
 
 		req, _ := http.NewRequest(http.MethodGet, "/api/championships/2022", nil)
 		w := httptest.NewRecorder()
