@@ -39,8 +39,8 @@ func TestChampionshipRepository_List(t *testing.T) {
 
 		startDate := time.Date(1978, 6, 1, 0, 0, 0, 0, time.UTC)
 		endDate := time.Date(1978, 6, 25, 0, 0, 0, 0, time.UTC)
-		rows := mock.NewRows([]string{"year", "start_date", "end_date", "host_codes", "champion_code"}).
-			AddRow(int32(1978), startDate, endDate, []string{"arg"}, pgtype.Text{String: "ARG", Valid: true})
+		rows := mock.NewRows([]string{"year", "start_date", "end_date", "host_codes", "confederation_codes", "champion_code"}).
+			AddRow(int32(1978), startDate, endDate, []string{"arg"}, []string{"conmebol"}, pgtype.Text{String: "ARG", Valid: true})
 
 		mock.ExpectQuery(`^-- name: ListChampionships :many.*`).
 			WithArgs(int32(1978), "arg", "CONMEBOL", int32(10), int32(0), "en").
@@ -54,6 +54,7 @@ func TestChampionshipRepository_List(t *testing.T) {
 		assert.Equal(t, "1978-06-01", result[0].StartDate)
 		assert.Equal(t, "1978-06-25", result[0].EndDate)
 		assert.Equal(t, []string{"ARG"}, result[0].HostCodes)
+		assert.Equal(t, []string{"CONMEBOL"}, result[0].ConfederationCodes)
 		require.NotNil(t, result[0].ChampionCode)
 		assert.Equal(t, "ARG", *result[0].ChampionCode)
 
@@ -527,12 +528,12 @@ func TestChampionshipRepository_GetByYear(t *testing.T) {
 		endDate := time.Date(1930, 7, 30, 0, 0, 0, 0, time.UTC)
 
 		rows := mock.NewRows([]string{
-			"year", "start_date", "end_date", "host_codes", "champion_code",
+			"year", "start_date", "end_date", "host_codes", "confederation_codes", "champion_code",
 			"total_teams", "total_matches", "total_stadiums", "total_players", "total_goals",
 			"stats_champion_code", "stats_runner_up_code", "stats_third_place_code", "stats_fourth_place_code",
 			"top_scorer_ids", "top_scorer_goals",
 		}).AddRow(
-			int32(1930), startDate, endDate, []string{"uru"}, pgtype.Text{String: "uru", Valid: true},
+			int32(1930), startDate, endDate, []string{"uru"}, []string{"conmebol"}, pgtype.Text{String: "uru", Valid: true},
 			pgtype.Int4{Int32: 13, Valid: true}, pgtype.Int4{Int32: 18, Valid: true}, pgtype.Int4{Int32: 3, Valid: true},
 			pgtype.Int4{Int32: 189, Valid: true}, pgtype.Int4{Int32: 70, Valid: true},
 			pgtype.Text{String: "uru", Valid: true}, pgtype.Text{String: "arg", Valid: true},
@@ -551,6 +552,7 @@ func TestChampionshipRepository_GetByYear(t *testing.T) {
 		assert.Equal(t, "1930-07-13", result.StartDate)
 		assert.Equal(t, "1930-07-30", result.EndDate)
 		assert.Equal(t, []string{"URU"}, result.HostCodes)
+		assert.Equal(t, []string{"CONMEBOL"}, result.ConfederationCodes)
 		require.NotNil(t, result.ChampionCode)
 		assert.Equal(t, "URU", *result.ChampionCode)
 		require.NotNil(t, result.Stats)
@@ -578,12 +580,12 @@ func TestChampionshipRepository_GetByYear(t *testing.T) {
 		endDate := time.Date(2026, 7, 19, 0, 0, 0, 0, time.UTC)
 
 		rows := mock.NewRows([]string{
-			"year", "start_date", "end_date", "host_codes", "champion_code",
+			"year", "start_date", "end_date", "host_codes", "confederation_codes", "champion_code",
 			"total_teams", "total_matches", "total_stadiums", "total_players", "total_goals",
 			"stats_champion_code", "stats_runner_up_code", "stats_third_place_code", "stats_fourth_place_code",
 			"top_scorer_ids", "top_scorer_goals",
 		}).AddRow(
-			int32(2026), startDate, endDate, []string{"usa", "can", "mex"}, pgtype.Text{Valid: false},
+			int32(2026), startDate, endDate, []string{"usa", "can", "mex"}, []string{"concacaf", "uefa"}, pgtype.Text{Valid: false},
 			pgtype.Int4{Valid: false}, pgtype.Int4{Valid: false}, pgtype.Int4{Valid: false},
 			pgtype.Int4{Valid: false}, pgtype.Int4{Valid: false},
 			pgtype.Text{Valid: false}, pgtype.Text{Valid: false},
@@ -602,6 +604,7 @@ func TestChampionshipRepository_GetByYear(t *testing.T) {
 		assert.Equal(t, "2026-06-11", result.StartDate)
 		assert.Equal(t, "2026-07-19", result.EndDate)
 		assert.Equal(t, []string{"USA", "CAN", "MEX"}, result.HostCodes)
+		assert.Equal(t, []string{"CONCACAF", "UEFA"}, result.ConfederationCodes)
 		assert.Nil(t, result.ChampionCode)
 		assert.Nil(t, result.Stats) // Stats should be nil here, to be filled by service
 

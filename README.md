@@ -403,6 +403,7 @@ Parámetros soportados para `/api/championships`:
 Notas de respuesta:
 
 - `hosts[].code` y `champion.code` se normalizan a mayúsculas.
+- `confederationCodes` expone los códigos de confederaciones organizadoras normalizados a mayúsculas.
 - `hosts[].name` corresponde al nombre localizado del anfitrión según `Accept-Language`, con fallback a español y luego al código.
 - `champion.name` corresponde al nombre localizado del campeón según `Accept-Language`, con fallback a español y luego al código.
 - `stats.runnerUp`, `stats.thirdPlace` y `stats.fourthPlace` exponen `code` y `name` localizados desde la caché de selecciones.

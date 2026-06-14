@@ -83,9 +83,9 @@ func TestChampionshipService_List(t *testing.T) {
 		filter := domain.ChampionshipFilter{Page: 1, Size: 20, Language: "en"}
 
 		expected := []domain.Championship{
-			{Year: 1930, HostCodes: []string{"URU"}, ChampionCode: stringPtr("URU")},
-			{Year: 1934, HostCodes: []string{"ITA"}, ChampionCode: stringPtr("ITA")},
-			{Year: 2002, HostCodes: []string{"KOR", "JPN", "XXX"}},
+			{Year: 1930, HostCodes: []string{"URU"}, ConfederationCodes: []string{"CONMEBOL"}, ChampionCode: stringPtr("URU")},
+			{Year: 1934, HostCodes: []string{"ITA"}, ConfederationCodes: []string{"UEFA"}, ChampionCode: stringPtr("ITA")},
+			{Year: 2002, HostCodes: []string{"KOR", "JPN", "XXX"}, ConfederationCodes: []string{"AFC"}},
 		}
 		mockRepo.On("List", ctx, filter).Return(expected, int64(22), nil)
 		mockRepo.On("ListTeamTranslations", ctx).Return([]domain.TeamTranslation{
@@ -103,14 +103,17 @@ func TestChampionshipService_List(t *testing.T) {
 		assert.Equal(t, int64(22), res.Pagination.TotalElements)
 		assert.Len(t, res.Data, 3)
 		assert.Equal(t, []domain.Host{{Code: "URU", Name: "Uruguay"}}, res.Data[0].Hosts)
+		assert.Equal(t, []string{"CONMEBOL"}, res.Data[0].ConfederationCodes)
 		assert.Equal(t, &domain.ChampionshipChampion{Code: "URU", Name: "Uruguay"}, res.Data[0].Champion)
 		assert.Equal(t, []domain.Host{{Code: "ITA", Name: "Italy"}}, res.Data[1].Hosts)
+		assert.Equal(t, []string{"UEFA"}, res.Data[1].ConfederationCodes)
 		assert.Equal(t, &domain.ChampionshipChampion{Code: "ITA", Name: "Italy"}, res.Data[1].Champion)
 		assert.Equal(t, []domain.Host{
 			{Code: "KOR", Name: "South Korea"},
 			{Code: "JPN", Name: "Japon"},
 			{Code: "XXX", Name: "XXX"},
 		}, res.Data[2].Hosts)
+		assert.Equal(t, []string{"AFC"}, res.Data[2].ConfederationCodes)
 		assert.Nil(t, res.Data[2].Champion)
 		mockRepo.AssertExpectations(t)
 	})
@@ -586,7 +589,13 @@ func TestChampionshipService_GetByYear(t *testing.T) {
 			ThirdPlaceCode:  "BRA",
 			FourthPlaceCode: "ITA",
 		}
-		expected := &domain.Championship{Year: 1930, HostCodes: []string{"URU"}, ChampionCode: stringPtr("URU"), Stats: expectedStats}
+		expected := &domain.Championship{
+			Year:               1930,
+			HostCodes:          []string{"URU"},
+			ConfederationCodes: []string{"CONMEBOL"},
+			ChampionCode:       stringPtr("URU"),
+			Stats:              expectedStats,
+		}
 		mockRepo.On("GetByYear", ctx, 1930).Return(expected, nil)
 		mockRepo.On("ListTeamTranslations", ctx).Return([]domain.TeamTranslation{
 			{TeamCode: "URU", Language: "es", Name: "Uruguay"},
@@ -600,6 +609,7 @@ func TestChampionshipService_GetByYear(t *testing.T) {
 		require.NotNil(t, res)
 		assert.Equal(t, 1930, res.Year)
 		assert.Equal(t, []domain.Host{{Code: "URU", Name: "Uruguay"}}, res.Hosts)
+		assert.Equal(t, []string{"CONMEBOL"}, res.ConfederationCodes)
 		assert.Equal(t, &domain.ChampionshipChampion{Code: "URU", Name: "Uruguay"}, res.Champion)
 		require.NotNil(t, res.Stats)
 		assert.Equal(t, int32(13), res.Stats.TotalTeams)
@@ -614,7 +624,13 @@ func TestChampionshipService_GetByYear(t *testing.T) {
 		mockRepo := new(MockChampionshipRepository)
 		svc := service.NewChampionshipService(mockRepo)
 
-		expected := &domain.Championship{Year: 2026, HostCodes: []string{"usa", "CAN", "MEX"}, ChampionCode: stringPtr(""), Stats: nil}
+		expected := &domain.Championship{
+			Year:               2026,
+			HostCodes:          []string{"usa", "CAN", "MEX"},
+			ConfederationCodes: []string{"CONCACAF", "UEFA"},
+			ChampionCode:       stringPtr(""),
+			Stats:              nil,
+		}
 		mockRepo.On("GetByYear", ctx, 2026).Return(expected, nil)
 		mockRepo.On("ListTeamTranslations", ctx).Return([]domain.TeamTranslation{
 			{TeamCode: "USA", Language: "es", Name: "Estados Unidos"},
@@ -631,6 +647,7 @@ func TestChampionshipService_GetByYear(t *testing.T) {
 			{Code: "CAN", Name: "Canada"},
 			{Code: "MEX", Name: "Mexico"},
 		}, res.Hosts)
+		assert.Equal(t, []string{"CONCACAF", "UEFA"}, res.ConfederationCodes)
 		assert.Nil(t, res.Champion)
 		require.NotNil(t, res.Stats)
 		assert.Equal(t, int32(0), res.Stats.TotalTeams)
