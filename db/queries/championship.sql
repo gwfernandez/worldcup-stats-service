@@ -4,6 +4,7 @@ SELECT
     start_date,
     end_date,
     host_codes,
+    confederation_codes,
     champion_code
 FROM championships c
 WHERE
@@ -53,6 +54,7 @@ SELECT
     c.start_date,
     c.end_date,
     c.host_codes,
+    c.confederation_codes,
     c.champion_code,
     s.total_teams,
     s.total_matches,

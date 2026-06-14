@@ -664,11 +664,12 @@ func TestChampionshipHandler_List(t *testing.T) {
 
 		expected := &domain.ChampionshipListResponse{
 			Data: []domain.Championship{{
-				Year:      1930,
-				StartDate: "1930-07-13",
-				EndDate:   "1930-07-30",
-				Hosts:     []domain.Host{{Code: "URU", Name: "Uruguay"}},
-				Champion:  &domain.ChampionshipChampion{Code: "URU", Name: "Uruguay"},
+				Year:               1930,
+				StartDate:          "1930-07-13",
+				EndDate:            "1930-07-30",
+				ConfederationCodes: []string{"CONMEBOL"},
+				Hosts:              []domain.Host{{Code: "URU", Name: "Uruguay"}},
+				Champion:           &domain.ChampionshipChampion{Code: "URU", Name: "Uruguay"},
 			}},
 			Pagination: domain.PaginationInfo{
 				Page:          1,
@@ -699,6 +700,7 @@ func TestChampionshipHandler_List(t *testing.T) {
 				"year": 1930,
 				"startDate": "1930-07-13",
 				"endDate": "1930-07-30",
+				"confederationCodes": ["CONMEBOL"],
 				"hosts": [{"code": "URU", "name": "Uruguay"}],
 				"champion": {"code": "URU", "name": "Uruguay"}
 			}],
@@ -780,11 +782,12 @@ func TestChampionshipHandler_GetByYear(t *testing.T) {
 		r := setupChampionshipRouter(svc)
 
 		expected := &domain.Championship{
-			Year:      1930,
-			StartDate: "1930-07-13",
-			EndDate:   "1930-07-30",
-			Hosts:     []domain.Host{{Code: "URU", Name: "Uruguay"}},
-			Champion:  &domain.ChampionshipChampion{Code: "URU", Name: "Uruguay"},
+			Year:               1930,
+			StartDate:          "1930-07-13",
+			EndDate:            "1930-07-30",
+			ConfederationCodes: []string{"CONMEBOL"},
+			Hosts:              []domain.Host{{Code: "URU", Name: "Uruguay"}},
+			Champion:           &domain.ChampionshipChampion{Code: "URU", Name: "Uruguay"},
 			Stats: &domain.ChampionshipsStats{
 				TotalTeams:    13,
 				TotalMatches:  18,
@@ -815,6 +818,7 @@ func TestChampionshipHandler_GetByYear(t *testing.T) {
 			"year": 1930,
 			"startDate": "1930-07-13",
 			"endDate": "1930-07-30",
+			"confederationCodes": ["CONMEBOL"],
 			"hosts": [{"code": "URU", "name": "Uruguay"}],
 			"champion": {"code": "URU", "name": "Uruguay"},
 			"stats": {

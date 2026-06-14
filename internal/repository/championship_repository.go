@@ -220,7 +220,7 @@ func (r *championshipRepository) ListStandingsByYear(ctx context.Context, filter
 	return standings, total, nil
 }
 
-func toChampionshipDomain(row sqlc.Championship) domain.Championship {
+func toChampionshipDomain(row sqlc.ListChampionshipsRow) domain.Championship {
 	var championCode *string
 	if row.ChampionCode.Valid {
 		val := strings.ToUpper(row.ChampionCode.String)
@@ -228,11 +228,12 @@ func toChampionshipDomain(row sqlc.Championship) domain.Championship {
 	}
 
 	return domain.Championship{
-		Year:         int(row.Year),
-		StartDate:    dateToString(row.StartDate),
-		EndDate:      dateToString(row.EndDate),
-		HostCodes:    uppercaseSlice(row.HostCodes),
-		ChampionCode: championCode,
+		Year:               int(row.Year),
+		StartDate:          dateToString(row.StartDate),
+		EndDate:            dateToString(row.EndDate),
+		HostCodes:          uppercaseSlice(row.HostCodes),
+		ConfederationCodes: uppercaseSlice(row.ConfederationCodes),
+		ChampionCode:       championCode,
 	}
 }
 
@@ -244,11 +245,12 @@ func toChampionshipDetailDomain(row sqlc.GetChampionshipByYearRow) domain.Champi
 	}
 
 	c := domain.Championship{
-		Year:         int(row.Year),
-		StartDate:    dateToString(row.StartDate),
-		EndDate:      dateToString(row.EndDate),
-		HostCodes:    uppercaseSlice(row.HostCodes),
-		ChampionCode: championCode,
+		Year:               int(row.Year),
+		StartDate:          dateToString(row.StartDate),
+		EndDate:            dateToString(row.EndDate),
+		HostCodes:          uppercaseSlice(row.HostCodes),
+		ConfederationCodes: uppercaseSlice(row.ConfederationCodes),
+		ChampionCode:       championCode,
 	}
 
 	// If TotalTeams is valid, it means we have stats in the DB

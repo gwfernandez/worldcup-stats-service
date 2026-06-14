@@ -156,6 +156,7 @@ SELECT
     c.start_date,
     c.end_date,
     c.host_codes,
+    c.confederation_codes,
     c.champion_code,
     s.total_teams,
     s.total_matches,
@@ -178,6 +179,7 @@ type GetChampionshipByYearRow struct {
 	StartDate            pgtype.Date
 	EndDate              pgtype.Date
 	HostCodes            []string
+	ConfederationCodes   []string
 	ChampionCode         pgtype.Text
 	TotalTeams           pgtype.Int4
 	TotalMatches         pgtype.Int4
@@ -200,6 +202,7 @@ func (q *Queries) GetChampionshipByYear(ctx context.Context, year int32) (GetCha
 		&i.StartDate,
 		&i.EndDate,
 		&i.HostCodes,
+		&i.ConfederationCodes,
 		&i.ChampionCode,
 		&i.TotalTeams,
 		&i.TotalMatches,
@@ -551,6 +554,7 @@ SELECT
     start_date,
     end_date,
     host_codes,
+    confederation_codes,
     champion_code
 FROM championships c
 WHERE
@@ -583,7 +587,16 @@ type ListChampionshipsParams struct {
 	Language string
 }
 
-func (q *Queries) ListChampionships(ctx context.Context, arg ListChampionshipsParams) ([]Championship, error) {
+type ListChampionshipsRow struct {
+	Year               int32
+	StartDate          pgtype.Date
+	EndDate            pgtype.Date
+	HostCodes          []string
+	ConfederationCodes []string
+	ChampionCode       pgtype.Text
+}
+
+func (q *Queries) ListChampionships(ctx context.Context, arg ListChampionshipsParams) ([]ListChampionshipsRow, error) {
 	rows, err := q.db.Query(ctx, listChampionships,
 		arg.Column1,
 		arg.Column2,
@@ -596,14 +609,15 @@ func (q *Queries) ListChampionships(ctx context.Context, arg ListChampionshipsPa
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Championship
+	var items []ListChampionshipsRow
 	for rows.Next() {
-		var i Championship
+		var i ListChampionshipsRow
 		if err := rows.Scan(
 			&i.Year,
 			&i.StartDate,
 			&i.EndDate,
 			&i.HostCodes,
+			&i.ConfederationCodes,
 			&i.ChampionCode,
 		); err != nil {
 			return nil, err
