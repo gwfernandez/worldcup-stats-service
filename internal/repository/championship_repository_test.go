@@ -181,8 +181,7 @@ func TestChampionshipRepository_ListTeamsByYear(t *testing.T) {
 		require.Len(t, result, 2)
 		assert.Equal(t, domain.ChampionshipTeam{
 			Year:              1930,
-			TeamCode:          "ARG",
-			Name:              "Argentina",
+			Team:              domain.SimpleTeam{Code: "ARG", Name: "Argentina"},
 			ConfederationCode: "CONMEBOL",
 			GroupCode:         "1",
 			StageReached:      "runner_up",
@@ -364,8 +363,7 @@ func TestChampionshipRepository_ListStandingsByYear(t *testing.T) {
 		assert.Equal(t, int64(13), total)
 		require.Len(t, result, 2)
 		assert.Equal(t, domain.ChampionshipStanding{
-			TeamCode:       "URU",
-			TeamName:       "Uruguay",
+			Team:           domain.SimpleTeam{Code: "URU", Name: "Uruguay"},
 			GroupCode:      "3",
 			MatchesPlayed:  4,
 			Wins:           4,
@@ -379,7 +377,7 @@ func TestChampionshipRepository_ListStandingsByYear(t *testing.T) {
 			Position:       1,
 			Performance:    "champion",
 		}, result[0])
-		assert.Equal(t, "ARG", result[1].TeamCode)
+		assert.Equal(t, "ARG", result[1].Team.Code)
 		assert.Equal(t, "runner_up", result[1].Performance)
 
 		assert.NoError(t, mock.ExpectationsWereMet())
@@ -464,11 +462,10 @@ func TestChampionshipRepository_ListScorersByYear(t *testing.T) {
 		require.Len(t, result, 2)
 		assert.Equal(t, domain.ChampionshipScorer{
 			FullName: "Guillermo Stabile",
-			TeamCode: "ARG",
-			TeamName: "Argentina",
+			Team:     domain.SimpleTeam{Code: "ARG", Name: "Argentina"},
 			Goals:    8,
 		}, result[0])
-		assert.Equal(t, "ARG", result[1].TeamCode)
+		assert.Equal(t, "ARG", result[1].Team.Code)
 
 		assert.NoError(t, mock.ExpectationsWereMet())
 	})

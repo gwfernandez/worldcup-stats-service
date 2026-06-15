@@ -2,12 +2,11 @@ package domain
 
 // Scorer represents a player in the historical scorers table.
 type Scorer struct {
-	FullName          string   `json:"fullName"`
-	TeamCode          string   `json:"teamCode"`
-	TeamName          string   `json:"teamName"`
-	Goals             int32    `json:"goals"`
-	ListTeams         []string `json:"listTeams"`
-	ConfederationCode string   `json:"confederationCode"`
+	FullName          string     `json:"fullName"`
+	Team              SimpleTeam `json:"team"`
+	Goals             int32      `json:"goals"`
+	ListTeams         []string   `json:"listTeams"`
+	ConfederationCode string     `json:"confederationCode"`
 }
 
 // ScorerFilter defines filters and pagination for listing historical scorers.

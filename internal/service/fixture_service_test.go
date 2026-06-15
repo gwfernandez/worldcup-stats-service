@@ -163,7 +163,7 @@ func groupStandingRecord(stage, groupCode, teamCode string, position int32) doma
 		Stage:     stage,
 		GroupCode: groupCode,
 		Standing: domain.GroupStanding{
-			TeamCode: teamCode,
+			Team:     domain.SimpleTeam{Code: teamCode},
 			Position: &position,
 		},
 	}

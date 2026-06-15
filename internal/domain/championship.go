@@ -15,44 +15,26 @@ type ChampionshipsStats struct {
 	TotalPlayers    int32       `json:"totalPlayers"`
 	TotalGoals      int32       `json:"totalGoals"`
 	RunnerUpCode    string      `json:"-"`
-	RunnerUp        *PodiumTeam `json:"runnerUp"`
+	RunnerUp        *SimpleTeam `json:"runnerUp"`
 	ThirdPlaceCode  string      `json:"-"`
-	ThirdPlace      *PodiumTeam `json:"thirdPlace"`
+	ThirdPlace      *SimpleTeam `json:"thirdPlace"`
 	FourthPlaceCode string      `json:"-"`
-	FourthPlace     *PodiumTeam `json:"fourthPlace"`
+	FourthPlace     *SimpleTeam `json:"fourthPlace"`
 	TopScorers      []TopScorer `json:"topScorers"`
 	TopScorerGoals  int32       `json:"topScorerGoals"`
 }
 
-// PodiumTeam represents a translated team in the championship podium.
-type PodiumTeam struct {
-	Code string `json:"code"`
-	Name string `json:"name"`
-}
-
-// Host represents a translated host team for a championship edition.
-type Host struct {
-	Code string `json:"code"`
-	Name string `json:"name"`
-}
-
-// ChampionshipChampion represents a translated champion team for a championship edition.
-type ChampionshipChampion struct {
-	Code string `json:"code"`
-	Name string `json:"name"`
-}
-
 // Championship represents a football world cup championship edition.
 type Championship struct {
-	Year               int                   `json:"year"`
-	StartDate          string                `json:"startDate"`
-	EndDate            string                `json:"endDate"`
-	HostCodes          []string              `json:"-"`
-	ConfederationCodes []string              `json:"confederationCodes"`
-	Hosts              []Host                `json:"hosts"`
-	ChampionCode       *string               `json:"-"`
-	Champion           *ChampionshipChampion `json:"champion"`
-	Stats              *ChampionshipsStats   `json:"stats,omitempty"`
+	Year               int                 `json:"year"`
+	StartDate          string              `json:"startDate"`
+	EndDate            string              `json:"endDate"`
+	HostCodes          []string            `json:"-"`
+	ConfederationCodes []string            `json:"confederationCodes"`
+	Hosts              []SimpleTeam        `json:"hosts"`
+	ChampionCode       *string             `json:"-"`
+	Champion           *SimpleTeam         `json:"champion"`
+	Stats              *ChampionshipsStats `json:"stats,omitempty"`
 }
 
 // ChampionshipFilter represents filters for listing championships.
@@ -67,13 +49,12 @@ type ChampionshipFilter struct {
 
 // ChampionshipTeam represents a team that participated in a championship edition.
 type ChampionshipTeam struct {
-	Year              int    `json:"year"`
-	TeamCode          string `json:"teamCode"`
-	Name              string `json:"name"`
-	ConfederationCode string `json:"confederationCode"`
-	GroupCode         string `json:"groupCode"`
-	StageReached      string `json:"stageReached"`
-	Managers          string `json:"managers"`
+	Year              int        `json:"year"`
+	Team              SimpleTeam `json:"team"`
+	ConfederationCode string     `json:"confederationCode"`
+	GroupCode         string     `json:"groupCode"`
+	StageReached      string     `json:"stageReached"`
+	Managers          string     `json:"managers"`
 }
 
 // ChampionshipTeamFilter represents filters for listing championship teams.
@@ -107,10 +88,9 @@ type ChampionshipStadiumFilter struct {
 
 // ChampionshipScorer represents a player scorer in a championship edition.
 type ChampionshipScorer struct {
-	FullName string `json:"fullName"`
-	TeamCode string `json:"teamCode"`
-	TeamName string `json:"teamName"`
-	Goals    int32  `json:"goals"`
+	FullName string     `json:"fullName"`
+	Team     SimpleTeam `json:"team"`
+	Goals    int32      `json:"goals"`
 }
 
 // ChampionshipScorerFilter represents filters for listing championship scorers.
@@ -125,20 +105,19 @@ type ChampionshipScorerFilter struct {
 
 // ChampionshipStanding represents a team standing in a championship edition.
 type ChampionshipStanding struct {
-	TeamCode       string `json:"teamCode"`
-	TeamName       string `json:"teamName"`
-	GroupCode      string `json:"groupCode"`
-	MatchesPlayed  int32  `json:"matchesPlayed"`
-	Wins           int32  `json:"wins"`
-	Draws          int32  `json:"draws"`
-	Losses         int32  `json:"losses"`
-	GoalsFor       int32  `json:"goalsFor"`
-	GoalsAgainst   int32  `json:"goalsAgainst"`
-	GoalDifference int32  `json:"goalDifference"`
-	Points         int32  `json:"points"`
-	UnifiedPoints  int32  `json:"unifiedPoints"`
-	Position       int32  `json:"position"`
-	Performance    string `json:"performance"`
+	Team           SimpleTeam `json:"team"`
+	GroupCode      string     `json:"groupCode"`
+	MatchesPlayed  int32      `json:"matchesPlayed"`
+	Wins           int32      `json:"wins"`
+	Draws          int32      `json:"draws"`
+	Losses         int32      `json:"losses"`
+	GoalsFor       int32      `json:"goalsFor"`
+	GoalsAgainst   int32      `json:"goalsAgainst"`
+	GoalDifference int32      `json:"goalDifference"`
+	Points         int32      `json:"points"`
+	UnifiedPoints  int32      `json:"unifiedPoints"`
+	Position       int32      `json:"position"`
+	Performance    string     `json:"performance"`
 }
 
 // ChampionshipStandingFilter represents filters for listing championship standings.

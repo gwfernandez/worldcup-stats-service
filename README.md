@@ -332,8 +332,10 @@ Ejemplo de respuesta:
 {
   "data": [
     {
-      "teamCode": "BRA",
-      "teamName": "Brasil",
+      "team": {
+        "code": "BRA",
+        "name": "Brasil"
+      },
       "matchesPlayed": 114,
       "wins": 79,
       "draws": 14,
@@ -376,9 +378,9 @@ Notas de respuesta:
 
 - Si no hay goleadores asociados a los filtros, responde `200 OK` con `data: []` y metadata de paginación.
 - Los resultados se ordenan por `goals` descendente y `fullName` ascendente.
-- `teamCode`, `listTeams` y `confederationCode` se normalizan a mayúsculas.
-- La respuesta expone `fullName`, `teamCode`, `teamName`, `goals`, `listTeams` y `confederationCode`.
-- `teamName` corresponde al nombre localizado de la selección principal según `Accept-Language`, con fallback a `teams.name`.
+- `team.code`, `listTeams` y `confederationCode` se normalizan a mayúsculas.
+- La respuesta expone `fullName`, `team`, `goals`, `listTeams` y `confederationCode`.
+- `team.name` corresponde al nombre localizado de la selección principal según `Accept-Language`, con fallback a `teams.name`.
 
 Ejemplo de respuesta:
 
@@ -387,8 +389,10 @@ Ejemplo de respuesta:
   "data": [
     {
       "fullName": "Lionel Messi",
-      "teamCode": "ARG",
-      "teamName": "Argentina",
+      "team": {
+        "code": "ARG",
+        "name": "Argentina"
+      },
       "goals": 13,
       "listTeams": ["ARG"],
       "confederationCode": "CONMEBOL"
@@ -434,7 +438,7 @@ Notas de respuesta:
 - `stats.runnerUp`, `stats.thirdPlace` y `stats.fourthPlace` exponen `code` y `name` localizados desde la caché de selecciones.
 - Si no hay estadísticas cargadas para una edición, `stats` devuelve valores predeterminados (enteros en `0`, strings vacíos `""` y arrays vacíos `[]`).
 - El fixture agrupa stages de tipo `group` con `groups[].matches` y `groups[].standings`; los stages `knockout` exponen `matches` directamente.
-- En el fixture, cada match expone `homeTeamCode`, `homeTeamName`, `awayTeamCode` y `awayTeamName`; cada standing de grupo expone `teamCode` y `teamName`.
+- En el fixture, cada match expone `homeTeam` y `awayTeam`; cada standing de grupo expone `team`.
 - Los nombres de selecciones del fixture se resuelven según `Accept-Language` con fallback a `teams.name`.
 
 Parámetros soportados para `/api/championships/:year/teams`:
@@ -451,8 +455,8 @@ Notas de respuesta:
 - Si `:year` es numérico pero no tiene selecciones asociadas, responde `200 OK` con `data: []` y metadata de paginación.
 - `managers` devuelve string vacío `""` cuando no hay DTs asociados.
 - Los resultados se ordenan por posición ascendente e instancia alcanzada descendente.
-- La respuesta expone `year`, `teamCode`, `name`, `confederationCode`, `groupCode`, `stageReached` y `managers`.
-- `name` se resuelve según `Accept-Language` con fallback a `teams.name`.
+- La respuesta expone `year`, `team`, `confederationCode`, `groupCode`, `stageReached` y `managers`.
+- `team.name` se resuelve según `Accept-Language` con fallback a `teams.name`.
 
 Parámetros soportados para `/api/championships/:year/scorers`:
 
@@ -466,8 +470,8 @@ Notas de respuesta:
 - Si `:year` no es numérico, responde `400 Bad Request` con `{"error":"invalid year parameter"}`.
 - Si `:year` es numérico pero no tiene goleadores asociados, responde `200 OK` con `data: []` y metadata de paginación.
 - Los resultados se ordenan por `goals` descendente y `fullName` ascendente.
-- `fullName`, `teamCode` y `teamName` se exponen en `camelCase`; `teamCode` se normaliza a mayúsculas.
-- `teamName` corresponde al nombre localizado de la selección según `Accept-Language`, con fallback a `teams.name`.
+- `fullName` y `team` se exponen en `camelCase`; `team.code` se normaliza a mayúsculas.
+- `team.name` corresponde al nombre localizado de la selección según `Accept-Language`, con fallback a `teams.name`.
 
 Parámetros soportados para `/api/championships/:year/stadiums`:
 
@@ -493,9 +497,9 @@ Notas de respuesta:
 - Si `:year` es numérico pero no tiene posiciones asociadas, responde `200 OK` con `data: []` y metadata de paginación.
 - No soporta filtros adicionales.
 - Los resultados se ordenan por `position` ascendente e instancia alcanzada.
-- `teamCode` y `groupCode` se normalizan a mayúsculas.
-- La respuesta expone `teamCode`, `teamName`, `groupCode`, `matchesPlayed`, `wins`, `draws`, `losses`, `goalsFor`, `goalsAgainst`, `goalDifference`, `points`, `unifiedPoints`, `position` y `performance`.
-- `teamName` se resuelve según `Accept-Language` con fallback a `teams.name`.
+- `team.code` y `groupCode` se normalizan a mayúsculas.
+- La respuesta expone `team`, `groupCode`, `matchesPlayed`, `wins`, `draws`, `losses`, `goalsFor`, `goalsAgainst`, `goalDifference`, `points`, `unifiedPoints`, `position` y `performance`.
+- `team.name` se resuelve según `Accept-Language` con fallback a `teams.name`.
 
 ### Ejemplos de request
  

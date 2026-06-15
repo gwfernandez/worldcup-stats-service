@@ -295,8 +295,7 @@ func toChampionshipTeamDomain(row sqlc.ListChampionshipTeamsByYearRow) domain.Ch
 
 	return domain.ChampionshipTeam{
 		Year:              int(row.Year),
-		TeamCode:          strings.ToUpper(row.TeamCode),
-		Name:              row.Name,
+		Team:              domain.SimpleTeam{Code: strings.ToUpper(row.TeamCode), Name: row.Name},
 		ConfederationCode: strings.ToUpper(row.ConfederationCode),
 		GroupCode:         strings.ToUpper(groupCode),
 		StageReached:      row.StageReached,
@@ -318,16 +317,14 @@ func toChampionshipStadiumDomain(row sqlc.ListChampionshipStadiumsByYearRow) dom
 func toChampionshipScorerDomain(row sqlc.ListChampionshipScorersByYearRow) domain.ChampionshipScorer {
 	return domain.ChampionshipScorer{
 		FullName: row.FullName,
-		TeamCode: strings.ToUpper(row.TeamCode),
-		TeamName: row.Name,
+		Team:     domain.SimpleTeam{Code: strings.ToUpper(row.TeamCode), Name: row.Name},
 		Goals:    row.Goals,
 	}
 }
 
 func toChampionshipStandingDomain(row sqlc.ListChampionshipStandingsByYearRow) domain.ChampionshipStanding {
 	return domain.ChampionshipStanding{
-		TeamCode:       strings.ToUpper(row.TeamCode),
-		TeamName:       row.Name,
+		Team:           domain.SimpleTeam{Code: strings.ToUpper(row.TeamCode), Name: row.Name},
 		GroupCode:      strings.ToUpper(row.GroupCode),
 		MatchesPlayed:  row.MatchesPlayed,
 		Wins:           row.Wins,

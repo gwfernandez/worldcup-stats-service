@@ -40,8 +40,7 @@ func toGroupStandingRecord(row sqlc.ListGroupsStatsByYearRow) domain.GroupStandi
 		Stage:     enumString(row.Stage),
 		GroupCode: strings.ToUpper(row.GroupCode),
 		Standing: domain.GroupStanding{
-			TeamCode:       strings.ToUpper(row.TeamCode),
-			TeamName:       row.Name,
+			Team:           domain.SimpleTeam{Code: strings.ToUpper(row.TeamCode), Name: row.Name},
 			MatchesPlayed:  row.MatchesPlayed,
 			Wins:           row.Wins,
 			Draws:          row.Draws,

@@ -286,14 +286,14 @@ func (s *championshipService) ensureHostCache(ctx context.Context) error {
 	return nil
 }
 
-func (s *championshipService) resolveHosts(hostCodes []string, language string) []domain.Host {
-	hosts := make([]domain.Host, 0, len(hostCodes))
+func (s *championshipService) resolveHosts(hostCodes []string, language string) []domain.SimpleTeam {
+	hosts := make([]domain.SimpleTeam, 0, len(hostCodes))
 	for _, hostCode := range hostCodes {
 		code := strings.ToUpper(strings.TrimSpace(hostCode))
 		if code == "" {
 			continue
 		}
-		hosts = append(hosts, domain.Host{
+		hosts = append(hosts, domain.SimpleTeam{
 			Code: code,
 			Name: s.resolveHostName(code, language),
 		})
@@ -301,7 +301,7 @@ func (s *championshipService) resolveHosts(hostCodes []string, language string) 
 	return hosts
 }
 
-func (s *championshipService) resolveChampion(championCode *string, language string) *domain.ChampionshipChampion {
+func (s *championshipService) resolveChampion(championCode *string, language string) *domain.SimpleTeam {
 	if championCode == nil {
 		return nil
 	}
@@ -309,7 +309,7 @@ func (s *championshipService) resolveChampion(championCode *string, language str
 	if code == "" {
 		return nil
 	}
-	return &domain.ChampionshipChampion{
+	return &domain.SimpleTeam{
 		Code: code,
 		Name: s.resolveTeamName(code, language),
 	}
@@ -324,12 +324,12 @@ func (s *championshipService) hydrateChampionshipStats(stats *domain.Championshi
 	stats.FourthPlace = s.resolvePodiumTeam(stats.FourthPlaceCode, language)
 }
 
-func (s *championshipService) resolvePodiumTeam(teamCode string, language string) *domain.PodiumTeam {
+func (s *championshipService) resolvePodiumTeam(teamCode string, language string) *domain.SimpleTeam {
 	code := strings.ToUpper(strings.TrimSpace(teamCode))
 	if code == "" {
 		return nil
 	}
-	return &domain.PodiumTeam{
+	return &domain.SimpleTeam{
 		Code: code,
 		Name: s.resolveTeamName(code, language),
 	}

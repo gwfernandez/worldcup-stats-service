@@ -45,15 +45,12 @@ func TestFixtureHandler_GetByYear(t *testing.T) {
 			Groups: []domain.FixtureGroup{{
 				GroupCode: "A",
 				Matches: []domain.FixtureMatch{{
-					ID:           1,
-					HomeTeamCode: "ARG",
-					HomeTeamName: "Argentina",
-					AwayTeamCode: "FRA",
-					AwayTeamName: "France",
+					ID:       1,
+					HomeTeam: domain.SimpleTeam{Code: "ARG", Name: "Argentina"},
+					AwayTeam: domain.SimpleTeam{Code: "FRA", Name: "France"},
 				}},
 				Standings: []domain.GroupStanding{{
-					TeamCode: "ARG",
-					TeamName: "Argentina",
+					Team: domain.SimpleTeam{Code: "ARG", Name: "Argentina"},
 				}},
 			}},
 		}}}
@@ -81,10 +78,14 @@ func TestFixtureHandler_GetByYear(t *testing.T) {
 							"matchDate": null,
 							"matchTime": null,
 							"stadiumId": null,
-							"homeTeamCode": "ARG",
-							"homeTeamName": "Argentina",
-							"awayTeamCode": "FRA",
-							"awayTeamName": "France",
+							"homeTeam": {
+								"code": "ARG",
+								"name": "Argentina"
+							},
+							"awayTeam": {
+								"code": "FRA",
+								"name": "France"
+							},
 							"homeTeamScore": null,
 							"awayTeamScore": null,
 							"extraTime": false,
@@ -97,8 +98,10 @@ func TestFixtureHandler_GetByYear(t *testing.T) {
 							"refId": null
 						}],
 						"standings": [{
-							"teamCode": "ARG",
-							"teamName": "Argentina",
+							"team": {
+								"code": "ARG",
+								"name": "Argentina"
+							},
 							"matchesPlayed": 0,
 							"wins": 0,
 							"draws": 0,
