@@ -30,18 +30,22 @@ func TestChampionService_List(t *testing.T) {
 
 	t.Run("success", func(t *testing.T) {
 		mockRepo := new(MockChampionRepository)
-		svc := service.NewChampionService(mockRepo)
+		resolver := new(mockTeamNameResolver)
+		svc := service.NewChampionService(mockRepo, resolver)
 		filter := domain.ChampionFilter{Page: 1, Size: 10}
 		expected := []domain.Champion{{
-			Team:  domain.SimpleTeam{Code: "BRA", Name: "Brasil"},
+			Team:  domain.SimpleTeam{Code: "BRA"},
 			Wins:  5,
 			Years: []int32{1958, 1962, 1970, 1994, 2002},
 		}}
 		mockRepo.On("List", ctx, filter).Return(expected, int64(11), nil)
+		resolver.On("Resolve", ctx, "BRA", "").Return("Brasil", nil).Once()
 
 		result, err := svc.List(ctx, filter)
 		assert.NoError(t, err)
-		assert.Equal(t, expected, result.Data)
+		assert.Equal(t, "Brasil", result.Data[0].Team.Name)
+		assert.Equal(t, int64(5), result.Data[0].Wins)
+		assert.Equal(t, []int32{1958, 1962, 1970, 1994, 2002}, result.Data[0].Years)
 		assert.Equal(t, 1, result.Pagination.Page)
 		assert.Equal(t, 10, result.Pagination.Size)
 		assert.Equal(t, int64(11), result.Pagination.TotalElements)
@@ -49,6 +53,7 @@ func TestChampionService_List(t *testing.T) {
 		assert.True(t, result.Pagination.HasNext)
 		assert.False(t, result.Pagination.HasPrevious)
 		mockRepo.AssertExpectations(t)
+		resolver.AssertExpectations(t)
 	})
 
 	t.Run("empty results", func(t *testing.T) {

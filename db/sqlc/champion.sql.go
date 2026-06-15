@@ -29,7 +29,6 @@ func (q *Queries) CountChampions(ctx context.Context) (int64, error) {
 const listChampions = `-- name: ListChampions :many
 SELECT
     c.unified_code AS team_code,
-    COALESCE(tt.name, t.name)::varchar AS name,
     c.wins,
     c.years
 FROM (
@@ -41,29 +40,23 @@ FROM (
     INNER JOIN teams t ON t.code = cs.champion_code
     GROUP BY t.unified_code
 ) c
-INNER JOIN teams t ON t.code = c.unified_code
-LEFT JOIN team_translations tt
-    ON tt.team_code = t.code
-    AND tt.language = $1
-ORDER BY c.wins DESC, COALESCE(tt.name, t.name) ASC
-LIMIT $3 OFFSET $2
+ORDER BY c.wins DESC, c.unified_code ASC
+LIMIT $2 OFFSET $1
 `
 
 type ListChampionsParams struct {
-	Language    string
 	OffsetValue int32
 	LimitValue  int32
 }
 
 type ListChampionsRow struct {
 	TeamCode string
-	Name     string
 	Wins     int64
 	Years    []int32
 }
 
 func (q *Queries) ListChampions(ctx context.Context, arg ListChampionsParams) ([]ListChampionsRow, error) {
-	rows, err := q.db.Query(ctx, listChampions, arg.Language, arg.OffsetValue, arg.LimitValue)
+	rows, err := q.db.Query(ctx, listChampions, arg.OffsetValue, arg.LimitValue)
 	if err != nil {
 		return nil, err
 	}
@@ -71,12 +64,7 @@ func (q *Queries) ListChampions(ctx context.Context, arg ListChampionsParams) ([
 	var items []ListChampionsRow
 	for rows.Next() {
 		var i ListChampionsRow
-		if err := rows.Scan(
-			&i.TeamCode,
-			&i.Name,
-			&i.Wins,
-			&i.Years,
-		); err != nil {
+		if err := rows.Scan(&i.TeamCode, &i.Wins, &i.Years); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

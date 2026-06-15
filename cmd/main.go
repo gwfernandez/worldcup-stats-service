@@ -55,7 +55,7 @@ func main() {
 	championshipRepo := repository.NewChampionshipRepository(pool)
 	teamNameResolver := service.NewCachedTeamNameResolver(championshipRepo)
 	championRepo := repository.NewChampionRepository(pool)
-	championSvc := service.NewChampionService(championRepo)
+	championSvc := service.NewChampionService(championRepo, teamNameResolver)
 	championHandlerV1 := v1.NewChampionHandler(championSvc)
 	standingRepo := repository.NewStandingRepository(pool)
 	standingSvc := service.NewStandingService(standingRepo, teamNameResolver)
