@@ -37,6 +37,15 @@ func (m *mockGroupStatsRepository) ListByYear(ctx context.Context, year int, lan
 	return args.Get(0).([]domain.GroupStandingRecord), args.Error(1)
 }
 
+type mockTeamNameResolver struct {
+	mock.Mock
+}
+
+func (m *mockTeamNameResolver) Resolve(ctx context.Context, code string, language string) (string, error) {
+	args := m.Called(ctx, code, language)
+	return args.String(0), args.Error(1)
+}
+
 func TestFixtureService_GetByYear(t *testing.T) {
 	ctx := context.Background()
 
@@ -78,6 +87,48 @@ func TestFixtureService_GetByYear(t *testing.T) {
 		assert.Empty(t, result.Stages[1].Groups)
 		matchRepo.AssertExpectations(t)
 		statsRepo.AssertExpectations(t)
+	})
+
+	t.Run("hydrates team names from resolver", func(t *testing.T) {
+		matchRepo := new(mockMatchRepository)
+		statsRepo := new(mockGroupStatsRepository)
+		resolver := new(mockTeamNameResolver)
+		svc := service.NewFixtureService(matchRepo, statsRepo, resolver)
+
+		matches := []domain.FixtureMatchRecord{
+			{
+				Stage:     "group_stage",
+				GroupCode: "A",
+				Match: domain.FixtureMatch{
+					ID:        1,
+					StageType: "group",
+					HomeTeam:  domain.SimpleTeam{Code: "ARG"},
+					AwayTeam:  domain.SimpleTeam{Code: "FRA"},
+				},
+			},
+		}
+		standings := []domain.GroupStandingRecord{
+			groupStandingRecord("group_stage", "A", "ARG", 1),
+		}
+
+		matchRepo.On("ListByYear", ctx, 1978, "en").Return(matches, nil)
+		statsRepo.On("ListByYear", ctx, 1978, "en").Return(standings, nil)
+		resolver.On("Resolve", ctx, "ARG", "en").Return("Argentina", nil).Twice()
+		resolver.On("Resolve", ctx, "FRA", "en").Return("France", nil).Once()
+
+		result, err := svc.GetByYear(ctx, 1978, "en")
+		assert.NoError(t, err)
+		require.NotNil(t, result)
+		require.Len(t, result.Stages, 1)
+		require.Len(t, result.Stages[0].Groups, 1)
+		require.Len(t, result.Stages[0].Groups[0].Matches, 1)
+		assert.Equal(t, "Argentina", result.Stages[0].Groups[0].Matches[0].HomeTeam.Name)
+		assert.Equal(t, "France", result.Stages[0].Groups[0].Matches[0].AwayTeam.Name)
+		require.Len(t, result.Stages[0].Groups[0].Standings, 1)
+		assert.Equal(t, "Argentina", result.Stages[0].Groups[0].Standings[0].Team.Name)
+		matchRepo.AssertExpectations(t)
+		statsRepo.AssertExpectations(t)
+		resolver.AssertExpectations(t)
 	})
 
 	t.Run("world cup with only knockout stages and replay", func(t *testing.T) {
@@ -163,7 +214,7 @@ func groupStandingRecord(stage, groupCode, teamCode string, position int32) doma
 		Stage:     stage,
 		GroupCode: groupCode,
 		Standing: domain.GroupStanding{
-			TeamCode: teamCode,
+			Team:     domain.SimpleTeam{Code: teamCode},
 			Position: &position,
 		},
 	}

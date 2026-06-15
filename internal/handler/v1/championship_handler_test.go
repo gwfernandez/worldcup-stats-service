@@ -86,9 +86,9 @@ func TestChampionshipHandler_ListScorersByYear(t *testing.T) {
 		expected := &domain.ChampionshipScorerListResponse{
 			Data: []domain.ChampionshipScorer{{
 				FullName: "Guillermo Stabile",
-				TeamCode: "ARG",
-				TeamName: "Argentina",
-				Goals:    8,
+				Team:     domain.SimpleTeam{Code: "ARG", Name: "Argentina"},
+
+				Goals: 8,
 			}},
 			Pagination: domain.PaginationInfo{
 				Page:          1,
@@ -116,8 +116,10 @@ func TestChampionshipHandler_ListScorersByYear(t *testing.T) {
 		assert.JSONEq(t, `{
 			"data": [{
 				"fullName": "Guillermo Stabile",
-				"teamCode": "ARG",
-				"teamName": "Argentina",
+				"team": {
+					"code": "ARG",
+					"name": "Argentina"
+				},
 				"goals": 8
 			}],
 			"pagination": {
@@ -232,8 +234,7 @@ func TestChampionshipHandler_ListTeamsByYear(t *testing.T) {
 		expected := &domain.ChampionshipTeamListResponse{
 			Data: []domain.ChampionshipTeam{{
 				Year:              1930,
-				TeamCode:          "ARG",
-				Name:              "Argentina",
+				Team:              domain.SimpleTeam{Code: "ARG", Name: "Argentina"},
 				ConfederationCode: "CONMEBOL",
 				GroupCode:         "1",
 				StageReached:      "runner_up",
@@ -266,8 +267,10 @@ func TestChampionshipHandler_ListTeamsByYear(t *testing.T) {
 		assert.JSONEq(t, `{
 			"data": [{
 				"year": 1930,
-				"teamCode": "ARG",
-				"name": "Argentina",
+				"team": {
+					"code": "ARG",
+					"name": "Argentina"
+				},
 				"confederationCode": "CONMEBOL",
 				"groupCode": "1",
 				"stageReached": "runner_up",
@@ -355,8 +358,8 @@ func TestChampionshipHandler_ListStandingsByYear(t *testing.T) {
 
 		expected := &domain.ChampionshipStandingListResponse{
 			Data: []domain.ChampionshipStanding{{
-				TeamCode:       "URU",
-				TeamName:       "Uruguay",
+				Team: domain.SimpleTeam{Code: "URU", Name: "Uruguay"},
+
 				GroupCode:      "3",
 				MatchesPlayed:  4,
 				Wins:           4,
@@ -393,8 +396,10 @@ func TestChampionshipHandler_ListStandingsByYear(t *testing.T) {
 		assert.Equal(t, "1", w.Header().Get("API-Version-Used"))
 		assert.JSONEq(t, `{
 			"data": [{
-				"teamCode": "URU",
-				"teamName": "Uruguay",
+				"team": {
+					"code": "URU",
+					"name": "Uruguay"
+				},
 				"groupCode": "3",
 				"matchesPlayed": 4,
 				"wins": 4,
@@ -668,8 +673,8 @@ func TestChampionshipHandler_List(t *testing.T) {
 				StartDate:          "1930-07-13",
 				EndDate:            "1930-07-30",
 				ConfederationCodes: []string{"CONMEBOL"},
-				Hosts:              []domain.Host{{Code: "URU", Name: "Uruguay"}},
-				Champion:           &domain.ChampionshipChampion{Code: "URU", Name: "Uruguay"},
+				Hosts:              []domain.SimpleTeam{{Code: "URU", Name: "Uruguay"}},
+				Champion:           &domain.SimpleTeam{Code: "URU", Name: "Uruguay"},
 			}},
 			Pagination: domain.PaginationInfo{
 				Page:          1,
@@ -786,17 +791,17 @@ func TestChampionshipHandler_GetByYear(t *testing.T) {
 			StartDate:          "1930-07-13",
 			EndDate:            "1930-07-30",
 			ConfederationCodes: []string{"CONMEBOL"},
-			Hosts:              []domain.Host{{Code: "URU", Name: "Uruguay"}},
-			Champion:           &domain.ChampionshipChampion{Code: "URU", Name: "Uruguay"},
+			Hosts:              []domain.SimpleTeam{{Code: "URU", Name: "Uruguay"}},
+			Champion:           &domain.SimpleTeam{Code: "URU", Name: "Uruguay"},
 			Stats: &domain.ChampionshipsStats{
 				TotalTeams:    13,
 				TotalMatches:  18,
 				TotalStadiums: 3,
 				TotalPlayers:  176,
 				TotalGoals:    70,
-				RunnerUp:      &domain.PodiumTeam{Code: "ARG", Name: "Argentina"},
-				ThirdPlace:    &domain.PodiumTeam{Code: "USA", Name: "United States"},
-				FourthPlace:   &domain.PodiumTeam{Code: "YUG", Name: "Yugoslavia"},
+				RunnerUp:      &domain.SimpleTeam{Code: "ARG", Name: "Argentina"},
+				ThirdPlace:    &domain.SimpleTeam{Code: "USA", Name: "United States"},
+				FourthPlace:   &domain.SimpleTeam{Code: "YUG", Name: "Yugoslavia"},
 				TopScorers: []domain.TopScorer{{
 					ID:         1,
 					Name:       "Guillermo Stabile",

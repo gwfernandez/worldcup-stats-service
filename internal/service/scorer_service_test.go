@@ -30,21 +30,23 @@ func TestScorerService_List(t *testing.T) {
 
 	t.Run("success normalizes filters", func(t *testing.T) {
 		mockRepo := new(MockScorerRepository)
-		svc := service.NewScorerService(mockRepo)
+		resolver := new(mockTeamNameResolver)
+		svc := service.NewScorerService(mockRepo, resolver)
 		input := domain.ScorerFilter{Name: "messi", TeamCode: "arg", ConfederationCode: "conmebol", Page: 1, Size: 10}
 		expectedFilter := domain.ScorerFilter{Name: "messi", TeamCode: "ARG", ConfederationCode: "CONMEBOL", Page: 1, Size: 10}
 		expected := []domain.Scorer{{
 			FullName:          "Lionel Messi",
-			TeamCode:          "ARG",
+			Team:              domain.SimpleTeam{Code: "ARG"},
 			Goals:             13,
 			ListTeams:         []string{"ARG"},
 			ConfederationCode: "CONMEBOL",
 		}}
 		mockRepo.On("List", ctx, expectedFilter).Return(expected, int64(11), nil)
+		resolver.On("Resolve", ctx, "ARG", "").Return("Argentina", nil).Once()
 
 		result, err := svc.List(ctx, input)
 		assert.NoError(t, err)
-		assert.Equal(t, expected, result.Data)
+		assert.Equal(t, "Argentina", result.Data[0].Team.Name)
 		assert.Equal(t, 1, result.Pagination.Page)
 		assert.Equal(t, 10, result.Pagination.Size)
 		assert.Equal(t, int64(11), result.Pagination.TotalElements)
@@ -52,6 +54,7 @@ func TestScorerService_List(t *testing.T) {
 		assert.True(t, result.Pagination.HasNext)
 		assert.False(t, result.Pagination.HasPrevious)
 		mockRepo.AssertExpectations(t)
+		resolver.AssertExpectations(t)
 	})
 
 	t.Run("empty results", func(t *testing.T) {

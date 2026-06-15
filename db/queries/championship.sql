@@ -27,6 +27,26 @@ WHERE
 ORDER BY c.year ASC
 LIMIT $4 OFFSET $5;
 
+-- name: ListChampionshipsWithoutHostFilter :many
+SELECT
+    year,
+    start_date,
+    end_date,
+    host_codes,
+    confederation_codes,
+    champion_code
+FROM championships c
+WHERE
+    ($1::integer = 0 OR c.year = $1)
+    AND ($2::text = '' OR EXISTS (
+        SELECT 1
+        FROM teams t
+        WHERE t.code = ANY(c.host_codes)
+          AND LOWER(t.confederation_code) = LOWER($2)
+    ))
+ORDER BY c.year ASC
+LIMIT $3 OFFSET $4;
+
 -- name: CountChampionships :one
 SELECT COUNT(*)
 FROM championships c
@@ -46,6 +66,18 @@ WHERE
         FROM teams t
         WHERE t.code = ANY(c.host_codes)
           AND LOWER(t.confederation_code) = LOWER($3)
+    ));
+
+-- name: CountChampionshipsWithoutHostFilter :one
+SELECT COUNT(*)
+FROM championships c
+WHERE
+    ($1::integer = 0 OR c.year = $1)
+    AND ($2::text = '' OR EXISTS (
+        SELECT 1
+        FROM teams t
+        WHERE t.code = ANY(c.host_codes)
+          AND LOWER(t.confederation_code) = LOWER($2)
     ));
 
 -- name: GetChampionshipByYear :one
@@ -75,7 +107,6 @@ WHERE c.year = $1;
 SELECT
     ct.year,
     ct.team_code,
-    COALESCE(tt.name, t.name)::varchar AS name,
     t.confederation_code,
     cts.group_code,
     COALESCE(CASE
@@ -109,6 +140,39 @@ WHERE ct.year = $1
 ORDER BY cts.position ASC, cts.stage_reached DESC
 LIMIT $5 OFFSET $6;
 
+-- name: ListChampionshipTeamsByYearWithoutNameFilter :many
+SELECT
+    ct.year,
+    ct.team_code,
+    t.confederation_code,
+    cts.group_code,
+    COALESCE(CASE
+        WHEN ct.team_code = cs.champion_code THEN 'champion'
+        WHEN ct.team_code = cs.runner_up_code THEN 'runner_up'
+        WHEN ct.team_code = cs.third_place_code THEN 'third_place'
+        WHEN ct.team_code = cs.fourth_place_code THEN 'fourth_place'
+        ELSE cts.stage_reached::text
+    END, '')::text AS stage_reached,
+    COALESCE(m.managers, '')::text AS managers
+FROM championships_teams ct
+INNER JOIN teams t ON t.code = ct.team_code
+INNER JOIN championships_teams_stats cts ON ct.year = cts.year AND ct.team_code = cts.team_code
+INNER JOIN championships_stats cs ON cs.year = ct.year
+LEFT JOIN (
+    SELECT
+        cm.team_code,
+        string_agg(NULLIF(TRIM(CONCAT_WS(' ', NULLIF(m.first_name, ''), NULLIF(m.last_name, ''))), ''), ', ') AS managers
+    FROM championships_managers cm
+    INNER JOIN managers m ON cm.manager_id = m.id
+    WHERE cm.year = $1
+    GROUP BY cm.team_code
+) m ON m.team_code = ct.team_code
+WHERE ct.year = $1
+    AND ($2::text = '' OR t.confederation_code = $2)
+    AND ($3::text = '' OR cts.group_code = $3)
+ORDER BY cts.position ASC, cts.stage_reached DESC
+LIMIT $4 OFFSET $5;
+
 -- name: CountChampionshipTeamsByYear :one
 SELECT COUNT(*)
 FROM championships_teams ct
@@ -122,10 +186,18 @@ WHERE ct.year = $1
     AND ($3::text = '' OR t.confederation_code = $3)
     AND ($4::text = '' OR cts.group_code = $4);
 
+-- name: CountChampionshipTeamsByYearWithoutNameFilter :one
+SELECT COUNT(*)
+FROM championships_teams ct
+INNER JOIN teams t ON t.code = ct.team_code
+INNER JOIN championships_teams_stats cts ON ct.year = cts.year AND ct.team_code = cts.team_code
+WHERE ct.year = $1
+    AND ($2::text = '' OR t.confederation_code = $2)
+    AND ($3::text = '' OR cts.group_code = $3);
+
 -- name: ListChampionshipStandingsByYear :many
 SELECT
     cts.team_code,
-    COALESCE(tt.name, t.name)::varchar AS name,
     COALESCE(cts.group_code, '')::text AS group_code,
     cts.matches_played,
     cts.wins,
@@ -145,10 +217,6 @@ SELECT
         ELSE cts.stage_reached::text
     END, '')::text AS performance
 FROM championships_teams ct
-INNER JOIN teams t ON t.code = ct.team_code
-LEFT JOIN team_translations tt
-    ON tt.team_code = t.code
-    AND tt.language = sqlc.arg(language)
 INNER JOIN championships_teams_stats cts ON ct.year = cts.year AND ct.team_code = cts.team_code
 INNER JOIN championships_stats cs ON cs.year = ct.year
 WHERE ct.year = $1
@@ -158,7 +226,6 @@ LIMIT $2 OFFSET $3;
 -- name: CountChampionshipStandingsByYear :one
 SELECT COUNT(*)
 FROM championships_teams ct
-INNER JOIN teams t ON t.code = ct.team_code
 INNER JOIN championships_teams_stats cts ON ct.year = cts.year AND ct.team_code = cts.team_code
 INNER JOIN championships_stats cs ON cs.year = ct.year
 WHERE ct.year = $1;
@@ -189,14 +256,9 @@ WHERE css.year = $1
 SELECT
     TRIM(CONCAT_WS(' ', NULLIF(p.first_name, ''), NULLIF(p.last_name, '')))::text AS full_name,
     ss.team_code,
-    COALESCE(tt.name, t.name)::varchar AS name,
     ss.goals
 FROM squads_stats ss
 INNER JOIN players p ON p.id = ss.player_id
-INNER JOIN teams t ON t.code = ss.team_code
-LEFT JOIN team_translations tt
-    ON tt.team_code = t.code
-    AND tt.language = sqlc.arg(language)
 WHERE ss.year = $1
     AND ss.goals > 0
     AND (

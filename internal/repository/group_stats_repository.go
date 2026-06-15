@@ -19,10 +19,7 @@ func NewGroupStatsRepository(db sqlc.DBTX) GroupStatsRepository {
 }
 
 func (r *groupStatsRepository) ListByYear(ctx context.Context, year int, language string) ([]domain.GroupStandingRecord, error) {
-	rows, err := r.queries.ListGroupsStatsByYear(ctx, sqlc.ListGroupsStatsByYearParams{
-		Year:     int32(year),
-		Language: language,
-	})
+	rows, err := r.queries.ListGroupsStatsByYear(ctx, int32(year))
 	if err != nil {
 		return nil, err
 	}
@@ -40,8 +37,7 @@ func toGroupStandingRecord(row sqlc.ListGroupsStatsByYearRow) domain.GroupStandi
 		Stage:     enumString(row.Stage),
 		GroupCode: strings.ToUpper(row.GroupCode),
 		Standing: domain.GroupStanding{
-			TeamCode:       strings.ToUpper(row.TeamCode),
-			TeamName:       row.Name,
+			Team:           domain.SimpleTeam{Code: strings.ToUpper(row.TeamCode)},
 			MatchesPlayed:  row.MatchesPlayed,
 			Wins:           row.Wins,
 			Draws:          row.Draws,

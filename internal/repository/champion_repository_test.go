@@ -26,22 +26,22 @@ func TestChampionRepository_List(t *testing.T) {
 		mock.ExpectQuery(`^-- name: CountChampions :one.*`).
 			WillReturnRows(countRows)
 
-		rows := mock.NewRows([]string{"team_code", "name", "wins", "years"}).
-			AddRow("bra", "Brasil", int64(5), []int32{1958, 1962, 1970, 1994, 2002}).
-			AddRow("arg", "Argentina", int64(3), []int32{1978, 1986, 2022})
+		rows := mock.NewRows([]string{"team_code", "wins", "years"}).
+			AddRow("bra", int64(5), []int32{1958, 1962, 1970, 1994, 2002}).
+			AddRow("arg", int64(3), []int32{1978, 1986, 2022})
 		mock.ExpectQuery(`^-- name: ListChampions :many.*`).
-			WithArgs("en", int32(0), int32(10)).
+			WithArgs(int32(0), int32(10)).
 			WillReturnRows(rows)
 
 		result, total, err := repo.List(context.Background(), filter)
 		assert.NoError(t, err)
 		assert.Equal(t, int64(2), total)
 		require.Len(t, result, 2)
-		assert.Equal(t, "BRA", result[0].TeamCode)
-		assert.Equal(t, "Brasil", result[0].TeamName)
+		assert.Equal(t, "BRA", result[0].Team.Code)
+		assert.Empty(t, result[0].Team.Name)
 		assert.Equal(t, int64(5), result[0].Wins)
 		assert.Equal(t, []int32{1958, 1962, 1970, 1994, 2002}, result[0].Years)
-		assert.Equal(t, "ARG", result[1].TeamCode)
+		assert.Equal(t, "ARG", result[1].Team.Code)
 		assert.NoError(t, mock.ExpectationsWereMet())
 	})
 
@@ -71,7 +71,7 @@ func TestChampionRepository_List(t *testing.T) {
 		mock.ExpectQuery(`^-- name: CountChampions :one.*`).
 			WillReturnRows(countRows)
 		mock.ExpectQuery(`^-- name: ListChampions :many.*`).
-			WithArgs("", int32(20), int32(20)).
+			WithArgs(int32(20), int32(20)).
 			WillReturnError(errors.New("db error"))
 
 		result, total, err := repo.List(context.Background(), domain.ChampionFilter{Page: 2, Size: 20})

@@ -2,10 +2,9 @@ package domain
 
 // Champion represents a team in the historical champions table.
 type Champion struct {
-	TeamCode string  `json:"teamCode"`
-	TeamName string  `json:"teamName"`
-	Wins     int64   `json:"wins"`
-	Years    []int32 `json:"years"`
+	Team  SimpleTeam `json:"team"`
+	Wins  int64      `json:"wins"`
+	Years []int32    `json:"years"`
 }
 
 // ChampionFilter defines pagination for listing champions.

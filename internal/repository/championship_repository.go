@@ -24,18 +24,61 @@ func NewChampionshipRepository(db sqlc.DBTX) ChampionshipRepository {
 
 // List retrieves a paginated list of championships based on the given filters.
 func (r *championshipRepository) List(ctx context.Context, filter domain.ChampionshipFilter) ([]domain.Championship, int64, error) {
-	total, err := r.queries.CountChampionships(ctx, sqlc.CountChampionshipsParams{
-		Column1:  int32(filter.Year),
-		Column2:  filter.Host,
-		Column3:  filter.ConfederationCode,
-		Language: filter.Language,
-	})
+	total, err := r.countChampionships(ctx, filter)
 	if err != nil {
 		return nil, 0, err
 	}
 
 	limit := int32(filter.Size)
 	offset := int32((filter.Page - 1) * filter.Size)
+
+	championships, err := r.listChampionships(ctx, filter, limit, offset)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return championships, total, nil
+}
+
+func (r *championshipRepository) countChampionships(ctx context.Context, filter domain.ChampionshipFilter) (int64, error) {
+	if filter.Host == "" {
+		return r.queries.CountChampionshipsWithoutHostFilter(ctx, sqlc.CountChampionshipsWithoutHostFilterParams{
+			Column1: int32(filter.Year),
+			Column2: filter.ConfederationCode,
+		})
+	}
+	return r.queries.CountChampionships(ctx, sqlc.CountChampionshipsParams{
+		Column1:  int32(filter.Year),
+		Column2:  filter.Host,
+		Column3:  filter.ConfederationCode,
+		Language: filter.Language,
+	})
+}
+
+func (r *championshipRepository) listChampionships(ctx context.Context, filter domain.ChampionshipFilter, limit int32, offset int32) ([]domain.Championship, error) {
+	if filter.Host == "" {
+		rows, err := r.queries.ListChampionshipsWithoutHostFilter(ctx, sqlc.ListChampionshipsWithoutHostFilterParams{
+			Column1: int32(filter.Year),
+			Column2: filter.ConfederationCode,
+			Limit:   limit,
+			Offset:  offset,
+		})
+		if err != nil {
+			return nil, err
+		}
+		championships := make([]domain.Championship, len(rows))
+		for i, row := range rows {
+			championships[i] = toChampionshipDomainFromFields(
+				row.Year,
+				row.StartDate,
+				row.EndDate,
+				row.HostCodes,
+				row.ConfederationCodes,
+				row.ChampionCode,
+			)
+		}
+		return championships, nil
+	}
 
 	rows, err := r.queries.ListChampionships(ctx, sqlc.ListChampionshipsParams{
 		Column1:  int32(filter.Year),
@@ -46,15 +89,13 @@ func (r *championshipRepository) List(ctx context.Context, filter domain.Champio
 		Language: filter.Language,
 	})
 	if err != nil {
-		return nil, 0, err
+		return nil, err
 	}
-
 	championships := make([]domain.Championship, len(rows))
 	for i, row := range rows {
 		championships[i] = toChampionshipDomain(row)
 	}
-
-	return championships, total, nil
+	return championships, nil
 }
 
 // GetByYear retrieves a championship and its stats by year.
@@ -92,19 +133,64 @@ func (r *championshipRepository) ListTeamTranslations(ctx context.Context) ([]do
 
 // ListTeamsByYear retrieves a paginated list of teams that participated in a championship year.
 func (r *championshipRepository) ListTeamsByYear(ctx context.Context, filter domain.ChampionshipTeamFilter) ([]domain.ChampionshipTeam, int64, error) {
-	total, err := r.queries.CountChampionshipTeamsByYear(ctx, sqlc.CountChampionshipTeamsByYearParams{
-		Year:     int32(filter.Year),
-		Column2:  filter.Name,
-		Column3:  filter.ConfederationCode,
-		Column4:  filter.GroupCode,
-		Language: filter.Language,
-	})
+	total, err := r.countChampionshipTeamsByYear(ctx, filter)
 	if err != nil {
 		return nil, 0, err
 	}
 
 	limit := int32(filter.Size)
 	offset := int32((filter.Page - 1) * filter.Size)
+
+	teams, err := r.listChampionshipTeamsByYear(ctx, filter, limit, offset)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return teams, total, nil
+}
+
+func (r *championshipRepository) countChampionshipTeamsByYear(ctx context.Context, filter domain.ChampionshipTeamFilter) (int64, error) {
+	if filter.Name == "" {
+		return r.queries.CountChampionshipTeamsByYearWithoutNameFilter(ctx, sqlc.CountChampionshipTeamsByYearWithoutNameFilterParams{
+			Year:    int32(filter.Year),
+			Column2: filter.ConfederationCode,
+			Column3: filter.GroupCode,
+		})
+	}
+	return r.queries.CountChampionshipTeamsByYear(ctx, sqlc.CountChampionshipTeamsByYearParams{
+		Year:     int32(filter.Year),
+		Column2:  filter.Name,
+		Column3:  filter.ConfederationCode,
+		Column4:  filter.GroupCode,
+		Language: filter.Language,
+	})
+}
+
+func (r *championshipRepository) listChampionshipTeamsByYear(ctx context.Context, filter domain.ChampionshipTeamFilter, limit int32, offset int32) ([]domain.ChampionshipTeam, error) {
+	if filter.Name == "" {
+		rows, err := r.queries.ListChampionshipTeamsByYearWithoutNameFilter(ctx, sqlc.ListChampionshipTeamsByYearWithoutNameFilterParams{
+			Year:    int32(filter.Year),
+			Column2: filter.ConfederationCode,
+			Column3: filter.GroupCode,
+			Limit:   limit,
+			Offset:  offset,
+		})
+		if err != nil {
+			return nil, err
+		}
+		teams := make([]domain.ChampionshipTeam, len(rows))
+		for i, row := range rows {
+			teams[i] = toChampionshipTeamDomainFromFields(
+				row.Year,
+				row.TeamCode,
+				row.ConfederationCode,
+				row.GroupCode,
+				row.StageReached,
+				row.Managers,
+			)
+		}
+		return teams, nil
+	}
 
 	rows, err := r.queries.ListChampionshipTeamsByYear(ctx, sqlc.ListChampionshipTeamsByYearParams{
 		Year:     int32(filter.Year),
@@ -116,15 +202,13 @@ func (r *championshipRepository) ListTeamsByYear(ctx context.Context, filter dom
 		Language: filter.Language,
 	})
 	if err != nil {
-		return nil, 0, err
+		return nil, err
 	}
-
 	teams := make([]domain.ChampionshipTeam, len(rows))
 	for i, row := range rows {
 		teams[i] = toChampionshipTeamDomain(row)
 	}
-
-	return teams, total, nil
+	return teams, nil
 }
 
 // ListStadiumsByYear retrieves a paginated list of stadiums used in a championship year.
@@ -176,9 +260,8 @@ func (r *championshipRepository) ListScorersByYear(ctx context.Context, filter d
 		Year:        int32(filter.Year),
 		Column2:     filter.Name,
 		Column3:     filter.TeamCode,
-		Language:    filter.Language,
-		LimitValue:  limit,
 		OffsetValue: offset,
+		LimitValue:  limit,
 	})
 	if err != nil {
 		return nil, 0, err
@@ -203,10 +286,9 @@ func (r *championshipRepository) ListStandingsByYear(ctx context.Context, filter
 	offset := int32((filter.Page - 1) * filter.Size)
 
 	rows, err := r.queries.ListChampionshipStandingsByYear(ctx, sqlc.ListChampionshipStandingsByYearParams{
-		Year:     int32(filter.Year),
-		Limit:    limit,
-		Offset:   offset,
-		Language: filter.Language,
+		Year:   int32(filter.Year),
+		Limit:  limit,
+		Offset: offset,
 	})
 	if err != nil {
 		return nil, 0, err
@@ -221,18 +303,29 @@ func (r *championshipRepository) ListStandingsByYear(ctx context.Context, filter
 }
 
 func toChampionshipDomain(row sqlc.ListChampionshipsRow) domain.Championship {
+	return toChampionshipDomainFromFields(
+		row.Year,
+		row.StartDate,
+		row.EndDate,
+		row.HostCodes,
+		row.ConfederationCodes,
+		row.ChampionCode,
+	)
+}
+
+func toChampionshipDomainFromFields(year int32, startDate pgtype.Date, endDate pgtype.Date, hostCodes []string, confederationCodes []string, championCodeValue pgtype.Text) domain.Championship {
 	var championCode *string
-	if row.ChampionCode.Valid {
-		val := strings.ToUpper(row.ChampionCode.String)
+	if championCodeValue.Valid {
+		val := strings.ToUpper(championCodeValue.String)
 		championCode = &val
 	}
 
 	return domain.Championship{
-		Year:               int(row.Year),
-		StartDate:          dateToString(row.StartDate),
-		EndDate:            dateToString(row.EndDate),
-		HostCodes:          uppercaseSlice(row.HostCodes),
-		ConfederationCodes: uppercaseSlice(row.ConfederationCodes),
+		Year:               int(year),
+		StartDate:          dateToString(startDate),
+		EndDate:            dateToString(endDate),
+		HostCodes:          uppercaseSlice(hostCodes),
+		ConfederationCodes: uppercaseSlice(confederationCodes),
 		ChampionCode:       championCode,
 	}
 }
@@ -288,19 +381,28 @@ func toChampionshipDetailDomain(row sqlc.GetChampionshipByYearRow) domain.Champi
 }
 
 func toChampionshipTeamDomain(row sqlc.ListChampionshipTeamsByYearRow) domain.ChampionshipTeam {
-	groupCode := ""
-	if row.GroupCode.Valid {
-		groupCode = row.GroupCode.String
-	}
+	return toChampionshipTeamDomainFromFields(
+		row.Year,
+		row.TeamCode,
+		row.ConfederationCode,
+		row.GroupCode,
+		row.StageReached,
+		row.Managers,
+	)
+}
 
+func toChampionshipTeamDomainFromFields(year int32, teamCode string, confederationCode string, groupCodeValue pgtype.Text, stageReached string, managers string) domain.ChampionshipTeam {
+	groupCode := ""
+	if groupCodeValue.Valid {
+		groupCode = groupCodeValue.String
+	}
 	return domain.ChampionshipTeam{
-		Year:              int(row.Year),
-		TeamCode:          strings.ToUpper(row.TeamCode),
-		Name:              row.Name,
-		ConfederationCode: strings.ToUpper(row.ConfederationCode),
+		Year:              int(year),
+		Team:              domain.SimpleTeam{Code: strings.ToUpper(teamCode)},
+		ConfederationCode: strings.ToUpper(confederationCode),
 		GroupCode:         strings.ToUpper(groupCode),
-		StageReached:      row.StageReached,
-		Managers:          row.Managers,
+		StageReached:      stageReached,
+		Managers:          managers,
 	}
 }
 
@@ -318,16 +420,14 @@ func toChampionshipStadiumDomain(row sqlc.ListChampionshipStadiumsByYearRow) dom
 func toChampionshipScorerDomain(row sqlc.ListChampionshipScorersByYearRow) domain.ChampionshipScorer {
 	return domain.ChampionshipScorer{
 		FullName: row.FullName,
-		TeamCode: strings.ToUpper(row.TeamCode),
-		TeamName: row.Name,
+		Team:     domain.SimpleTeam{Code: strings.ToUpper(row.TeamCode)},
 		Goals:    row.Goals,
 	}
 }
 
 func toChampionshipStandingDomain(row sqlc.ListChampionshipStandingsByYearRow) domain.ChampionshipStanding {
 	return domain.ChampionshipStanding{
-		TeamCode:       strings.ToUpper(row.TeamCode),
-		TeamName:       row.Name,
+		Team:           domain.SimpleTeam{Code: strings.ToUpper(row.TeamCode)},
 		GroupCode:      strings.ToUpper(row.GroupCode),
 		MatchesPlayed:  row.MatchesPlayed,
 		Wins:           row.Wins,

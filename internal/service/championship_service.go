@@ -5,25 +5,24 @@ import (
 	"fmt"
 	"math"
 	"strings"
-	"sync"
 
 	"github.com/jendrix/worldcup-stats-service/internal/domain"
 	"github.com/jendrix/worldcup-stats-service/internal/repository"
 )
 
-const defaultHostLanguage = "es"
-
 // championshipService implements ChampionshipService with business logic.
 type championshipService struct {
-	repo               repository.ChampionshipRepository
-	hostCacheMu        sync.RWMutex
-	hostCacheLoaded    bool
-	hostNameByLanguage map[string]map[string]string
+	repo             repository.ChampionshipRepository
+	teamNameResolver TeamNameResolver
 }
 
 // NewChampionshipService creates a new ChampionshipService.
-func NewChampionshipService(repo repository.ChampionshipRepository) ChampionshipService {
-	return &championshipService{repo: repo}
+func NewChampionshipService(repo repository.ChampionshipRepository, resolvers ...TeamNameResolver) ChampionshipService {
+	resolver := TeamNameResolver(NewCachedTeamNameResolver(repo))
+	if len(resolvers) > 0 && resolvers[0] != nil {
+		resolver = resolvers[0]
+	}
+	return &championshipService{repo: repo, teamNameResolver: resolver}
 }
 
 // List returns a paginated and filtered list of championships.
@@ -84,6 +83,9 @@ func (s *championshipService) ListTeamsByYear(ctx context.Context, filter domain
 
 	if data == nil {
 		data = make([]domain.ChampionshipTeam, 0)
+	}
+	if err := s.hydrateChampionshipTeams(ctx, data, filter.Language); err != nil {
+		return nil, err
 	}
 
 	return &domain.ChampionshipTeamListResponse{
@@ -155,6 +157,9 @@ func (s *championshipService) ListScorersByYear(ctx context.Context, filter doma
 	if data == nil {
 		data = make([]domain.ChampionshipScorer, 0)
 	}
+	if err := s.hydrateChampionshipScorers(ctx, data, filter.Language); err != nil {
+		return nil, err
+	}
 
 	return &domain.ChampionshipScorerListResponse{
 		Data: data,
@@ -189,6 +194,9 @@ func (s *championshipService) ListStandingsByYear(ctx context.Context, filter do
 
 	if data == nil {
 		data = make([]domain.ChampionshipStanding, 0)
+	}
+	if err := s.hydrateChampionshipStandings(ctx, data, filter.Language); err != nil {
+		return nil, err
 	}
 
 	return &domain.ChampionshipStandingListResponse{
@@ -229,137 +237,138 @@ func (s *championshipService) GetByYear(ctx context.Context, year int, language 
 			TopScorerGoals:  0,
 		}
 	}
-	if err := s.ensureHostCache(ctx); err != nil {
+	if err := s.hydrateChampionship(ctx, championship, language); err != nil {
 		return nil, err
 	}
-	championship.Hosts = s.resolveHosts(championship.HostCodes, language)
-	championship.Champion = s.resolveChampion(championship.ChampionCode, language)
-	s.hydrateChampionshipStats(championship.Stats, language)
 
 	return championship, nil
 }
 
 func (s *championshipService) hydrateChampionshipHosts(ctx context.Context, championships []domain.Championship, language string) error {
-	if err := s.ensureHostCache(ctx); err != nil {
-		return err
-	}
 	for i := range championships {
-		championships[i].Hosts = s.resolveHosts(championships[i].HostCodes, language)
-		championships[i].Champion = s.resolveChampion(championships[i].ChampionCode, language)
+		if err := s.hydrateChampionship(ctx, &championships[i], language); err != nil {
+			return err
+		}
 	}
 	return nil
 }
 
-func (s *championshipService) ensureHostCache(ctx context.Context) error {
-	s.hostCacheMu.RLock()
-	if s.hostCacheLoaded {
-		s.hostCacheMu.RUnlock()
-		return nil
-	}
-	s.hostCacheMu.RUnlock()
-
-	s.hostCacheMu.Lock()
-	defer s.hostCacheMu.Unlock()
-	if s.hostCacheLoaded {
-		return nil
-	}
-
-	translations, err := s.repo.ListTeamTranslations(ctx)
+func (s *championshipService) hydrateChampionship(ctx context.Context, championship *domain.Championship, language string) error {
+	hosts, err := s.resolveHosts(ctx, championship.HostCodes, language)
 	if err != nil {
 		return err
 	}
-	hostNameByLanguage := make(map[string]map[string]string)
-	for _, translation := range translations {
-		language := normalizeHostLanguage(translation.Language)
-		code := strings.ToUpper(strings.TrimSpace(translation.TeamCode))
-		if language == "" || code == "" {
-			continue
-		}
-		if _, ok := hostNameByLanguage[language]; !ok {
-			hostNameByLanguage[language] = make(map[string]string)
-		}
-		hostNameByLanguage[language][code] = translation.Name
+	championship.Hosts = hosts
+	champion, err := s.resolveChampion(ctx, championship.ChampionCode, language)
+	if err != nil {
+		return err
 	}
-	s.hostNameByLanguage = hostNameByLanguage
-	s.hostCacheLoaded = true
+	championship.Champion = champion
+	return s.hydrateChampionshipStats(ctx, championship.Stats, language)
+}
 
+func (s *championshipService) hydrateChampionshipTeams(ctx context.Context, teams []domain.ChampionshipTeam, language string) error {
+	for i := range teams {
+		name, err := s.resolveTeamName(ctx, teams[i].Team.Code, language)
+		if err != nil {
+			return err
+		}
+		teams[i].Team.Name = name
+	}
 	return nil
 }
 
-func (s *championshipService) resolveHosts(hostCodes []string, language string) []domain.Host {
-	hosts := make([]domain.Host, 0, len(hostCodes))
+func (s *championshipService) hydrateChampionshipScorers(ctx context.Context, scorers []domain.ChampionshipScorer, language string) error {
+	for i := range scorers {
+		name, err := s.resolveTeamName(ctx, scorers[i].Team.Code, language)
+		if err != nil {
+			return err
+		}
+		scorers[i].Team.Name = name
+	}
+	return nil
+}
+
+func (s *championshipService) hydrateChampionshipStandings(ctx context.Context, standings []domain.ChampionshipStanding, language string) error {
+	for i := range standings {
+		name, err := s.resolveTeamName(ctx, standings[i].Team.Code, language)
+		if err != nil {
+			return err
+		}
+		standings[i].Team.Name = name
+	}
+	return nil
+}
+
+func (s *championshipService) resolveHosts(ctx context.Context, hostCodes []string, language string) ([]domain.SimpleTeam, error) {
+	hosts := make([]domain.SimpleTeam, 0, len(hostCodes))
 	for _, hostCode := range hostCodes {
 		code := strings.ToUpper(strings.TrimSpace(hostCode))
 		if code == "" {
 			continue
 		}
-		hosts = append(hosts, domain.Host{
+		name, err := s.resolveTeamName(ctx, code, language)
+		if err != nil {
+			return nil, err
+		}
+		hosts = append(hosts, domain.SimpleTeam{
 			Code: code,
-			Name: s.resolveHostName(code, language),
+			Name: name,
 		})
 	}
-	return hosts
+	return hosts, nil
 }
 
-func (s *championshipService) resolveChampion(championCode *string, language string) *domain.ChampionshipChampion {
+func (s *championshipService) resolveChampion(ctx context.Context, championCode *string, language string) (*domain.SimpleTeam, error) {
 	if championCode == nil {
-		return nil
+		return nil, nil
 	}
 	code := strings.ToUpper(strings.TrimSpace(*championCode))
 	if code == "" {
+		return nil, nil
+	}
+	name, err := s.resolveTeamName(ctx, code, language)
+	if err != nil {
+		return nil, err
+	}
+	return &domain.SimpleTeam{
+		Code: code,
+		Name: name,
+	}, nil
+}
+
+func (s *championshipService) hydrateChampionshipStats(ctx context.Context, stats *domain.ChampionshipsStats, language string) error {
+	if stats == nil {
 		return nil
 	}
-	return &domain.ChampionshipChampion{
-		Code: code,
-		Name: s.resolveTeamName(code, language),
+	var err error
+	stats.RunnerUp, err = s.resolvePodiumTeam(ctx, stats.RunnerUpCode, language)
+	if err != nil {
+		return err
 	}
+	stats.ThirdPlace, err = s.resolvePodiumTeam(ctx, stats.ThirdPlaceCode, language)
+	if err != nil {
+		return err
+	}
+	stats.FourthPlace, err = s.resolvePodiumTeam(ctx, stats.FourthPlaceCode, language)
+	return err
 }
 
-func (s *championshipService) hydrateChampionshipStats(stats *domain.ChampionshipsStats, language string) {
-	if stats == nil {
-		return
-	}
-	stats.RunnerUp = s.resolvePodiumTeam(stats.RunnerUpCode, language)
-	stats.ThirdPlace = s.resolvePodiumTeam(stats.ThirdPlaceCode, language)
-	stats.FourthPlace = s.resolvePodiumTeam(stats.FourthPlaceCode, language)
-}
-
-func (s *championshipService) resolvePodiumTeam(teamCode string, language string) *domain.PodiumTeam {
+func (s *championshipService) resolvePodiumTeam(ctx context.Context, teamCode string, language string) (*domain.SimpleTeam, error) {
 	code := strings.ToUpper(strings.TrimSpace(teamCode))
 	if code == "" {
-		return nil
+		return nil, nil
 	}
-	return &domain.PodiumTeam{
+	name, err := s.resolveTeamName(ctx, code, language)
+	if err != nil {
+		return nil, err
+	}
+	return &domain.SimpleTeam{
 		Code: code,
-		Name: s.resolveTeamName(code, language),
-	}
+		Name: name,
+	}, nil
 }
 
-func (s *championshipService) resolveHostName(code string, language string) string {
-	return s.resolveTeamName(code, language)
-}
-
-func (s *championshipService) resolveTeamName(code string, language string) string {
-	s.hostCacheMu.RLock()
-	defer s.hostCacheMu.RUnlock()
-
-	if namesByCode := s.hostNameByLanguage[normalizeHostLanguage(language)]; namesByCode != nil {
-		if name := namesByCode[code]; name != "" {
-			return name
-		}
-	}
-	if namesByCode := s.hostNameByLanguage[defaultHostLanguage]; namesByCode != nil {
-		if name := namesByCode[code]; name != "" {
-			return name
-		}
-	}
-	return code
-}
-
-func normalizeHostLanguage(language string) string {
-	language = strings.ToLower(strings.TrimSpace(language))
-	if language == "" {
-		return defaultHostLanguage
-	}
-	return language
+func (s *championshipService) resolveTeamName(ctx context.Context, code string, language string) (string, error) {
+	return s.teamNameResolver.Resolve(ctx, code, language)
 }

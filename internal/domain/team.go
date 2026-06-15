@@ -1,5 +1,11 @@
 package domain
 
+// SimpleTeam represents a summarized team in API responses.
+type SimpleTeam struct {
+	Code string `json:"code"`
+	Name string `json:"name"`
+}
+
 // Team represents a team entity.
 type Team struct {
 	Code              string  `json:"code"`

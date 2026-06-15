@@ -12,12 +12,17 @@ import (
 
 // scorerService implements ScorerService with business logic.
 type scorerService struct {
-	repo repository.ScorerRepository
+	repo             repository.ScorerRepository
+	teamNameResolver TeamNameResolver
 }
 
 // NewScorerService creates a new ScorerService.
-func NewScorerService(repo repository.ScorerRepository) ScorerService {
-	return &scorerService{repo: repo}
+func NewScorerService(repo repository.ScorerRepository, resolvers ...TeamNameResolver) ScorerService {
+	var resolver TeamNameResolver
+	if len(resolvers) > 0 {
+		resolver = resolvers[0]
+	}
+	return &scorerService{repo: repo, teamNameResolver: resolver}
 }
 
 // List returns a paginated list of historical scorers.
@@ -45,6 +50,9 @@ func (s *scorerService) List(ctx context.Context, filter domain.ScorerFilter) (*
 	if data == nil {
 		data = make([]domain.Scorer, 0)
 	}
+	if err := s.hydrateScorers(ctx, data, filter.Language); err != nil {
+		return nil, err
+	}
 
 	return &domain.ScorerListResponse{
 		Data: data,
@@ -57,4 +65,22 @@ func (s *scorerService) List(ctx context.Context, filter domain.ScorerFilter) (*
 			HasPrevious:   filter.Page > 1,
 		},
 	}, nil
+}
+
+func (s *scorerService) hydrateScorers(ctx context.Context, scorers []domain.Scorer, language string) error {
+	for i := range scorers {
+		name, err := s.resolveTeamName(ctx, scorers[i].Team.Code, language)
+		if err != nil {
+			return err
+		}
+		scorers[i].Team.Name = name
+	}
+	return nil
+}
+
+func (s *scorerService) resolveTeamName(ctx context.Context, code string, language string) (string, error) {
+	if s.teamNameResolver == nil {
+		return code, nil
+	}
+	return s.teamNameResolver.Resolve(ctx, code, language)
 }
