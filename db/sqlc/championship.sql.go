@@ -61,7 +61,6 @@ func (q *Queries) CountChampionshipStadiumsByYear(ctx context.Context, arg Count
 const countChampionshipStandingsByYear = `-- name: CountChampionshipStandingsByYear :one
 SELECT COUNT(*)
 FROM championships_teams ct
-INNER JOIN teams t ON t.code = ct.team_code
 INNER JOIN championships_teams_stats cts ON ct.year = cts.year AND ct.team_code = cts.team_code
 INNER JOIN championships_stats cs ON cs.year = ct.year
 WHERE ct.year = $1
@@ -223,14 +222,9 @@ const listChampionshipScorersByYear = `-- name: ListChampionshipScorersByYear :m
 SELECT
     TRIM(CONCAT_WS(' ', NULLIF(p.first_name, ''), NULLIF(p.last_name, '')))::text AS full_name,
     ss.team_code,
-    COALESCE(tt.name, t.name)::varchar AS name,
     ss.goals
 FROM squads_stats ss
 INNER JOIN players p ON p.id = ss.player_id
-INNER JOIN teams t ON t.code = ss.team_code
-LEFT JOIN team_translations tt
-    ON tt.team_code = t.code
-    AND tt.language = $4
 WHERE ss.year = $1
     AND ss.goals > 0
     AND (
@@ -240,14 +234,13 @@ WHERE ss.year = $1
     )
     AND ($3::text = '' OR ss.team_code = $3)
 ORDER BY ss.goals DESC, full_name ASC
-LIMIT $6 OFFSET $5
+LIMIT $5 OFFSET $4
 `
 
 type ListChampionshipScorersByYearParams struct {
 	Year        int32
 	Column2     string
 	Column3     string
-	Language    string
 	OffsetValue int32
 	LimitValue  int32
 }
@@ -255,7 +248,6 @@ type ListChampionshipScorersByYearParams struct {
 type ListChampionshipScorersByYearRow struct {
 	FullName string
 	TeamCode string
-	Name     string
 	Goals    int32
 }
 
@@ -264,7 +256,6 @@ func (q *Queries) ListChampionshipScorersByYear(ctx context.Context, arg ListCha
 		arg.Year,
 		arg.Column2,
 		arg.Column3,
-		arg.Language,
 		arg.OffsetValue,
 		arg.LimitValue,
 	)
@@ -275,12 +266,7 @@ func (q *Queries) ListChampionshipScorersByYear(ctx context.Context, arg ListCha
 	var items []ListChampionshipScorersByYearRow
 	for rows.Next() {
 		var i ListChampionshipScorersByYearRow
-		if err := rows.Scan(
-			&i.FullName,
-			&i.TeamCode,
-			&i.Name,
-			&i.Goals,
-		); err != nil {
+		if err := rows.Scan(&i.FullName, &i.TeamCode, &i.Goals); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -358,7 +344,6 @@ func (q *Queries) ListChampionshipStadiumsByYear(ctx context.Context, arg ListCh
 const listChampionshipStandingsByYear = `-- name: ListChampionshipStandingsByYear :many
 SELECT
     cts.team_code,
-    COALESCE(tt.name, t.name)::varchar AS name,
     COALESCE(cts.group_code, '')::text AS group_code,
     cts.matches_played,
     cts.wins,
@@ -378,10 +363,6 @@ SELECT
         ELSE cts.stage_reached::text
     END, '')::text AS performance
 FROM championships_teams ct
-INNER JOIN teams t ON t.code = ct.team_code
-LEFT JOIN team_translations tt
-    ON tt.team_code = t.code
-    AND tt.language = $4
 INNER JOIN championships_teams_stats cts ON ct.year = cts.year AND ct.team_code = cts.team_code
 INNER JOIN championships_stats cs ON cs.year = ct.year
 WHERE ct.year = $1
@@ -390,15 +371,13 @@ LIMIT $2 OFFSET $3
 `
 
 type ListChampionshipStandingsByYearParams struct {
-	Year     int32
-	Limit    int32
-	Offset   int32
-	Language string
+	Year   int32
+	Limit  int32
+	Offset int32
 }
 
 type ListChampionshipStandingsByYearRow struct {
 	TeamCode       string
-	Name           string
 	GroupCode      string
 	MatchesPlayed  int32
 	Wins           int32
@@ -414,12 +393,7 @@ type ListChampionshipStandingsByYearRow struct {
 }
 
 func (q *Queries) ListChampionshipStandingsByYear(ctx context.Context, arg ListChampionshipStandingsByYearParams) ([]ListChampionshipStandingsByYearRow, error) {
-	rows, err := q.db.Query(ctx, listChampionshipStandingsByYear,
-		arg.Year,
-		arg.Limit,
-		arg.Offset,
-		arg.Language,
-	)
+	rows, err := q.db.Query(ctx, listChampionshipStandingsByYear, arg.Year, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -429,7 +403,6 @@ func (q *Queries) ListChampionshipStandingsByYear(ctx context.Context, arg ListC
 		var i ListChampionshipStandingsByYearRow
 		if err := rows.Scan(
 			&i.TeamCode,
-			&i.Name,
 			&i.GroupCode,
 			&i.MatchesPlayed,
 			&i.Wins,

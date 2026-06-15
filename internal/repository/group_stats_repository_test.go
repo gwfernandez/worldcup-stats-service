@@ -20,16 +20,16 @@ func TestGroupStatsRepository_ListByYear(t *testing.T) {
 
 		repo := repository.NewGroupStatsRepository(mock)
 		rows := mock.NewRows([]string{
-			"year", "stage", "group_code", "team_code", "name", "matches_played", "wins", "draws", "losses",
+			"year", "stage", "group_code", "team_code", "matches_played", "wins", "draws", "losses",
 			"goals_for", "goals_against", "goal_difference", "points", "unified_points", "position",
 		}).AddRow(
-			int32(1978), "group_stage", "a", "arg", "Argentina", int32(3), int32(2), int32(1), int32(0),
+			int32(1978), "group_stage", "a", "arg", int32(3), int32(2), int32(1), int32(0),
 			int32(4), int32(1), pgtype.Int4{Int32: 3, Valid: true}, int32(5), int32(7),
 			pgtype.Int4{Int32: 1, Valid: true},
 		)
 
 		mock.ExpectQuery(`^-- name: ListGroupsStatsByYear :many.*`).
-			WithArgs(int32(1978), "en").
+			WithArgs(int32(1978)).
 			WillReturnRows(rows)
 
 		result, err := repo.ListByYear(context.Background(), 1978, "en")
@@ -38,7 +38,7 @@ func TestGroupStatsRepository_ListByYear(t *testing.T) {
 		assert.Equal(t, "group_stage", result[0].Stage)
 		assert.Equal(t, "A", result[0].GroupCode)
 		assert.Equal(t, "ARG", result[0].Standing.Team.Code)
-		assert.Equal(t, "Argentina", result[0].Standing.Team.Name)
+		assert.Empty(t, result[0].Standing.Team.Name)
 		assert.Equal(t, int32(3), result[0].Standing.GoalDifference)
 		require.NotNil(t, result[0].Standing.Position)
 		assert.Equal(t, int32(1), *result[0].Standing.Position)
@@ -52,12 +52,12 @@ func TestGroupStatsRepository_ListByYear(t *testing.T) {
 
 		repo := repository.NewGroupStatsRepository(mock)
 		rows := mock.NewRows([]string{
-			"year", "stage", "group_code", "team_code", "name", "matches_played", "wins", "draws", "losses",
+			"year", "stage", "group_code", "team_code", "matches_played", "wins", "draws", "losses",
 			"goals_for", "goals_against", "goal_difference", "points", "unified_points", "position",
 		})
 
 		mock.ExpectQuery(`^-- name: ListGroupsStatsByYear :many.*`).
-			WithArgs(int32(1938), "es").
+			WithArgs(int32(1938)).
 			WillReturnRows(rows)
 
 		result, err := repo.ListByYear(context.Background(), 1938, "es")

@@ -176,9 +176,8 @@ func (r *championshipRepository) ListScorersByYear(ctx context.Context, filter d
 		Year:        int32(filter.Year),
 		Column2:     filter.Name,
 		Column3:     filter.TeamCode,
-		Language:    filter.Language,
-		LimitValue:  limit,
 		OffsetValue: offset,
+		LimitValue:  limit,
 	})
 	if err != nil {
 		return nil, 0, err
@@ -203,10 +202,9 @@ func (r *championshipRepository) ListStandingsByYear(ctx context.Context, filter
 	offset := int32((filter.Page - 1) * filter.Size)
 
 	rows, err := r.queries.ListChampionshipStandingsByYear(ctx, sqlc.ListChampionshipStandingsByYearParams{
-		Year:     int32(filter.Year),
-		Limit:    limit,
-		Offset:   offset,
-		Language: filter.Language,
+		Year:   int32(filter.Year),
+		Limit:  limit,
+		Offset: offset,
 	})
 	if err != nil {
 		return nil, 0, err
@@ -317,14 +315,14 @@ func toChampionshipStadiumDomain(row sqlc.ListChampionshipStadiumsByYearRow) dom
 func toChampionshipScorerDomain(row sqlc.ListChampionshipScorersByYearRow) domain.ChampionshipScorer {
 	return domain.ChampionshipScorer{
 		FullName: row.FullName,
-		Team:     domain.SimpleTeam{Code: strings.ToUpper(row.TeamCode), Name: row.Name},
+		Team:     domain.SimpleTeam{Code: strings.ToUpper(row.TeamCode)},
 		Goals:    row.Goals,
 	}
 }
 
 func toChampionshipStandingDomain(row sqlc.ListChampionshipStandingsByYearRow) domain.ChampionshipStanding {
 	return domain.ChampionshipStanding{
-		Team:           domain.SimpleTeam{Code: strings.ToUpper(row.TeamCode), Name: row.Name},
+		Team:           domain.SimpleTeam{Code: strings.ToUpper(row.TeamCode)},
 		GroupCode:      strings.ToUpper(row.GroupCode),
 		MatchesPlayed:  row.MatchesPlayed,
 		Wins:           row.Wins,

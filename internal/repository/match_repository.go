@@ -23,10 +23,7 @@ func NewMatchRepository(db sqlc.DBTX) MatchRepository {
 }
 
 func (r *matchRepository) ListByYear(ctx context.Context, year int, language string) ([]domain.FixtureMatchRecord, error) {
-	rows, err := r.queries.ListMatchesByYear(ctx, sqlc.ListMatchesByYearParams{
-		Year:     int32(year),
-		Language: language,
-	})
+	rows, err := r.queries.ListMatchesByYear(ctx, int32(year))
 	if err != nil {
 		return nil, err
 	}
@@ -51,8 +48,8 @@ func toFixtureMatchRecord(row sqlc.ListMatchesByYearRow) domain.FixtureMatchReco
 			MatchDate:              datePtr(row.MatchDate),
 			MatchTime:              timePtr(row.MatchTime),
 			StadiumID:              int8Ptr(row.StadiumID),
-			HomeTeam:               domain.SimpleTeam{Code: strings.ToUpper(row.HomeTeamCode), Name: row.HomeTeamName},
-			AwayTeam:               domain.SimpleTeam{Code: strings.ToUpper(row.AwayTeamCode), Name: row.AwayTeamName},
+			HomeTeam:               domain.SimpleTeam{Code: strings.ToUpper(row.HomeTeamCode)},
+			AwayTeam:               domain.SimpleTeam{Code: strings.ToUpper(row.AwayTeamCode)},
 			HomeTeamScore:          int4Ptr(row.HomeTeamScore),
 			AwayTeamScore:          int4Ptr(row.AwayTeamScore),
 			ExtraTime:              row.ExtraTime,

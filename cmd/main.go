@@ -62,11 +62,12 @@ func main() {
 	scorerSvc := service.NewScorerService(scorerRepo)
 	scorerHandlerV1 := v1.NewScorerHandler(scorerSvc)
 	championshipRepo := repository.NewChampionshipRepository(pool)
-	championshipSvc := service.NewChampionshipService(championshipRepo)
+	teamNameResolver := service.NewCachedTeamNameResolver(championshipRepo)
+	championshipSvc := service.NewChampionshipService(championshipRepo, teamNameResolver)
 	championshipHandlerV1 := v1.NewChampionshipHandler(championshipSvc)
 	matchRepo := repository.NewMatchRepository(pool)
 	groupStatsRepo := repository.NewGroupStatsRepository(pool)
-	fixtureSvc := service.NewFixtureService(matchRepo, groupStatsRepo)
+	fixtureSvc := service.NewFixtureService(matchRepo, groupStatsRepo, teamNameResolver)
 	fixtureHandlerV1 := v1.NewFixtureHandler(fixtureSvc)
 
 	// Set up Gin router

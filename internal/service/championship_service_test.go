@@ -280,15 +280,21 @@ func TestChampionshipService_ListStandingsByYear(t *testing.T) {
 		filter := domain.ChampionshipStandingFilter{Year: 1930, Page: 1, Size: 10}
 
 		expected := []domain.ChampionshipStanding{
-			{Team: domain.SimpleTeam{Code: "URU", Name: "Uruguay"}, GroupCode: "3", MatchesPlayed: 4, Wins: 4, GoalsFor: 15, GoalsAgainst: 3, GoalDifference: 12, Points: 8, UnifiedPoints: 12, Position: 1, Performance: "champion"},
-			{Team: domain.SimpleTeam{Code: "ARG", Name: "Argentina"}, GroupCode: "1", MatchesPlayed: 5, Wins: 4, Losses: 1, GoalsFor: 18, GoalsAgainst: 9, GoalDifference: 9, Points: 8, UnifiedPoints: 12, Position: 2, Performance: "runner_up"},
+			{Team: domain.SimpleTeam{Code: "URU"}, GroupCode: "3", MatchesPlayed: 4, Wins: 4, GoalsFor: 15, GoalsAgainst: 3, GoalDifference: 12, Points: 8, UnifiedPoints: 12, Position: 1, Performance: "champion"},
+			{Team: domain.SimpleTeam{Code: "ARG"}, GroupCode: "1", MatchesPlayed: 5, Wins: 4, Losses: 1, GoalsFor: 18, GoalsAgainst: 9, GoalDifference: 9, Points: 8, UnifiedPoints: 12, Position: 2, Performance: "runner_up"},
 		}
 		mockRepo.On("ListStandingsByYear", ctx, filter).Return(expected, int64(13), nil)
+		mockRepo.On("ListTeamTranslations", ctx).Return([]domain.TeamTranslation{
+			{TeamCode: "URU", Language: "es", Name: "Uruguay"},
+			{TeamCode: "ARG", Language: "es", Name: "Argentina"},
+		}, nil)
 
 		res, err := svc.ListStandingsByYear(ctx, filter)
 		assert.NoError(t, err)
 		require.NotNil(t, res)
 		assert.Len(t, res.Data, 2)
+		assert.Equal(t, "Uruguay", res.Data[0].Team.Name)
+		assert.Equal(t, "Argentina", res.Data[1].Team.Name)
 		assert.Equal(t, 1, res.Pagination.Page)
 		assert.Equal(t, 10, res.Pagination.Size)
 		assert.Equal(t, int64(13), res.Pagination.TotalElements)
@@ -492,15 +498,20 @@ func TestChampionshipService_ListScorersByYear(t *testing.T) {
 		filter := domain.ChampionshipScorerFilter{Year: 1930, TeamCode: "ARG", Page: 1, Size: 10}
 
 		expected := []domain.ChampionshipScorer{
-			{FullName: "Guillermo Stabile", Team: domain.SimpleTeam{Code: "ARG", Name: "Argentina"}, Goals: 8},
-			{FullName: "Carlos Peucelle", Team: domain.SimpleTeam{Code: "ARG", Name: "Argentina"}, Goals: 3},
+			{FullName: "Guillermo Stabile", Team: domain.SimpleTeam{Code: "ARG"}, Goals: 8},
+			{FullName: "Carlos Peucelle", Team: domain.SimpleTeam{Code: "ARG"}, Goals: 3},
 		}
 		mockRepo.On("ListScorersByYear", ctx, filter).Return(expected, int64(13), nil)
+		mockRepo.On("ListTeamTranslations", ctx).Return([]domain.TeamTranslation{
+			{TeamCode: "ARG", Language: "es", Name: "Argentina"},
+		}, nil)
 
 		res, err := svc.ListScorersByYear(ctx, filter)
 		assert.NoError(t, err)
 		require.NotNil(t, res)
 		assert.Len(t, res.Data, 2)
+		assert.Equal(t, "Argentina", res.Data[0].Team.Name)
+		assert.Equal(t, "Argentina", res.Data[1].Team.Name)
 		assert.Equal(t, 1, res.Pagination.Page)
 		assert.Equal(t, 10, res.Pagination.Size)
 		assert.Equal(t, int64(13), res.Pagination.TotalElements)

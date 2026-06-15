@@ -125,7 +125,6 @@ WHERE ct.year = $1
 -- name: ListChampionshipStandingsByYear :many
 SELECT
     cts.team_code,
-    COALESCE(tt.name, t.name)::varchar AS name,
     COALESCE(cts.group_code, '')::text AS group_code,
     cts.matches_played,
     cts.wins,
@@ -145,10 +144,6 @@ SELECT
         ELSE cts.stage_reached::text
     END, '')::text AS performance
 FROM championships_teams ct
-INNER JOIN teams t ON t.code = ct.team_code
-LEFT JOIN team_translations tt
-    ON tt.team_code = t.code
-    AND tt.language = sqlc.arg(language)
 INNER JOIN championships_teams_stats cts ON ct.year = cts.year AND ct.team_code = cts.team_code
 INNER JOIN championships_stats cs ON cs.year = ct.year
 WHERE ct.year = $1
@@ -158,7 +153,6 @@ LIMIT $2 OFFSET $3;
 -- name: CountChampionshipStandingsByYear :one
 SELECT COUNT(*)
 FROM championships_teams ct
-INNER JOIN teams t ON t.code = ct.team_code
 INNER JOIN championships_teams_stats cts ON ct.year = cts.year AND ct.team_code = cts.team_code
 INNER JOIN championships_stats cs ON cs.year = ct.year
 WHERE ct.year = $1;
@@ -189,14 +183,9 @@ WHERE css.year = $1
 SELECT
     TRIM(CONCAT_WS(' ', NULLIF(p.first_name, ''), NULLIF(p.last_name, '')))::text AS full_name,
     ss.team_code,
-    COALESCE(tt.name, t.name)::varchar AS name,
     ss.goals
 FROM squads_stats ss
 INNER JOIN players p ON p.id = ss.player_id
-INNER JOIN teams t ON t.code = ss.team_code
-LEFT JOIN team_translations tt
-    ON tt.team_code = t.code
-    AND tt.language = sqlc.arg(language)
 WHERE ss.year = $1
     AND ss.goals > 0
     AND (
