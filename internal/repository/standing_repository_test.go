@@ -14,6 +14,47 @@ import (
 )
 
 func TestStandingRepository_List(t *testing.T) {
+	t.Run("success without name filter uses optimized query", func(t *testing.T) {
+		mock, err := pgxmock.NewPool()
+		require.NoError(t, err)
+		defer mock.Close()
+
+		repo := repository.NewStandingRepository(mock)
+		filter := domain.StandingFilter{ConfederationCode: "CONMEBOL", Page: 1, Size: 10}
+
+		countRows := mock.NewRows([]string{"count"}).AddRow(int64(1))
+		mock.ExpectQuery(`^-- name: CountStandingsWithoutNameFilter :one.*`).
+			WithArgs("CONMEBOL").
+			WillReturnRows(countRows)
+
+		rows := mock.NewRows([]string{
+			"team_code",
+			"matches_played",
+			"wins",
+			"draws",
+			"losses",
+			"goals_for",
+			"goals_against",
+			"goal_difference",
+			"points",
+			"unified_points",
+			"position",
+			"unified_position",
+		}).AddRow("arg", int32(88), int32(53), int32(10), int32(25), int32(152), int32(101), int32(51), int32(133), int32(159), int32(3), int32(3))
+
+		mock.ExpectQuery(`^-- name: ListStandingsWithoutNameFilter :many.*`).
+			WithArgs("CONMEBOL", int32(0), int32(10)).
+			WillReturnRows(rows)
+
+		result, total, err := repo.List(context.Background(), filter)
+		assert.NoError(t, err)
+		assert.Equal(t, int64(1), total)
+		require.Len(t, result, 1)
+		assert.Equal(t, "ARG", result[0].Team.Code)
+		assert.Empty(t, result[0].Team.Name)
+		assert.NoError(t, mock.ExpectationsWereMet())
+	})
+
 	t.Run("success with filters", func(t *testing.T) {
 		mock, err := pgxmock.NewPool()
 		require.NoError(t, err)
@@ -29,7 +70,6 @@ func TestStandingRepository_List(t *testing.T) {
 
 		rows := mock.NewRows([]string{
 			"team_code",
-			"name",
 			"matches_played",
 			"wins",
 			"draws",
@@ -41,7 +81,7 @@ func TestStandingRepository_List(t *testing.T) {
 			"unified_points",
 			"position",
 			"unified_position",
-		}).AddRow("arg", "Argentina", int32(88), int32(53), int32(10), int32(25), int32(152), int32(101), int32(51), int32(133), int32(159), int32(3), int32(3))
+		}).AddRow("arg", int32(88), int32(53), int32(10), int32(25), int32(152), int32(101), int32(51), int32(133), int32(159), int32(3), int32(3))
 
 		mock.ExpectQuery(`^-- name: ListStandings :many.*`).
 			WithArgs("en", "arg", "CONMEBOL", int32(10), int32(10)).
@@ -52,7 +92,7 @@ func TestStandingRepository_List(t *testing.T) {
 		assert.Equal(t, int64(11), total)
 		require.Len(t, result, 1)
 		assert.Equal(t, "ARG", result[0].Team.Code)
-		assert.Equal(t, "Argentina", result[0].Team.Name)
+		assert.Empty(t, result[0].Team.Name)
 		assert.Equal(t, int32(88), result[0].MatchesPlayed)
 		assert.Equal(t, int32(53), result[0].Wins)
 		assert.Equal(t, int32(10), result[0].Draws)
@@ -73,8 +113,8 @@ func TestStandingRepository_List(t *testing.T) {
 		defer mock.Close()
 
 		repo := repository.NewStandingRepository(mock)
-		mock.ExpectQuery(`^-- name: CountStandings :one.*`).
-			WithArgs("", "", "").
+		mock.ExpectQuery(`^-- name: CountStandingsWithoutNameFilter :one.*`).
+			WithArgs("").
 			WillReturnError(errors.New("db error"))
 
 		result, total, err := repo.List(context.Background(), domain.StandingFilter{Page: 1, Size: 20})
@@ -91,11 +131,11 @@ func TestStandingRepository_List(t *testing.T) {
 
 		repo := repository.NewStandingRepository(mock)
 		countRows := mock.NewRows([]string{"count"}).AddRow(int64(1))
-		mock.ExpectQuery(`^-- name: CountStandings :one.*`).
-			WithArgs("", "", "").
+		mock.ExpectQuery(`^-- name: CountStandingsWithoutNameFilter :one.*`).
+			WithArgs("").
 			WillReturnRows(countRows)
-		mock.ExpectQuery(`^-- name: ListStandings :many.*`).
-			WithArgs("", "", "", int32(20), int32(20)).
+		mock.ExpectQuery(`^-- name: ListStandingsWithoutNameFilter :many.*`).
+			WithArgs("", int32(20), int32(20)).
 			WillReturnError(errors.New("db error"))
 
 		result, total, err := repo.List(context.Background(), domain.StandingFilter{Page: 2, Size: 20})

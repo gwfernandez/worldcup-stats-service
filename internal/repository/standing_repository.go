@@ -19,24 +19,14 @@ func NewStandingRepository(db sqlc.DBTX) StandingRepository {
 }
 
 func (r *standingRepository) List(ctx context.Context, filter domain.StandingFilter) ([]domain.Standing, int64, error) {
-	total, err := r.queries.CountStandings(ctx, sqlc.CountStandingsParams{
-		Language:          filter.Language,
-		NameFilter:        filter.Name,
-		ConfederationCode: filter.ConfederationCode,
-	})
+	total, err := r.count(ctx, filter)
 	if err != nil {
 		return nil, 0, err
 	}
 
 	limit := int32(filter.Size)
 	offset := int32((filter.Page - 1) * filter.Size)
-	rows, err := r.queries.ListStandings(ctx, sqlc.ListStandingsParams{
-		Language:          filter.Language,
-		NameFilter:        filter.Name,
-		ConfederationCode: filter.ConfederationCode,
-		LimitValue:        limit,
-		OffsetValue:       offset,
-	})
+	rows, err := r.list(ctx, filter, limit, offset)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -49,9 +39,37 @@ func (r *standingRepository) List(ctx context.Context, filter domain.StandingFil
 	return standings, total, nil
 }
 
-func toStandingDomain(row sqlc.ListStandingsRow) domain.Standing {
+func (r *standingRepository) count(ctx context.Context, filter domain.StandingFilter) (int64, error) {
+	if filter.Name == "" {
+		return r.queries.CountStandingsWithoutNameFilter(ctx, filter.ConfederationCode)
+	}
+	return r.queries.CountStandings(ctx, sqlc.CountStandingsParams{
+		Language:          filter.Language,
+		NameFilter:        filter.Name,
+		ConfederationCode: filter.ConfederationCode,
+	})
+}
+
+func (r *standingRepository) list(ctx context.Context, filter domain.StandingFilter, limit int32, offset int32) ([]sqlc.Standing, error) {
+	if filter.Name == "" {
+		return r.queries.ListStandingsWithoutNameFilter(ctx, sqlc.ListStandingsWithoutNameFilterParams{
+			ConfederationCode: filter.ConfederationCode,
+			LimitValue:        limit,
+			OffsetValue:       offset,
+		})
+	}
+	return r.queries.ListStandings(ctx, sqlc.ListStandingsParams{
+		Language:          filter.Language,
+		NameFilter:        filter.Name,
+		ConfederationCode: filter.ConfederationCode,
+		LimitValue:        limit,
+		OffsetValue:       offset,
+	})
+}
+
+func toStandingDomain(row sqlc.Standing) domain.Standing {
 	return domain.Standing{
-		Team:            domain.SimpleTeam{Code: strings.ToUpper(row.TeamCode), Name: row.Name},
+		Team:            domain.SimpleTeam{Code: strings.ToUpper(row.TeamCode)},
 		MatchesPlayed:   row.MatchesPlayed,
 		Wins:            row.Wins,
 		Draws:           row.Draws,

@@ -34,10 +34,23 @@ func (q *Queries) CountStandings(ctx context.Context, arg CountStandingsParams) 
 	return count, err
 }
 
+const countStandingsWithoutNameFilter = `-- name: CountStandingsWithoutNameFilter :one
+SELECT COUNT(*)
+FROM standings s
+INNER JOIN teams t ON t.code = s.team_code
+WHERE $1::text = '' OR t.confederation_code = $1
+`
+
+func (q *Queries) CountStandingsWithoutNameFilter(ctx context.Context, confederationCode string) (int64, error) {
+	row := q.db.QueryRow(ctx, countStandingsWithoutNameFilter, confederationCode)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const listStandings = `-- name: ListStandings :many
 SELECT
     s.team_code,
-    COALESCE(tt.name, t.name)::varchar AS name,
     s.matches_played,
     s.wins,
     s.draws,
@@ -69,23 +82,7 @@ type ListStandingsParams struct {
 	LimitValue        int32
 }
 
-type ListStandingsRow struct {
-	TeamCode        string
-	Name            string
-	MatchesPlayed   int32
-	Wins            int32
-	Draws           int32
-	Losses          int32
-	GoalsFor        int32
-	GoalsAgainst    int32
-	GoalDifference  int32
-	Points          int32
-	UnifiedPoints   int32
-	Position        int32
-	UnifiedPosition int32
-}
-
-func (q *Queries) ListStandings(ctx context.Context, arg ListStandingsParams) ([]ListStandingsRow, error) {
+func (q *Queries) ListStandings(ctx context.Context, arg ListStandingsParams) ([]Standing, error) {
 	rows, err := q.db.Query(ctx, listStandings,
 		arg.Language,
 		arg.NameFilter,
@@ -97,12 +94,71 @@ func (q *Queries) ListStandings(ctx context.Context, arg ListStandingsParams) ([
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ListStandingsRow
+	var items []Standing
 	for rows.Next() {
-		var i ListStandingsRow
+		var i Standing
 		if err := rows.Scan(
 			&i.TeamCode,
-			&i.Name,
+			&i.MatchesPlayed,
+			&i.Wins,
+			&i.Draws,
+			&i.Losses,
+			&i.GoalsFor,
+			&i.GoalsAgainst,
+			&i.GoalDifference,
+			&i.Points,
+			&i.UnifiedPoints,
+			&i.Position,
+			&i.UnifiedPosition,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listStandingsWithoutNameFilter = `-- name: ListStandingsWithoutNameFilter :many
+SELECT
+    s.team_code,
+    s.matches_played,
+    s.wins,
+    s.draws,
+    s.losses,
+    s.goals_for,
+    s.goals_against,
+    s.goal_difference,
+    s.points,
+    s.unified_points,
+    s.position,
+    s.unified_position
+FROM standings s
+INNER JOIN teams t ON t.code = s.team_code
+WHERE $1::text = '' OR t.confederation_code = $1
+ORDER BY s.position ASC
+LIMIT $3 OFFSET $2
+`
+
+type ListStandingsWithoutNameFilterParams struct {
+	ConfederationCode string
+	OffsetValue       int32
+	LimitValue        int32
+}
+
+func (q *Queries) ListStandingsWithoutNameFilter(ctx context.Context, arg ListStandingsWithoutNameFilterParams) ([]Standing, error) {
+	rows, err := q.db.Query(ctx, listStandingsWithoutNameFilter, arg.ConfederationCode, arg.OffsetValue, arg.LimitValue)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Standing
+	for rows.Next() {
+		var i Standing
+		if err := rows.Scan(
+			&i.TeamCode,
 			&i.MatchesPlayed,
 			&i.Wins,
 			&i.Draws,

@@ -188,15 +188,21 @@ func TestChampionshipService_ListTeamsByYear(t *testing.T) {
 		filter := domain.ChampionshipTeamFilter{Year: 1930, Page: 1, Size: 10}
 
 		expected := []domain.ChampionshipTeam{
-			{Year: 1930, Team: domain.SimpleTeam{Code: "URU", Name: "Uruguay"}, ConfederationCode: "CONMEBOL", GroupCode: "3", StageReached: "champion", Managers: "Alberto Suppici"},
-			{Year: 1930, Team: domain.SimpleTeam{Code: "ARG", Name: "Argentina"}, ConfederationCode: "CONMEBOL", GroupCode: "1", StageReached: "runner_up", Managers: ""},
+			{Year: 1930, Team: domain.SimpleTeam{Code: "URU"}, ConfederationCode: "CONMEBOL", GroupCode: "3", StageReached: "champion", Managers: "Alberto Suppici"},
+			{Year: 1930, Team: domain.SimpleTeam{Code: "ARG"}, ConfederationCode: "CONMEBOL", GroupCode: "1", StageReached: "runner_up", Managers: ""},
 		}
 		mockRepo.On("ListTeamsByYear", ctx, filter).Return(expected, int64(13), nil)
+		mockRepo.On("ListTeamTranslations", ctx).Return([]domain.TeamTranslation{
+			{TeamCode: "URU", Language: "es", Name: "Uruguay"},
+			{TeamCode: "ARG", Language: "es", Name: "Argentina"},
+		}, nil)
 
 		res, err := svc.ListTeamsByYear(ctx, filter)
 		assert.NoError(t, err)
 		require.NotNil(t, res)
 		assert.Len(t, res.Data, 2)
+		assert.Equal(t, "Uruguay", res.Data[0].Team.Name)
+		assert.Equal(t, "Argentina", res.Data[1].Team.Name)
 		assert.Equal(t, 1, res.Pagination.Page)
 		assert.Equal(t, 10, res.Pagination.Size)
 		assert.Equal(t, int64(13), res.Pagination.TotalElements)

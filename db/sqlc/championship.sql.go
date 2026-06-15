@@ -108,6 +108,29 @@ func (q *Queries) CountChampionshipTeamsByYear(ctx context.Context, arg CountCha
 	return count, err
 }
 
+const countChampionshipTeamsByYearWithoutNameFilter = `-- name: CountChampionshipTeamsByYearWithoutNameFilter :one
+SELECT COUNT(*)
+FROM championships_teams ct
+INNER JOIN teams t ON t.code = ct.team_code
+INNER JOIN championships_teams_stats cts ON ct.year = cts.year AND ct.team_code = cts.team_code
+WHERE ct.year = $1
+    AND ($2::text = '' OR t.confederation_code = $2)
+    AND ($3::text = '' OR cts.group_code = $3)
+`
+
+type CountChampionshipTeamsByYearWithoutNameFilterParams struct {
+	Year    int32
+	Column2 string
+	Column3 string
+}
+
+func (q *Queries) CountChampionshipTeamsByYearWithoutNameFilter(ctx context.Context, arg CountChampionshipTeamsByYearWithoutNameFilterParams) (int64, error) {
+	row := q.db.QueryRow(ctx, countChampionshipTeamsByYearWithoutNameFilter, arg.Year, arg.Column2, arg.Column3)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const countChampionships = `-- name: CountChampionships :one
 SELECT COUNT(*)
 FROM championships c
@@ -144,6 +167,31 @@ func (q *Queries) CountChampionships(ctx context.Context, arg CountChampionships
 		arg.Column3,
 		arg.Language,
 	)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
+const countChampionshipsWithoutHostFilter = `-- name: CountChampionshipsWithoutHostFilter :one
+SELECT COUNT(*)
+FROM championships c
+WHERE
+    ($1::integer = 0 OR c.year = $1)
+    AND ($2::text = '' OR EXISTS (
+        SELECT 1
+        FROM teams t
+        WHERE t.code = ANY(c.host_codes)
+          AND LOWER(t.confederation_code) = LOWER($2)
+    ))
+`
+
+type CountChampionshipsWithoutHostFilterParams struct {
+	Column1 int32
+	Column2 string
+}
+
+func (q *Queries) CountChampionshipsWithoutHostFilter(ctx context.Context, arg CountChampionshipsWithoutHostFilterParams) (int64, error) {
+	row := q.db.QueryRow(ctx, countChampionshipsWithoutHostFilter, arg.Column1, arg.Column2)
 	var count int64
 	err := row.Scan(&count)
 	return count, err
@@ -430,7 +478,6 @@ const listChampionshipTeamsByYear = `-- name: ListChampionshipTeamsByYear :many
 SELECT
     ct.year,
     ct.team_code,
-    COALESCE(tt.name, t.name)::varchar AS name,
     t.confederation_code,
     cts.group_code,
     COALESCE(CASE
@@ -478,7 +525,6 @@ type ListChampionshipTeamsByYearParams struct {
 type ListChampionshipTeamsByYearRow struct {
 	Year              int32
 	TeamCode          string
-	Name              string
 	ConfederationCode string
 	GroupCode         pgtype.Text
 	StageReached      string
@@ -505,7 +551,90 @@ func (q *Queries) ListChampionshipTeamsByYear(ctx context.Context, arg ListChamp
 		if err := rows.Scan(
 			&i.Year,
 			&i.TeamCode,
-			&i.Name,
+			&i.ConfederationCode,
+			&i.GroupCode,
+			&i.StageReached,
+			&i.Managers,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listChampionshipTeamsByYearWithoutNameFilter = `-- name: ListChampionshipTeamsByYearWithoutNameFilter :many
+SELECT
+    ct.year,
+    ct.team_code,
+    t.confederation_code,
+    cts.group_code,
+    COALESCE(CASE
+        WHEN ct.team_code = cs.champion_code THEN 'champion'
+        WHEN ct.team_code = cs.runner_up_code THEN 'runner_up'
+        WHEN ct.team_code = cs.third_place_code THEN 'third_place'
+        WHEN ct.team_code = cs.fourth_place_code THEN 'fourth_place'
+        ELSE cts.stage_reached::text
+    END, '')::text AS stage_reached,
+    COALESCE(m.managers, '')::text AS managers
+FROM championships_teams ct
+INNER JOIN teams t ON t.code = ct.team_code
+INNER JOIN championships_teams_stats cts ON ct.year = cts.year AND ct.team_code = cts.team_code
+INNER JOIN championships_stats cs ON cs.year = ct.year
+LEFT JOIN (
+    SELECT
+        cm.team_code,
+        string_agg(NULLIF(TRIM(CONCAT_WS(' ', NULLIF(m.first_name, ''), NULLIF(m.last_name, ''))), ''), ', ') AS managers
+    FROM championships_managers cm
+    INNER JOIN managers m ON cm.manager_id = m.id
+    WHERE cm.year = $1
+    GROUP BY cm.team_code
+) m ON m.team_code = ct.team_code
+WHERE ct.year = $1
+    AND ($2::text = '' OR t.confederation_code = $2)
+    AND ($3::text = '' OR cts.group_code = $3)
+ORDER BY cts.position ASC, cts.stage_reached DESC
+LIMIT $4 OFFSET $5
+`
+
+type ListChampionshipTeamsByYearWithoutNameFilterParams struct {
+	Year    int32
+	Column2 string
+	Column3 string
+	Limit   int32
+	Offset  int32
+}
+
+type ListChampionshipTeamsByYearWithoutNameFilterRow struct {
+	Year              int32
+	TeamCode          string
+	ConfederationCode string
+	GroupCode         pgtype.Text
+	StageReached      string
+	Managers          string
+}
+
+func (q *Queries) ListChampionshipTeamsByYearWithoutNameFilter(ctx context.Context, arg ListChampionshipTeamsByYearWithoutNameFilterParams) ([]ListChampionshipTeamsByYearWithoutNameFilterRow, error) {
+	rows, err := q.db.Query(ctx, listChampionshipTeamsByYearWithoutNameFilter,
+		arg.Year,
+		arg.Column2,
+		arg.Column3,
+		arg.Limit,
+		arg.Offset,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListChampionshipTeamsByYearWithoutNameFilterRow
+	for rows.Next() {
+		var i ListChampionshipTeamsByYearWithoutNameFilterRow
+		if err := rows.Scan(
+			&i.Year,
+			&i.TeamCode,
 			&i.ConfederationCode,
 			&i.GroupCode,
 			&i.StageReached,
@@ -585,6 +714,75 @@ func (q *Queries) ListChampionships(ctx context.Context, arg ListChampionshipsPa
 	var items []ListChampionshipsRow
 	for rows.Next() {
 		var i ListChampionshipsRow
+		if err := rows.Scan(
+			&i.Year,
+			&i.StartDate,
+			&i.EndDate,
+			&i.HostCodes,
+			&i.ConfederationCodes,
+			&i.ChampionCode,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listChampionshipsWithoutHostFilter = `-- name: ListChampionshipsWithoutHostFilter :many
+SELECT
+    year,
+    start_date,
+    end_date,
+    host_codes,
+    confederation_codes,
+    champion_code
+FROM championships c
+WHERE
+    ($1::integer = 0 OR c.year = $1)
+    AND ($2::text = '' OR EXISTS (
+        SELECT 1
+        FROM teams t
+        WHERE t.code = ANY(c.host_codes)
+          AND LOWER(t.confederation_code) = LOWER($2)
+    ))
+ORDER BY c.year ASC
+LIMIT $3 OFFSET $4
+`
+
+type ListChampionshipsWithoutHostFilterParams struct {
+	Column1 int32
+	Column2 string
+	Limit   int32
+	Offset  int32
+}
+
+type ListChampionshipsWithoutHostFilterRow struct {
+	Year               int32
+	StartDate          pgtype.Date
+	EndDate            pgtype.Date
+	HostCodes          []string
+	ConfederationCodes []string
+	ChampionCode       pgtype.Text
+}
+
+func (q *Queries) ListChampionshipsWithoutHostFilter(ctx context.Context, arg ListChampionshipsWithoutHostFilterParams) ([]ListChampionshipsWithoutHostFilterRow, error) {
+	rows, err := q.db.Query(ctx, listChampionshipsWithoutHostFilter,
+		arg.Column1,
+		arg.Column2,
+		arg.Limit,
+		arg.Offset,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListChampionshipsWithoutHostFilterRow
+	for rows.Next() {
+		var i ListChampionshipsWithoutHostFilterRow
 		if err := rows.Scan(
 			&i.Year,
 			&i.StartDate,

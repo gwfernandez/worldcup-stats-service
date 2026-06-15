@@ -84,6 +84,9 @@ func (s *championshipService) ListTeamsByYear(ctx context.Context, filter domain
 	if data == nil {
 		data = make([]domain.ChampionshipTeam, 0)
 	}
+	if err := s.hydrateChampionshipTeams(ctx, data, filter.Language); err != nil {
+		return nil, err
+	}
 
 	return &domain.ChampionshipTeamListResponse{
 		Data: data,
@@ -262,6 +265,17 @@ func (s *championshipService) hydrateChampionship(ctx context.Context, champions
 	}
 	championship.Champion = champion
 	return s.hydrateChampionshipStats(ctx, championship.Stats, language)
+}
+
+func (s *championshipService) hydrateChampionshipTeams(ctx context.Context, teams []domain.ChampionshipTeam, language string) error {
+	for i := range teams {
+		name, err := s.resolveTeamName(ctx, teams[i].Team.Code, language)
+		if err != nil {
+			return err
+		}
+		teams[i].Team.Name = name
+	}
+	return nil
 }
 
 func (s *championshipService) hydrateChampionshipScorers(ctx context.Context, scorers []domain.ChampionshipScorer, language string) error {
