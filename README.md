@@ -284,9 +284,34 @@ Parámetros soportados para `/api/champions`:
 Notas de respuesta:
 
 - No soporta filtros.
-- Los resultados se ordenan por `wins` descendente y, ante empates, por `teamName` localizado ascendente.
-- `teamName` se resuelve según `Accept-Language` con fallback a `teams.name`.
+- Los resultados se ordenan por `wins` descendente y, ante empates, por `team.name` localizado ascendente.
+- `team.name` se resuelve según `Accept-Language` con fallback a `teams.name`.
 - `years` se expone como array de números ordenado ascendentemente.
+
+Ejemplo de respuesta:
+
+```json
+{
+  "data": [
+    {
+      "team": {
+        "code": "BRA",
+        "name": "Brasil"
+      },
+      "wins": 5,
+      "years": [1958, 1962, 1970, 1994, 2002]
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "size": 20,
+    "totalElements": 8,
+    "totalPages": 1,
+    "hasNext": false,
+    "hasPrevious": false
+  }
+}
+```
 
 ### Tabla Histórica de Posiciones
 

@@ -33,10 +33,9 @@ func TestChampionService_List(t *testing.T) {
 		svc := service.NewChampionService(mockRepo)
 		filter := domain.ChampionFilter{Page: 1, Size: 10}
 		expected := []domain.Champion{{
-			TeamCode: "BRA",
-			TeamName: "Brasil",
-			Wins:     5,
-			Years:    []int32{1958, 1962, 1970, 1994, 2002},
+			Team:  domain.SimpleTeam{Code: "BRA", Name: "Brasil"},
+			Wins:  5,
+			Years: []int32{1958, 1962, 1970, 1994, 2002},
 		}}
 		mockRepo.On("List", ctx, filter).Return(expected, int64(11), nil)
 
