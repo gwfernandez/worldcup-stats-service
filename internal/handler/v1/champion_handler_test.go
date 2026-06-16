@@ -43,9 +43,10 @@ func TestChampionHandler_List(t *testing.T) {
 		r := setupChampionRouter(svc)
 		expected := &domain.ChampionListResponse{
 			Data: []domain.Champion{{
-				Team:  domain.SimpleTeam{Code: "BRA", Name: "Brasil"},
-				Wins:  5,
-				Years: []int32{1958, 1962, 1970, 1994, 2002},
+				Team:              domain.SimpleTeam{Code: "BRA", Name: "Brasil"},
+				Wins:              5,
+				Years:             []int32{1958, 1962, 1970, 1994, 2002},
+				ConfederationCode: "CONMEBOL",
 			}},
 			Pagination: domain.PaginationInfo{
 				Page:          1,
@@ -70,7 +71,8 @@ func TestChampionHandler_List(t *testing.T) {
 					"name": "Brasil"
 				},
 				"wins": 5,
-				"years": [1958, 1962, 1970, 1994, 2002]
+				"years": [1958, 1962, 1970, 1994, 2002],
+				"confederationCode": "CONMEBOL"
 			}],
 			"pagination": {
 				"page": 1,
@@ -123,7 +125,12 @@ func TestChampionHandler_List(t *testing.T) {
 		svc := new(MockChampionService)
 		r := setupChampionRouter(svc)
 		expected := &domain.ChampionListResponse{
-			Data:       []domain.Champion{{Team: domain.SimpleTeam{Code: "GER", Name: "Germany"}, Wins: 4, Years: []int32{1954, 1974, 1990, 2014}}},
+			Data: []domain.Champion{{
+				Team:              domain.SimpleTeam{Code: "GER", Name: "Germany"},
+				Wins:              4,
+				Years:             []int32{1954, 1974, 1990, 2014},
+				ConfederationCode: "UEFA",
+			}},
 			Pagination: domain.PaginationInfo{Page: 1, Size: 20, TotalElements: 1, TotalPages: 1},
 		}
 		svc.On("List", mock.Anything, domain.ChampionFilter{Language: "en", Page: 1, Size: 20}).Return(expected, nil)
@@ -141,7 +148,8 @@ func TestChampionHandler_List(t *testing.T) {
 					"name": "Germany"
 				},
 				"wins": 4,
-				"years": [1954, 1974, 1990, 2014]
+				"years": [1954, 1974, 1990, 2014],
+				"confederationCode": "UEFA"
 			}],
 			"pagination": {
 				"page": 1,
