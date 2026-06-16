@@ -12,10 +12,10 @@ import (
 const countChampions = `-- name: CountChampions :one
 SELECT COUNT(1)
 FROM (
-    SELECT t.unified_code
+    SELECT t.unified_code, t.confederation_code
     FROM championships_stats cs
     INNER JOIN teams t ON t.code = cs.champion_code
-    GROUP BY t.unified_code
+    GROUP BY t.unified_code, t.confederation_code
 ) c
 `
 
@@ -30,15 +30,17 @@ const listChampions = `-- name: ListChampions :many
 SELECT
     c.unified_code AS team_code,
     c.wins,
-    c.years
+    c.years,
+    c.confederation_code
 FROM (
     SELECT
         t.unified_code,
+        t.confederation_code,
         COUNT(1) AS wins,
         ARRAY_AGG(cs.year ORDER BY cs.year ASC)::integer[] AS years
     FROM championships_stats cs
     INNER JOIN teams t ON t.code = cs.champion_code
-    GROUP BY t.unified_code
+    GROUP BY t.unified_code, t.confederation_code
 ) c
 ORDER BY c.wins DESC, c.unified_code ASC
 LIMIT $2 OFFSET $1
@@ -50,9 +52,10 @@ type ListChampionsParams struct {
 }
 
 type ListChampionsRow struct {
-	TeamCode string
-	Wins     int64
-	Years    []int32
+	TeamCode          string
+	Wins              int64
+	Years             []int32
+	ConfederationCode string
 }
 
 func (q *Queries) ListChampions(ctx context.Context, arg ListChampionsParams) ([]ListChampionsRow, error) {
@@ -64,7 +67,12 @@ func (q *Queries) ListChampions(ctx context.Context, arg ListChampionsParams) ([
 	var items []ListChampionsRow
 	for rows.Next() {
 		var i ListChampionsRow
-		if err := rows.Scan(&i.TeamCode, &i.Wins, &i.Years); err != nil {
+		if err := rows.Scan(
+			&i.TeamCode,
+			&i.Wins,
+			&i.Years,
+			&i.ConfederationCode,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

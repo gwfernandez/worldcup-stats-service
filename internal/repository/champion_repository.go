@@ -47,7 +47,8 @@ func toChampionDomain(row sqlc.ListChampionsRow) domain.Champion {
 		Team: domain.SimpleTeam{
 			Code: strings.ToUpper(row.TeamCode),
 		},
-		Wins:  row.Wins,
-		Years: row.Years,
+		Wins:              row.Wins,
+		Years:             row.Years,
+		ConfederationCode: strings.ToUpper(row.ConfederationCode),
 	}
 }

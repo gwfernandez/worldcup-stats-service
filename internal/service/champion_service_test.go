@@ -34,9 +34,10 @@ func TestChampionService_List(t *testing.T) {
 		svc := service.NewChampionService(mockRepo, resolver)
 		filter := domain.ChampionFilter{Page: 1, Size: 10}
 		expected := []domain.Champion{{
-			Team:  domain.SimpleTeam{Code: "BRA"},
-			Wins:  5,
-			Years: []int32{1958, 1962, 1970, 1994, 2002},
+			Team:              domain.SimpleTeam{Code: "BRA"},
+			Wins:              5,
+			Years:             []int32{1958, 1962, 1970, 1994, 2002},
+			ConfederationCode: "CONMEBOL",
 		}}
 		mockRepo.On("List", ctx, filter).Return(expected, int64(11), nil)
 		resolver.On("Resolve", ctx, "BRA", "").Return("Brasil", nil).Once()
@@ -46,6 +47,7 @@ func TestChampionService_List(t *testing.T) {
 		assert.Equal(t, "Brasil", result.Data[0].Team.Name)
 		assert.Equal(t, int64(5), result.Data[0].Wins)
 		assert.Equal(t, []int32{1958, 1962, 1970, 1994, 2002}, result.Data[0].Years)
+		assert.Equal(t, "CONMEBOL", result.Data[0].ConfederationCode)
 		assert.Equal(t, 1, result.Pagination.Page)
 		assert.Equal(t, 10, result.Pagination.Size)
 		assert.Equal(t, int64(11), result.Pagination.TotalElements)
