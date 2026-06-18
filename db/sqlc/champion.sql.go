@@ -7,6 +7,8 @@ package sqlc
 
 import (
 	"context"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const countChampions = `-- name: CountChampions :one
@@ -21,6 +23,29 @@ FROM (
 
 func (q *Queries) CountChampions(ctx context.Context) (int64, error) {
 	row := q.db.QueryRow(ctx, countChampions)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
+const countFinalsWonByTeam = `-- name: CountFinalsWonByTeam :one
+SELECT COUNT(1)
+FROM teams t
+INNER JOIN championships c
+    ON c.champion_code = t.code
+    AND t.unified_code = $1
+INNER JOIN matches m
+    ON m.year = c.year
+    AND (
+        (m.home_team_code = t.code AND m.home_team_win)
+        OR (m.away_team_code = t.code AND m.away_team_win)
+    )
+WHERE m.stage = 'final'
+    OR (m.year = 1950 AND m.id = 75)
+`
+
+func (q *Queries) CountFinalsWonByTeam(ctx context.Context, teamCode string) (int64, error) {
+	row := q.db.QueryRow(ctx, countFinalsWonByTeam, teamCode)
 	var count int64
 	err := row.Scan(&count)
 	return count, err
@@ -72,6 +97,81 @@ func (q *Queries) ListChampions(ctx context.Context, arg ListChampionsParams) ([
 			&i.Wins,
 			&i.Years,
 			&i.ConfederationCode,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listFinalsWonByTeam = `-- name: ListFinalsWonByTeam :many
+SELECT
+    c.year,
+    m.match_date,
+    m.match_time,
+    m.home_team_code,
+    m.home_team_score,
+    m.home_team_score_penalties,
+    m.away_team_code,
+    m.away_team_score,
+    m.away_team_score_penalties
+FROM teams t
+INNER JOIN championships c
+    ON c.champion_code = t.code
+    AND t.unified_code = $1
+INNER JOIN matches m
+    ON m.year = c.year
+    AND (
+        (m.home_team_code = t.code AND m.home_team_win)
+        OR (m.away_team_code = t.code AND m.away_team_win)
+    )
+WHERE m.stage = 'final'
+    OR (m.year = 1950 AND m.id = 75)
+ORDER BY c.year ASC
+LIMIT $3 OFFSET $2
+`
+
+type ListFinalsWonByTeamParams struct {
+	TeamCode    string
+	OffsetValue int32
+	LimitValue  int32
+}
+
+type ListFinalsWonByTeamRow struct {
+	Year                   int32
+	MatchDate              pgtype.Date
+	MatchTime              pgtype.Time
+	HomeTeamCode           string
+	HomeTeamScore          pgtype.Int4
+	HomeTeamScorePenalties pgtype.Int4
+	AwayTeamCode           string
+	AwayTeamScore          pgtype.Int4
+	AwayTeamScorePenalties pgtype.Int4
+}
+
+func (q *Queries) ListFinalsWonByTeam(ctx context.Context, arg ListFinalsWonByTeamParams) ([]ListFinalsWonByTeamRow, error) {
+	rows, err := q.db.Query(ctx, listFinalsWonByTeam, arg.TeamCode, arg.OffsetValue, arg.LimitValue)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListFinalsWonByTeamRow
+	for rows.Next() {
+		var i ListFinalsWonByTeamRow
+		if err := rows.Scan(
+			&i.Year,
+			&i.MatchDate,
+			&i.MatchTime,
+			&i.HomeTeamCode,
+			&i.HomeTeamScore,
+			&i.HomeTeamScorePenalties,
+			&i.AwayTeamCode,
+			&i.AwayTeamScore,
+			&i.AwayTeamScorePenalties,
 		); err != nil {
 			return nil, err
 		}

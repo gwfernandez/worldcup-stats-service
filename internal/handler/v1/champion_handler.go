@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 
@@ -26,6 +27,7 @@ func (h *ChampionHandler) RegisterRoutes(rg *gin.RouterGroup) {
 	champions := rg.Group("/champions")
 	{
 		champions.GET("", h.List)
+		champions.GET("/:teamCode", h.ListFinalsWonByTeam)
 	}
 }
 
@@ -48,6 +50,27 @@ func (h *ChampionHandler) List(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, champions)
+}
+
+// ListFinalsWonByTeam godoc
+// @Summary List World Cup finals won by a team
+// @Produce json
+// @Param teamCode path string true "Unified team code"
+// @Router /api/champions/{teamCode} [get]
+func (h *ChampionHandler) ListFinalsWonByTeam(c *gin.Context) {
+	filter, err := parseChampionFinalFilter(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	finals, err := h.service.ListFinalsWonByTeam(c.Request.Context(), filter)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to retrieve champion finals"})
+		return
+	}
+
+	c.JSON(http.StatusOK, finals)
 }
 
 func parseChampionFilter(c *gin.Context) (domain.ChampionFilter, error) {
@@ -81,4 +104,18 @@ func parseChampionFilter(c *gin.Context) (domain.ChampionFilter, error) {
 	}
 
 	return filter, nil
+}
+
+func parseChampionFinalFilter(c *gin.Context) (domain.ChampionFinalFilter, error) {
+	pagination, err := parseChampionFilter(c)
+	if err != nil {
+		return domain.ChampionFinalFilter{}, err
+	}
+
+	return domain.ChampionFinalFilter{
+		TeamCode: strings.ToUpper(strings.TrimSpace(c.Param("teamCode"))),
+		Language: resolveLanguage(c.Request),
+		Page:     pagination.Page,
+		Size:     pagination.Size,
+	}, nil
 }

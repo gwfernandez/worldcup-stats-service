@@ -42,6 +42,29 @@ func (r *championRepository) List(ctx context.Context, filter domain.ChampionFil
 	return champions, total, nil
 }
 
+func (r *championRepository) ListFinalsWonByTeam(ctx context.Context, filter domain.ChampionFinalFilter) ([]domain.ChampionFinal, int64, error) {
+	total, err := r.queries.CountFinalsWonByTeam(ctx, filter.TeamCode)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	rows, err := r.queries.ListFinalsWonByTeam(ctx, sqlc.ListFinalsWonByTeamParams{
+		TeamCode:    filter.TeamCode,
+		LimitValue:  int32(filter.Size),
+		OffsetValue: int32((filter.Page - 1) * filter.Size),
+	})
+	if err != nil {
+		return nil, 0, err
+	}
+
+	finals := make([]domain.ChampionFinal, len(rows))
+	for i, row := range rows {
+		finals[i] = toChampionFinalDomain(row)
+	}
+
+	return finals, total, nil
+}
+
 func toChampionDomain(row sqlc.ListChampionsRow) domain.Champion {
 	return domain.Champion{
 		Team: domain.SimpleTeam{
@@ -50,5 +73,19 @@ func toChampionDomain(row sqlc.ListChampionsRow) domain.Champion {
 		Wins:              row.Wins,
 		Years:             row.Years,
 		ConfederationCode: strings.ToUpper(row.ConfederationCode),
+	}
+}
+
+func toChampionFinalDomain(row sqlc.ListFinalsWonByTeamRow) domain.ChampionFinal {
+	return domain.ChampionFinal{
+		Year:                   row.Year,
+		MatchDate:              datePtr(row.MatchDate),
+		MatchTime:              timePtr(row.MatchTime),
+		HomeTeam:               domain.SimpleTeam{Code: strings.ToUpper(row.HomeTeamCode)},
+		HomeTeamScore:          int4Ptr(row.HomeTeamScore),
+		HomeTeamScorePenalties: int4Ptr(row.HomeTeamScorePenalties),
+		AwayTeam:               domain.SimpleTeam{Code: strings.ToUpper(row.AwayTeamCode)},
+		AwayTeamScore:          int4Ptr(row.AwayTeamScore),
+		AwayTeamScorePenalties: int4Ptr(row.AwayTeamScorePenalties),
 	}
 }

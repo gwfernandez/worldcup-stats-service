@@ -7,6 +7,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 
 	"github.com/jendrix/worldcup-stats-service/internal/domain"
 	"github.com/jendrix/worldcup-stats-service/internal/service"
@@ -23,6 +24,14 @@ func (m *MockChampionRepository) List(ctx context.Context, filter domain.Champio
 		return nil, args.Get(1).(int64), args.Error(2)
 	}
 	return args.Get(0).([]domain.Champion), args.Get(1).(int64), args.Error(2)
+}
+
+func (m *MockChampionRepository) ListFinalsWonByTeam(ctx context.Context, filter domain.ChampionFinalFilter) ([]domain.ChampionFinal, int64, error) {
+	args := m.Called(ctx, filter)
+	if args.Get(0) == nil {
+		return nil, args.Get(1).(int64), args.Error(2)
+	}
+	return args.Get(0).([]domain.ChampionFinal), args.Get(1).(int64), args.Error(2)
 }
 
 func TestChampionService_List(t *testing.T) {
@@ -114,5 +123,96 @@ func TestChampionService_List(t *testing.T) {
 		assert.Error(t, err)
 		assert.Nil(t, result)
 		mockRepo.AssertExpectations(t)
+	})
+}
+
+func TestChampionService_ListFinalsWonByTeam(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("success normalizes team code and hydrates teams", func(t *testing.T) {
+		mockRepo := new(MockChampionRepository)
+		resolver := new(mockTeamNameResolver)
+		svc := service.NewChampionService(mockRepo, resolver)
+		input := domain.ChampionFinalFilter{TeamCode: " arg ", Language: "es", Page: 1, Size: 2}
+		normalized := domain.ChampionFinalFilter{TeamCode: "ARG", Language: "es", Page: 1, Size: 2}
+		finals := []domain.ChampionFinal{{
+			Year:     2022,
+			HomeTeam: domain.SimpleTeam{Code: "ARG"},
+			AwayTeam: domain.SimpleTeam{Code: "FRA"},
+		}}
+		mockRepo.On("ListFinalsWonByTeam", ctx, normalized).Return(finals, int64(3), nil)
+		resolver.On("Resolve", ctx, "ARG", "es").Return("Argentina", nil).Once()
+		resolver.On("Resolve", ctx, "FRA", "es").Return("Francia", nil).Once()
+
+		result, err := svc.ListFinalsWonByTeam(ctx, input)
+		require.NoError(t, err)
+		assert.Equal(t, "Argentina", result.Data[0].HomeTeam.Name)
+		assert.Equal(t, "Francia", result.Data[0].AwayTeam.Name)
+		assert.Equal(t, 2, result.Pagination.TotalPages)
+		assert.True(t, result.Pagination.HasNext)
+		assert.False(t, result.Pagination.HasPrevious)
+		mockRepo.AssertExpectations(t)
+		resolver.AssertExpectations(t)
+	})
+
+	t.Run("nil results become empty array", func(t *testing.T) {
+		mockRepo := new(MockChampionRepository)
+		svc := service.NewChampionService(mockRepo)
+		filter := domain.ChampionFinalFilter{TeamCode: "ZZZ", Language: "es", Page: 1, Size: 20}
+		mockRepo.On("ListFinalsWonByTeam", ctx, filter).Return(nil, int64(0), nil)
+
+		result, err := svc.ListFinalsWonByTeam(ctx, filter)
+		require.NoError(t, err)
+		assert.NotNil(t, result.Data)
+		assert.Empty(t, result.Data)
+		assert.Equal(t, 0, result.Pagination.TotalPages)
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("invalid page", func(t *testing.T) {
+		svc := service.NewChampionService(new(MockChampionRepository))
+
+		result, err := svc.ListFinalsWonByTeam(ctx, domain.ChampionFinalFilter{Page: 0, Size: 20})
+		assert.ErrorIs(t, err, domain.ErrInvalidInput)
+		assert.Nil(t, result)
+	})
+
+	t.Run("invalid size", func(t *testing.T) {
+		svc := service.NewChampionService(new(MockChampionRepository))
+
+		result, err := svc.ListFinalsWonByTeam(ctx, domain.ChampionFinalFilter{Page: 1, Size: 101})
+		assert.ErrorIs(t, err, domain.ErrInvalidInput)
+		assert.Nil(t, result)
+	})
+
+	t.Run("repository error", func(t *testing.T) {
+		mockRepo := new(MockChampionRepository)
+		svc := service.NewChampionService(mockRepo)
+		filter := domain.ChampionFinalFilter{TeamCode: "ARG", Language: "es", Page: 1, Size: 20}
+		mockRepo.On("ListFinalsWonByTeam", ctx, filter).Return(nil, int64(0), errors.New("db error"))
+
+		result, err := svc.ListFinalsWonByTeam(ctx, filter)
+		assert.Error(t, err)
+		assert.Nil(t, result)
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("resolver error", func(t *testing.T) {
+		mockRepo := new(MockChampionRepository)
+		resolver := new(mockTeamNameResolver)
+		svc := service.NewChampionService(mockRepo, resolver)
+		filter := domain.ChampionFinalFilter{TeamCode: "ARG", Language: "en", Page: 1, Size: 20}
+		finals := []domain.ChampionFinal{{
+			HomeTeam: domain.SimpleTeam{Code: "ARG"},
+			AwayTeam: domain.SimpleTeam{Code: "FRA"},
+		}}
+		mockRepo.On("ListFinalsWonByTeam", ctx, filter).Return(finals, int64(1), nil)
+		resolver.On("Resolve", ctx, "ARG", "en").Return("", errors.New("cache error")).Once()
+
+		result, err := svc.ListFinalsWonByTeam(ctx, filter)
+		assert.Error(t, err)
+		assert.Nil(t, result)
+		mockRepo.AssertExpectations(t)
+		resolver.AssertExpectations(t)
 	})
 }

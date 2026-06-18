@@ -9,4 +9,5 @@ import (
 // ChampionService defines the contract for champion business logic.
 type ChampionService interface {
 	List(ctx context.Context, filter domain.ChampionFilter) (*domain.ChampionListResponse, error)
+	ListFinalsWonByTeam(ctx context.Context, filter domain.ChampionFinalFilter) (*domain.ChampionFinalListResponse, error)
 }
