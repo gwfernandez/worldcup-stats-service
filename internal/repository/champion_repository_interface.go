@@ -9,4 +9,5 @@ import (
 // ChampionRepository defines the contract for champion data access.
 type ChampionRepository interface {
 	List(ctx context.Context, filter domain.ChampionFilter) ([]domain.Champion, int64, error)
+	ListFinalsWonByTeam(ctx context.Context, filter domain.ChampionFinalFilter) ([]domain.ChampionFinal, int64, error)
 }

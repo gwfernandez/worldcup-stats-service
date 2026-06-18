@@ -275,6 +275,7 @@ Notas de respuesta:
  | Método | Ruta | Descripción |
  |--------|------|-------------|
  | `GET` | `/api/champions` | Listar tabla histórica de campeones mundiales con paginación |
+ | `GET` | `/api/champions/:teamCode` | Listar finales ganadas por una selección con paginación |
 
 Parámetros soportados para `/api/champions`:
 
@@ -284,9 +285,23 @@ Parámetros soportados para `/api/champions`:
 Notas de respuesta:
 
 - No soporta filtros.
-- Los resultados se ordenan por `wins` descendente y, ante empates, por `team.name` localizado ascendente.
+- Los resultados se ordenan por `wins` descendente y, ante empates, por `team.code` ascendente.
 - `team.name` se resuelve según `Accept-Language` con fallback a `teams.name`.
 - `years` se expone como array de números ordenado ascendentemente.
+
+Parámetros soportados para `/api/champions/:teamCode`:
+
+- `teamCode`: código unificado de la selección, normalizado a mayúsculas.
+- `page`: número de página (base 1, por defecto `1`).
+- `size`: tamaño de página (por defecto `20`, máximo `100`).
+
+Notas de respuesta:
+
+- Devuelve exclusivamente finales ganadas, ordenadas cronológicamente por `year`.
+- Incluye el partido decisivo de 1950 como final histórica.
+- `homeTeam` y `awayTeam` exponen `code` y `name`; los nombres se resuelven según `Accept-Language`.
+- Si la selección no tiene finales ganadas o el código no existe, responde `200 OK` con `data: []`.
+- `matchDate`, `matchTime` y los resultados pueden ser `null` cuando el dato no está disponible.
 
 Ejemplo de respuesta:
 
@@ -306,6 +321,40 @@ Ejemplo de respuesta:
     "page": 1,
     "size": 20,
     "totalElements": 8,
+    "totalPages": 1,
+    "hasNext": false,
+    "hasPrevious": false
+  }
+}
+```
+
+Ejemplo de finales ganadas:
+
+```json
+{
+  "data": [
+    {
+      "year": 2022,
+      "matchDate": "2022-12-18",
+      "matchTime": "18:00:00",
+      "homeTeam": {
+        "code": "ARG",
+        "name": "Argentina"
+      },
+      "homeTeamScore": 3,
+      "homeTeamScorePenalties": 4,
+      "awayTeam": {
+        "code": "FRA",
+        "name": "Francia"
+      },
+      "awayTeamScore": 3,
+      "awayTeamScorePenalties": 2
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "size": 20,
+    "totalElements": 3,
     "totalPages": 1,
     "hasNext": false,
     "hasPrevious": false
@@ -526,6 +575,11 @@ curl -H "API-Version: 1" -H "Accept-Language: en" "http://localhost:8080/api/tea
 **Listar campeones mundiales**
 ```bash
 curl -H "API-Version: 1" "http://localhost:8080/api/champions?page=1&size=10"
+```
+
+**Listar finales ganadas por una selección**
+```bash
+curl -H "API-Version: 1" -H "Accept-Language: es" "http://localhost:8080/api/champions/ARG?page=1&size=20"
 ```
 
 **Listar tabla histórica de goleadores**

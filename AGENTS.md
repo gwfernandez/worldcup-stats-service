@@ -224,6 +224,20 @@ El flujo principal debe ejecutarse en este orden:
 | Método | Ruta | Descripción |
 |--------|------|-------------|
 | `GET` | `/api/champions` | Listar tabla histórica de campeones mundiales con paginación |
+| `GET` | `/api/champions/:teamCode` | Listar finales ganadas por una selección con paginación |
+
+Parámetros soportados para `/api/champions/:teamCode`:
+
+- `teamCode`: código unificado de la selección, normalizado a mayúsculas.
+- `page`: número de página (base 1, por defecto `1`).
+- `size`: tamaño de página (por defecto `20`, máximo `100`).
+
+Notas de respuesta:
+
+- Devuelve exclusivamente finales ganadas, ordenadas por año ascendente.
+- Incluye el partido decisivo de 1950 como final histórica.
+- `homeTeam` y `awayTeam` usan `SimpleTeam` y respetan `Accept-Language`.
+- Sin resultados responde `200 OK` con `data: []` y metadata de paginación.
 
 ### Tabla histórica de posiciones `/api/standings`
 

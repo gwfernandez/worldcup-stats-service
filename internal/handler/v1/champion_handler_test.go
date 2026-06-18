@@ -28,6 +28,14 @@ func (m *MockChampionService) List(ctx context.Context, filter domain.ChampionFi
 	return args.Get(0).(*domain.ChampionListResponse), args.Error(1)
 }
 
+func (m *MockChampionService) ListFinalsWonByTeam(ctx context.Context, filter domain.ChampionFinalFilter) (*domain.ChampionFinalListResponse, error) {
+	args := m.Called(ctx, filter)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*domain.ChampionFinalListResponse), args.Error(1)
+}
+
 func setupChampionRouter(svc *MockChampionService) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	r := gin.Default()
@@ -222,6 +230,135 @@ func TestChampionHandler_List(t *testing.T) {
 
 		assert.Equal(t, http.StatusInternalServerError, w.Code)
 		assert.JSONEq(t, `{"error":"failed to retrieve champions"}`, w.Body.String())
+		svc.AssertExpectations(t)
+	})
+}
+
+func TestChampionHandler_ListFinalsWonByTeam(t *testing.T) {
+	t.Run("success normalizes code and uses language and pagination", func(t *testing.T) {
+		svc := new(MockChampionService)
+		r := setupChampionRouter(svc)
+		matchDate := "2022-12-18"
+		matchTime := "18:00:00"
+		homeScore := int32(3)
+		homePenalties := int32(4)
+		awayScore := int32(3)
+		awayPenalties := int32(2)
+		expected := &domain.ChampionFinalListResponse{
+			Data: []domain.ChampionFinal{{
+				Year:                   2022,
+				MatchDate:              &matchDate,
+				MatchTime:              &matchTime,
+				HomeTeam:               domain.SimpleTeam{Code: "ARG", Name: "Argentina"},
+				HomeTeamScore:          &homeScore,
+				HomeTeamScorePenalties: &homePenalties,
+				AwayTeam:               domain.SimpleTeam{Code: "FRA", Name: "France"},
+				AwayTeamScore:          &awayScore,
+				AwayTeamScorePenalties: &awayPenalties,
+			}},
+			Pagination: domain.PaginationInfo{
+				Page:          2,
+				Size:          1,
+				TotalElements: 3,
+				TotalPages:    3,
+				HasNext:       true,
+				HasPrevious:   true,
+			},
+		}
+		svc.On("ListFinalsWonByTeam", mock.Anything, domain.ChampionFinalFilter{
+			TeamCode: "ARG",
+			Language: "en",
+			Page:     2,
+			Size:     1,
+		}).Return(expected, nil)
+
+		req, _ := http.NewRequest(http.MethodGet, "/api/champions/arg?page=2&size=1", nil)
+		req.Header.Set("Accept-Language", "en")
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		assert.JSONEq(t, `{
+			"data": [{
+				"year": 2022,
+				"matchDate": "2022-12-18",
+				"matchTime": "18:00:00",
+				"homeTeam": {"code": "ARG", "name": "Argentina"},
+				"homeTeamScore": 3,
+				"homeTeamScorePenalties": 4,
+				"awayTeam": {"code": "FRA", "name": "France"},
+				"awayTeamScore": 3,
+				"awayTeamScorePenalties": 2
+			}],
+			"pagination": {
+				"page": 2,
+				"size": 1,
+				"totalElements": 3,
+				"totalPages": 3,
+				"hasNext": true,
+				"hasPrevious": true
+			}
+		}`, w.Body.String())
+		svc.AssertExpectations(t)
+	})
+
+	t.Run("success with defaults and empty data", func(t *testing.T) {
+		svc := new(MockChampionService)
+		r := setupChampionRouter(svc)
+		expected := &domain.ChampionFinalListResponse{
+			Data:       []domain.ChampionFinal{},
+			Pagination: domain.PaginationInfo{Page: 1, Size: 20},
+		}
+		svc.On("ListFinalsWonByTeam", mock.Anything, domain.ChampionFinalFilter{
+			TeamCode: "ZZZ",
+			Language: "es",
+			Page:     1,
+			Size:     20,
+		}).Return(expected, nil)
+
+		req, _ := http.NewRequest(http.MethodGet, "/api/champions/zzz", nil)
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		assert.JSONEq(t, `{
+			"data": [],
+			"pagination": {
+				"page": 1,
+				"size": 20,
+				"totalElements": 0,
+				"totalPages": 0,
+				"hasNext": false,
+				"hasPrevious": false
+			}
+		}`, w.Body.String())
+		svc.AssertExpectations(t)
+	})
+
+	t.Run("bad request invalid pagination", func(t *testing.T) {
+		svc := new(MockChampionService)
+		r := setupChampionRouter(svc)
+
+		req, _ := http.NewRequest(http.MethodGet, "/api/champions/arg?page=0", nil)
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+		assert.JSONEq(t, `{"error":"invalid page parameter"}`, w.Body.String())
+	})
+
+	t.Run("internal error", func(t *testing.T) {
+		svc := new(MockChampionService)
+		r := setupChampionRouter(svc)
+		filter := domain.ChampionFinalFilter{TeamCode: "ARG", Language: "es", Page: 1, Size: 20}
+		svc.On("ListFinalsWonByTeam", mock.Anything, filter).Return(nil, errors.New("db error"))
+
+		req, _ := http.NewRequest(http.MethodGet, "/api/champions/arg", nil)
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusInternalServerError, w.Code)
+		assert.JSONEq(t, `{"error":"failed to retrieve champion finals"}`, w.Body.String())
 		svc.AssertExpectations(t)
 	})
 }
