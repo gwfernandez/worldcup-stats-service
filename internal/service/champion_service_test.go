@@ -136,16 +136,23 @@ func TestChampionService_ListFinalsWonByTeam(t *testing.T) {
 		input := domain.ChampionFinalFilter{TeamCode: " arg ", Language: "es", Page: 1, Size: 2}
 		normalized := domain.ChampionFinalFilter{TeamCode: "ARG", Language: "es", Page: 1, Size: 2}
 		finals := []domain.ChampionFinal{{
-			Year:     2022,
-			HomeTeam: domain.SimpleTeam{Code: "ARG"},
-			AwayTeam: domain.SimpleTeam{Code: "FRA"},
+			Year:      2022,
+			HostCodes: []domain.SimpleTeam{{Code: "KOR"}, {Code: "JPN"}},
+			HomeTeam:  domain.SimpleTeam{Code: "ARG"},
+			AwayTeam:  domain.SimpleTeam{Code: "FRA"},
 		}}
 		mockRepo.On("ListFinalsWonByTeam", ctx, normalized).Return(finals, int64(3), nil)
+		resolver.On("Resolve", ctx, "KOR", "es").Return("Corea del Sur", nil).Once()
+		resolver.On("Resolve", ctx, "JPN", "es").Return("Japón", nil).Once()
 		resolver.On("Resolve", ctx, "ARG", "es").Return("Argentina", nil).Once()
 		resolver.On("Resolve", ctx, "FRA", "es").Return("Francia", nil).Once()
 
 		result, err := svc.ListFinalsWonByTeam(ctx, input)
 		require.NoError(t, err)
+		assert.Equal(t, []domain.SimpleTeam{
+			{Code: "KOR", Name: "Corea del Sur"},
+			{Code: "JPN", Name: "Japón"},
+		}, result.Data[0].HostCodes)
 		assert.Equal(t, "Argentina", result.Data[0].HomeTeam.Name)
 		assert.Equal(t, "Francia", result.Data[0].AwayTeam.Name)
 		assert.Equal(t, 2, result.Pagination.TotalPages)
@@ -203,11 +210,12 @@ func TestChampionService_ListFinalsWonByTeam(t *testing.T) {
 		svc := service.NewChampionService(mockRepo, resolver)
 		filter := domain.ChampionFinalFilter{TeamCode: "ARG", Language: "en", Page: 1, Size: 20}
 		finals := []domain.ChampionFinal{{
-			HomeTeam: domain.SimpleTeam{Code: "ARG"},
-			AwayTeam: domain.SimpleTeam{Code: "FRA"},
+			HostCodes: []domain.SimpleTeam{{Code: "QAT"}},
+			HomeTeam:  domain.SimpleTeam{Code: "ARG"},
+			AwayTeam:  domain.SimpleTeam{Code: "FRA"},
 		}}
 		mockRepo.On("ListFinalsWonByTeam", ctx, filter).Return(finals, int64(1), nil)
-		resolver.On("Resolve", ctx, "ARG", "en").Return("", errors.New("cache error")).Once()
+		resolver.On("Resolve", ctx, "QAT", "en").Return("", errors.New("cache error")).Once()
 
 		result, err := svc.ListFinalsWonByTeam(ctx, filter)
 		assert.Error(t, err)

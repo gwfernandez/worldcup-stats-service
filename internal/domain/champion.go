@@ -23,15 +23,16 @@ type ChampionListResponse struct {
 
 // ChampionFinal represents a World Cup final won by a team.
 type ChampionFinal struct {
-	Year                   int32      `json:"year"`
-	MatchDate              *string    `json:"matchDate"`
-	MatchTime              *string    `json:"matchTime"`
-	HomeTeam               SimpleTeam `json:"homeTeam"`
-	HomeTeamScore          *int32     `json:"homeTeamScore"`
-	HomeTeamScorePenalties *int32     `json:"homeTeamScorePenalties"`
-	AwayTeam               SimpleTeam `json:"awayTeam"`
-	AwayTeamScore          *int32     `json:"awayTeamScore"`
-	AwayTeamScorePenalties *int32     `json:"awayTeamScorePenalties"`
+	Year                   int32        `json:"year"`
+	HostCodes              []SimpleTeam `json:"hostCodes"`
+	MatchDate              *string      `json:"matchDate"`
+	MatchTime              *string      `json:"matchTime"`
+	HomeTeam               SimpleTeam   `json:"homeTeam"`
+	HomeTeamScore          *int32       `json:"homeTeamScore"`
+	HomeTeamScorePenalties *int32       `json:"homeTeamScorePenalties"`
+	AwayTeam               SimpleTeam   `json:"awayTeam"`
+	AwayTeamScore          *int32       `json:"awayTeamScore"`
+	AwayTeamScorePenalties *int32       `json:"awayTeamScorePenalties"`
 }
 
 // ChampionFinalFilter defines pagination and team selection for won finals.

@@ -29,6 +29,7 @@ FROM (
 -- name: ListFinalsWonByTeam :many
 SELECT
     c.year,
+    c.host_codes,
     m.match_date,
     m.match_time,
     m.home_team_code,

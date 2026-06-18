@@ -117,6 +117,14 @@ func (s *championService) hydrateChampions(ctx context.Context, champions []doma
 
 func (s *championService) hydrateChampionFinals(ctx context.Context, finals []domain.ChampionFinal, language string) error {
 	for i := range finals {
+		for j := range finals[i].HostCodes {
+			hostName, err := s.resolveTeamName(ctx, finals[i].HostCodes[j].Code, language)
+			if err != nil {
+				return err
+			}
+			finals[i].HostCodes[j].Name = hostName
+		}
+
 		homeTeamName, err := s.resolveTeamName(ctx, finals[i].HomeTeam.Code, language)
 		if err != nil {
 			return err

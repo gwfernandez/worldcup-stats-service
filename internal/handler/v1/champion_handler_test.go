@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/gin-gonic/gin"
@@ -247,6 +248,7 @@ func TestChampionHandler_ListFinalsWonByTeam(t *testing.T) {
 		expected := &domain.ChampionFinalListResponse{
 			Data: []domain.ChampionFinal{{
 				Year:                   2022,
+				HostCodes:              []domain.SimpleTeam{{Code: "QAT", Name: "Qatar"}},
 				MatchDate:              &matchDate,
 				MatchTime:              &matchTime,
 				HomeTeam:               domain.SimpleTeam{Code: "ARG", Name: "Argentina"},
@@ -281,6 +283,7 @@ func TestChampionHandler_ListFinalsWonByTeam(t *testing.T) {
 		assert.JSONEq(t, `{
 			"data": [{
 				"year": 2022,
+				"hostCodes": [{"code": "QAT", "name": "Qatar"}],
 				"matchDate": "2022-12-18",
 				"matchTime": "18:00:00",
 				"homeTeam": {"code": "ARG", "name": "Argentina"},
@@ -299,6 +302,9 @@ func TestChampionHandler_ListFinalsWonByTeam(t *testing.T) {
 				"hasPrevious": true
 			}
 		}`, w.Body.String())
+		body := w.Body.String()
+		assert.Less(t, strings.Index(body, `"year"`), strings.Index(body, `"hostCodes"`))
+		assert.Less(t, strings.Index(body, `"hostCodes"`), strings.Index(body, `"matchDate"`))
 		svc.AssertExpectations(t)
 	})
 
