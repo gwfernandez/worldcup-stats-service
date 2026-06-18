@@ -100,12 +100,13 @@ func TestChampionRepository_ListFinalsWonByTeam(t *testing.T) {
 			WillReturnRows(mock.NewRows([]string{"count"}).AddRow(int64(2)))
 
 		rows := mock.NewRows([]string{
-			"year", "match_date", "match_time",
+			"year", "host_codes", "match_date", "match_time",
 			"home_team_code", "home_team_score", "home_team_score_penalties",
 			"away_team_code", "away_team_score", "away_team_score_penalties",
 		}).
 			AddRow(
 				int32(1930),
+				[]string{"uru"},
 				pgtype.Date{Time: time.Date(1930, 7, 30, 0, 0, 0, 0, time.UTC), Valid: true},
 				pgtype.Time{Microseconds: 14 * 60 * 60 * 1_000_000, Valid: true},
 				"uru",
@@ -117,6 +118,7 @@ func TestChampionRepository_ListFinalsWonByTeam(t *testing.T) {
 			).
 			AddRow(
 				int32(1950),
+				[]string{"bra"},
 				pgtype.Date{Time: time.Date(1950, 7, 16, 0, 0, 0, 0, time.UTC), Valid: true},
 				pgtype.Time{},
 				"bra",
@@ -135,6 +137,7 @@ func TestChampionRepository_ListFinalsWonByTeam(t *testing.T) {
 		assert.Equal(t, int64(2), total)
 		require.Len(t, result, 2)
 		assert.Equal(t, int32(1930), result[0].Year)
+		assert.Equal(t, []domain.SimpleTeam{{Code: "URU"}}, result[0].HostCodes)
 		assert.Equal(t, "1930-07-30", *result[0].MatchDate)
 		assert.Equal(t, "14:00:00", *result[0].MatchTime)
 		assert.Equal(t, "URU", result[0].HomeTeam.Code)
@@ -144,7 +147,41 @@ func TestChampionRepository_ListFinalsWonByTeam(t *testing.T) {
 		assert.Equal(t, int32(2), *result[0].AwayTeamScore)
 		assert.Nil(t, result[0].AwayTeamScorePenalties)
 		assert.Equal(t, int32(1950), result[1].Year)
+		assert.Equal(t, []domain.SimpleTeam{{Code: "BRA"}}, result[1].HostCodes)
 		assert.Nil(t, result[1].MatchTime)
+		assert.NoError(t, mock.ExpectationsWereMet())
+	})
+
+	t.Run("maps multiple hosts preserving order and empty hosts as array", func(t *testing.T) {
+		mock, err := pgxmock.NewPool()
+		require.NoError(t, err)
+		defer mock.Close()
+
+		repo := repository.NewChampionRepository(mock)
+		filter := domain.ChampionFinalFilter{TeamCode: "ARG", Page: 1, Size: 10}
+
+		mock.ExpectQuery(`^-- name: CountFinalsWonByTeam :one.*`).
+			WithArgs("ARG").
+			WillReturnRows(mock.NewRows([]string{"count"}).AddRow(int64(2)))
+
+		rows := mock.NewRows([]string{
+			"year", "host_codes", "match_date", "match_time",
+			"home_team_code", "home_team_score", "home_team_score_penalties",
+			"away_team_code", "away_team_score", "away_team_score_penalties",
+		}).
+			AddRow(int32(2002), []string{"kor", "jpn"}, pgtype.Date{}, pgtype.Time{}, "ger", pgtype.Int4{}, pgtype.Int4{}, "bra", pgtype.Int4{}, pgtype.Int4{}).
+			AddRow(int32(2022), []string(nil), pgtype.Date{}, pgtype.Time{}, "arg", pgtype.Int4{}, pgtype.Int4{}, "fra", pgtype.Int4{}, pgtype.Int4{})
+		mock.ExpectQuery(`^-- name: ListFinalsWonByTeam :many.*`).
+			WithArgs("ARG", int32(0), int32(10)).
+			WillReturnRows(rows)
+
+		result, total, err := repo.ListFinalsWonByTeam(context.Background(), filter)
+		require.NoError(t, err)
+		assert.Equal(t, int64(2), total)
+		require.Len(t, result, 2)
+		assert.Equal(t, []domain.SimpleTeam{{Code: "KOR"}, {Code: "JPN"}}, result[0].HostCodes)
+		assert.NotNil(t, result[1].HostCodes)
+		assert.Empty(t, result[1].HostCodes)
 		assert.NoError(t, mock.ExpectationsWereMet())
 	})
 

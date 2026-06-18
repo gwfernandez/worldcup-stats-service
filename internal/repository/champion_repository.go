@@ -79,6 +79,7 @@ func toChampionDomain(row sqlc.ListChampionsRow) domain.Champion {
 func toChampionFinalDomain(row sqlc.ListFinalsWonByTeamRow) domain.ChampionFinal {
 	return domain.ChampionFinal{
 		Year:                   row.Year,
+		HostCodes:              toSimpleTeams(row.HostCodes),
 		MatchDate:              datePtr(row.MatchDate),
 		MatchTime:              timePtr(row.MatchTime),
 		HomeTeam:               domain.SimpleTeam{Code: strings.ToUpper(row.HomeTeamCode)},
@@ -88,4 +89,12 @@ func toChampionFinalDomain(row sqlc.ListFinalsWonByTeamRow) domain.ChampionFinal
 		AwayTeamScore:          int4Ptr(row.AwayTeamScore),
 		AwayTeamScorePenalties: int4Ptr(row.AwayTeamScorePenalties),
 	}
+}
+
+func toSimpleTeams(codes []string) []domain.SimpleTeam {
+	teams := make([]domain.SimpleTeam, len(codes))
+	for i, code := range codes {
+		teams[i] = domain.SimpleTeam{Code: strings.ToUpper(code)}
+	}
+	return teams
 }

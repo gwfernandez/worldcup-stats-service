@@ -111,6 +111,7 @@ func (q *Queries) ListChampions(ctx context.Context, arg ListChampionsParams) ([
 const listFinalsWonByTeam = `-- name: ListFinalsWonByTeam :many
 SELECT
     c.year,
+    c.host_codes,
     m.match_date,
     m.match_time,
     m.home_team_code,
@@ -143,6 +144,7 @@ type ListFinalsWonByTeamParams struct {
 
 type ListFinalsWonByTeamRow struct {
 	Year                   int32
+	HostCodes              []string
 	MatchDate              pgtype.Date
 	MatchTime              pgtype.Time
 	HomeTeamCode           string
@@ -164,6 +166,7 @@ func (q *Queries) ListFinalsWonByTeam(ctx context.Context, arg ListFinalsWonByTe
 		var i ListFinalsWonByTeamRow
 		if err := rows.Scan(
 			&i.Year,
+			&i.HostCodes,
 			&i.MatchDate,
 			&i.MatchTime,
 			&i.HomeTeamCode,

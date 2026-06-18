@@ -299,7 +299,9 @@ Notas de respuesta:
 
 - Devuelve exclusivamente finales ganadas, ordenadas cronológicamente por `year`.
 - Incluye el partido decisivo de 1950 como final histórica.
-- `homeTeam` y `awayTeam` exponen `code` y `name`; los nombres se resuelven según `Accept-Language`.
+- `hostCodes` expone los anfitriones de cada edición como un array de `SimpleTeam`.
+- `homeTeam` y `awayTeam` exponen `code` y `name`.
+- Los nombres de `hostCodes`, `homeTeam` y `awayTeam` se resuelven según `Accept-Language`.
 - Si la selección no tiene finales ganadas o el código no existe, responde `200 OK` con `data: []`.
 - `matchDate`, `matchTime` y los resultados pueden ser `null` cuando el dato no está disponible.
 
@@ -335,6 +337,12 @@ Ejemplo de finales ganadas:
   "data": [
     {
       "year": 2022,
+      "hostCodes": [
+        {
+          "code": "QAT",
+          "name": "Catar"
+        }
+      ],
       "matchDate": "2022-12-18",
       "matchTime": "18:00:00",
       "homeTeam": {

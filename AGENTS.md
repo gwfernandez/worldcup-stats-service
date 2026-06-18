@@ -236,6 +236,7 @@ Notas de respuesta:
 
 - Devuelve exclusivamente finales ganadas, ordenadas por año ascendente.
 - Incluye el partido decisivo de 1950 como final histórica.
+- `hostCodes` usa un array de `SimpleTeam`, conserva el orden configurado para la edición y respeta `Accept-Language`.
 - `homeTeam` y `awayTeam` usan `SimpleTeam` y respetan `Accept-Language`.
 - Sin resultados responde `200 OK` con `data: []` y metadata de paginación.
 
