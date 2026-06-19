@@ -43,19 +43,19 @@ func TestStandingHandler_List(t *testing.T) {
 		r := setupStandingRouter(svc)
 		expected := &domain.StandingListResponse{
 			Data: []domain.Standing{{
-				Team: domain.SimpleTeam{Code: "BRA", Name: "Brasil"},
-
-				MatchesPlayed:   114,
-				Wins:            79,
-				Draws:           14,
-				Losses:          21,
-				GoalsFor:        237,
-				GoalsAgainst:    108,
-				GoalDifference:  129,
-				Points:          193,
-				UnifiedPoints:   237,
-				Position:        1,
-				UnifiedPosition: 1,
+				Team:              domain.SimpleTeam{Code: "BRA", Name: "Brasil"},
+				ConfederationCode: "CONMEBOL",
+				MatchesPlayed:     114,
+				Wins:              79,
+				Draws:             14,
+				Losses:            21,
+				GoalsFor:          237,
+				GoalsAgainst:      108,
+				GoalDifference:    129,
+				Points:            193,
+				UnifiedPoints:     237,
+				Position:          1,
+				UnifiedPosition:   1,
 			}},
 			Pagination: domain.PaginationInfo{
 				Page:          1,
@@ -80,6 +80,7 @@ func TestStandingHandler_List(t *testing.T) {
 					"code": "BRA",
 					"name": "Brasil"
 				},
+				"confederationCode": "CONMEBOL",
 				"matchesPlayed": 114,
 				"wins": 79,
 				"draws": 14,
@@ -143,7 +144,11 @@ func TestStandingHandler_List(t *testing.T) {
 		svc := new(MockStandingService)
 		r := setupStandingRouter(svc)
 		expected := &domain.StandingListResponse{
-			Data:       []domain.Standing{{Team: domain.SimpleTeam{Code: "GER", Name: "Germany"}, Position: 2}},
+			Data: []domain.Standing{{
+				Team:              domain.SimpleTeam{Code: "GER", Name: "Germany"},
+				ConfederationCode: "UEFA",
+				Position:          2,
+			}},
 			Pagination: domain.PaginationInfo{Page: 1, Size: 20, TotalElements: 1, TotalPages: 1},
 		}
 		svc.On("List", mock.Anything, domain.StandingFilter{Name: "ger", Language: "en", Page: 1, Size: 20}).Return(expected, nil)
@@ -160,6 +165,7 @@ func TestStandingHandler_List(t *testing.T) {
 					"code": "GER",
 					"name": "Germany"
 				},
+				"confederationCode": "UEFA",
 				"matchesPlayed": 0,
 				"wins": 0,
 				"draws": 0,

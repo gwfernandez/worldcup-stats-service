@@ -51,6 +51,7 @@ func (q *Queries) CountStandingsWithoutNameFilter(ctx context.Context, confedera
 const listStandings = `-- name: ListStandings :many
 SELECT
     s.team_code,
+    t.confederation_code,
     s.matches_played,
     s.wins,
     s.draws,
@@ -82,7 +83,23 @@ type ListStandingsParams struct {
 	LimitValue        int32
 }
 
-func (q *Queries) ListStandings(ctx context.Context, arg ListStandingsParams) ([]Standing, error) {
+type ListStandingsRow struct {
+	TeamCode          string
+	ConfederationCode string
+	MatchesPlayed     int32
+	Wins              int32
+	Draws             int32
+	Losses            int32
+	GoalsFor          int32
+	GoalsAgainst      int32
+	GoalDifference    int32
+	Points            int32
+	UnifiedPoints     int32
+	Position          int32
+	UnifiedPosition   int32
+}
+
+func (q *Queries) ListStandings(ctx context.Context, arg ListStandingsParams) ([]ListStandingsRow, error) {
 	rows, err := q.db.Query(ctx, listStandings,
 		arg.Language,
 		arg.NameFilter,
@@ -94,11 +111,12 @@ func (q *Queries) ListStandings(ctx context.Context, arg ListStandingsParams) ([
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Standing
+	var items []ListStandingsRow
 	for rows.Next() {
-		var i Standing
+		var i ListStandingsRow
 		if err := rows.Scan(
 			&i.TeamCode,
+			&i.ConfederationCode,
 			&i.MatchesPlayed,
 			&i.Wins,
 			&i.Draws,
@@ -124,6 +142,7 @@ func (q *Queries) ListStandings(ctx context.Context, arg ListStandingsParams) ([
 const listStandingsWithoutNameFilter = `-- name: ListStandingsWithoutNameFilter :many
 SELECT
     s.team_code,
+    t.confederation_code,
     s.matches_played,
     s.wins,
     s.draws,
@@ -148,17 +167,34 @@ type ListStandingsWithoutNameFilterParams struct {
 	LimitValue        int32
 }
 
-func (q *Queries) ListStandingsWithoutNameFilter(ctx context.Context, arg ListStandingsWithoutNameFilterParams) ([]Standing, error) {
+type ListStandingsWithoutNameFilterRow struct {
+	TeamCode          string
+	ConfederationCode string
+	MatchesPlayed     int32
+	Wins              int32
+	Draws             int32
+	Losses            int32
+	GoalsFor          int32
+	GoalsAgainst      int32
+	GoalDifference    int32
+	Points            int32
+	UnifiedPoints     int32
+	Position          int32
+	UnifiedPosition   int32
+}
+
+func (q *Queries) ListStandingsWithoutNameFilter(ctx context.Context, arg ListStandingsWithoutNameFilterParams) ([]ListStandingsWithoutNameFilterRow, error) {
 	rows, err := q.db.Query(ctx, listStandingsWithoutNameFilter, arg.ConfederationCode, arg.OffsetValue, arg.LimitValue)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Standing
+	var items []ListStandingsWithoutNameFilterRow
 	for rows.Next() {
-		var i Standing
+		var i ListStandingsWithoutNameFilterRow
 		if err := rows.Scan(
 			&i.TeamCode,
+			&i.ConfederationCode,
 			&i.MatchesPlayed,
 			&i.Wins,
 			&i.Draws,

@@ -29,6 +29,7 @@ func TestStandingRepository_List(t *testing.T) {
 
 		rows := mock.NewRows([]string{
 			"team_code",
+			"confederation_code",
 			"matches_played",
 			"wins",
 			"draws",
@@ -40,7 +41,7 @@ func TestStandingRepository_List(t *testing.T) {
 			"unified_points",
 			"position",
 			"unified_position",
-		}).AddRow("arg", int32(88), int32(53), int32(10), int32(25), int32(152), int32(101), int32(51), int32(133), int32(159), int32(3), int32(3))
+		}).AddRow("arg", "conmebol", int32(88), int32(53), int32(10), int32(25), int32(152), int32(101), int32(51), int32(133), int32(159), int32(3), int32(3))
 
 		mock.ExpectQuery(`^-- name: ListStandingsWithoutNameFilter :many.*`).
 			WithArgs("CONMEBOL", int32(0), int32(10)).
@@ -52,6 +53,7 @@ func TestStandingRepository_List(t *testing.T) {
 		require.Len(t, result, 1)
 		assert.Equal(t, "ARG", result[0].Team.Code)
 		assert.Empty(t, result[0].Team.Name)
+		assert.Equal(t, "CONMEBOL", result[0].ConfederationCode)
 		assert.NoError(t, mock.ExpectationsWereMet())
 	})
 
@@ -70,6 +72,7 @@ func TestStandingRepository_List(t *testing.T) {
 
 		rows := mock.NewRows([]string{
 			"team_code",
+			"confederation_code",
 			"matches_played",
 			"wins",
 			"draws",
@@ -81,7 +84,7 @@ func TestStandingRepository_List(t *testing.T) {
 			"unified_points",
 			"position",
 			"unified_position",
-		}).AddRow("arg", int32(88), int32(53), int32(10), int32(25), int32(152), int32(101), int32(51), int32(133), int32(159), int32(3), int32(3))
+		}).AddRow("arg", "conmebol", int32(88), int32(53), int32(10), int32(25), int32(152), int32(101), int32(51), int32(133), int32(159), int32(3), int32(3))
 
 		mock.ExpectQuery(`^-- name: ListStandings :many.*`).
 			WithArgs("en", "arg", "CONMEBOL", int32(10), int32(10)).
@@ -93,6 +96,7 @@ func TestStandingRepository_List(t *testing.T) {
 		require.Len(t, result, 1)
 		assert.Equal(t, "ARG", result[0].Team.Code)
 		assert.Empty(t, result[0].Team.Name)
+		assert.Equal(t, "CONMEBOL", result[0].ConfederationCode)
 		assert.Equal(t, int32(88), result[0].MatchesPlayed)
 		assert.Equal(t, int32(53), result[0].Wins)
 		assert.Equal(t, int32(10), result[0].Draws)
