@@ -35,19 +35,19 @@ func TestStandingService_List(t *testing.T) {
 		input := domain.StandingFilter{Name: "argen", ConfederationCode: "conmebol", Page: 1, Size: 10}
 		expectedFilter := domain.StandingFilter{Name: "argen", ConfederationCode: "CONMEBOL", Page: 1, Size: 10}
 		expected := []domain.Standing{{
-			Team: domain.SimpleTeam{Code: "ARG"},
-
-			MatchesPlayed:   88,
-			Wins:            53,
-			Draws:           10,
-			Losses:          25,
-			GoalsFor:        152,
-			GoalsAgainst:    101,
-			GoalDifference:  51,
-			Points:          133,
-			UnifiedPoints:   159,
-			Position:        3,
-			UnifiedPosition: 3,
+			Team:              domain.SimpleTeam{Code: "ARG"},
+			ConfederationCode: "CONMEBOL",
+			MatchesPlayed:     88,
+			Wins:              53,
+			Draws:             10,
+			Losses:            25,
+			GoalsFor:          152,
+			GoalsAgainst:      101,
+			GoalDifference:    51,
+			Points:            133,
+			UnifiedPoints:     159,
+			Position:          3,
+			UnifiedPosition:   3,
 		}}
 		mockRepo.On("List", ctx, expectedFilter).Return(expected, int64(11), nil)
 		resolver.On("Resolve", ctx, "ARG", "").Return("Argentina", nil).Once()
@@ -55,6 +55,7 @@ func TestStandingService_List(t *testing.T) {
 		result, err := svc.List(ctx, input)
 		assert.NoError(t, err)
 		assert.Equal(t, "Argentina", result.Data[0].Team.Name)
+		assert.Equal(t, "CONMEBOL", result.Data[0].ConfederationCode)
 		assert.Equal(t, 1, result.Pagination.Page)
 		assert.Equal(t, 10, result.Pagination.Size)
 		assert.Equal(t, int64(11), result.Pagination.TotalElements)

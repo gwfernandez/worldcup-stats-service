@@ -1,6 +1,7 @@
 -- name: ListStandings :many
 SELECT
     s.team_code,
+    t.confederation_code,
     s.matches_played,
     s.wins,
     s.draws,
@@ -26,6 +27,7 @@ LIMIT sqlc.arg(limit_value) OFFSET sqlc.arg(offset_value);
 -- name: ListStandingsWithoutNameFilter :many
 SELECT
     s.team_code,
+    t.confederation_code,
     s.matches_played,
     s.wins,
     s.draws,

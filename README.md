@@ -393,6 +393,7 @@ Ejemplo de respuesta:
         "code": "BRA",
         "name": "Brasil"
       },
+      "confederationCode": "CONMEBOL",
       "matchesPlayed": 114,
       "wins": 79,
       "draws": 14,
@@ -416,6 +417,12 @@ Ejemplo de respuesta:
   }
 }
 ```
+
+Notas de respuesta:
+
+- `confederationCode` se expone al nivel superior de cada posición y se normaliza a mayúsculas.
+- `team` conserva la estructura `SimpleTeam` con `code` y el nombre localizado según `Accept-Language`.
+- Si no hay posiciones asociadas a los filtros, responde `200 OK` con `data: []` y metadata de paginación.
 
 ### Tabla Histórica de Goleadores
 

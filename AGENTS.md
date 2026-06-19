@@ -253,6 +253,12 @@ Parámetros soportados:
 - `page`: número de página (base 1, por defecto `1`).
 - `size`: tamaño de página (por defecto `20`, máximo `100`).
 
+Notas de respuesta:
+
+- Cada posición expone `confederationCode` al nivel superior, normalizado a mayúsculas.
+- `team` mantiene la estructura `SimpleTeam` y respeta `Accept-Language`.
+- Sin resultados responde `200 OK` con `data: []` y metadata de paginación.
+
 ### Tabla histórica de goleadores `/api/scorers`
 
 | Método | Ruta | Descripción |
