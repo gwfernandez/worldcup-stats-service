@@ -67,6 +67,17 @@ func (s *goalService) ListByPlayer(ctx context.Context, filter domain.GoalFilter
 
 func (s *goalService) hydrateGoals(ctx context.Context, goals []domain.Goal, language string) error {
 	for i := range goals {
+		if goals[i].Hosts == nil {
+			goals[i].Hosts = make([]domain.SimpleTeam, 0)
+		}
+		for j := range goals[i].Hosts {
+			name, err := s.teamNameResolver.Resolve(ctx, goals[i].Hosts[j].Code, language)
+			if err != nil {
+				return err
+			}
+			goals[i].Hosts[j].Name = name
+		}
+
 		name, err := s.teamNameResolver.Resolve(ctx, goals[i].OpponentTeam.Code, language)
 		if err != nil {
 			return err

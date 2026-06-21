@@ -49,6 +49,7 @@ func (r *goalRepository) ListByPlayer(ctx context.Context, filter domain.GoalFil
 func toGoalDomain(row sqlc.ListGoalsByPlayerRow) domain.Goal {
 	return domain.Goal{
 		Year:          row.Year,
+		Hosts:         toSimpleTeams(row.HostCodes),
 		MatchDate:     datePtr(row.MatchDate),
 		OpponentTeam:  domain.SimpleTeam{Code: strings.ToUpper(row.OpponentTeamCode)},
 		MinuteRegular: row.MinuteRegular,
