@@ -44,8 +44,9 @@ func TestScorerHandler_List(t *testing.T) {
 		r := setupScorerRouter(svc)
 		expected := &domain.ScorerListResponse{
 			Data: []domain.Scorer{{
-				FullName: "Lionel Messi",
-				Team:     domain.SimpleTeam{Code: "ARG", Name: "Argentina"},
+				PlayerID:          10,
+				FullName:          "Lionel Messi",
+				Team:              domain.SimpleTeam{Code: "ARG", Name: "Argentina"},
 
 				Goals:             13,
 				ListTeams:         []string{"ARG"},
@@ -72,6 +73,7 @@ func TestScorerHandler_List(t *testing.T) {
 		assert.Equal(t, "1", w.Header().Get("API-Version-Used"))
 		assert.JSONEq(t, `{
 			"data": [{
+				"playerId": 10,
 				"fullName": "Lionel Messi",
 				"team": {
 					"code": "ARG",

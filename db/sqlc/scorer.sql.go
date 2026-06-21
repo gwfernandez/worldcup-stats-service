@@ -39,6 +39,7 @@ func (q *Queries) CountScorers(ctx context.Context, arg CountScorersParams) (int
 
 const listScorers = `-- name: ListScorers :many
 SELECT
+    p.id AS player_id,
     TRIM(CONCAT_WS(' ', NULLIF(p.first_name, ''), NULLIF(p.last_name, '')))::text AS full_name,
     t.unified_code AS team_code,
     ps.goals,
@@ -68,6 +69,7 @@ type ListScorersParams struct {
 }
 
 type ListScorersRow struct {
+	PlayerID          int64
 	FullName          string
 	TeamCode          string
 	Goals             int32
@@ -91,6 +93,7 @@ func (q *Queries) ListScorers(ctx context.Context, arg ListScorersParams) ([]Lis
 	for rows.Next() {
 		var i ListScorersRow
 		if err := rows.Scan(
+			&i.PlayerID,
 			&i.FullName,
 			&i.TeamCode,
 			&i.Goals,

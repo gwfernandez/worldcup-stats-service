@@ -1,5 +1,6 @@
 -- name: ListScorers :many
 SELECT
+    p.id AS player_id,
     TRIM(CONCAT_WS(' ', NULLIF(p.first_name, ''), NULLIF(p.last_name, '')))::text AS full_name,
     t.unified_code AS team_code,
     ps.goals,

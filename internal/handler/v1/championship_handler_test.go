@@ -85,6 +85,7 @@ func TestChampionshipHandler_ListScorersByYear(t *testing.T) {
 
 		expected := &domain.ChampionshipScorerListResponse{
 			Data: []domain.ChampionshipScorer{{
+				PlayerID: 10,
 				FullName: "Guillermo Stabile",
 				Team:     domain.SimpleTeam{Code: "ARG", Name: "Argentina"},
 
@@ -115,6 +116,7 @@ func TestChampionshipHandler_ListScorersByYear(t *testing.T) {
 		assert.Equal(t, http.StatusOK, w.Code)
 		assert.JSONEq(t, `{
 			"data": [{
+				"playerId": 10,
 				"fullName": "Guillermo Stabile",
 				"team": {
 					"code": "ARG",
