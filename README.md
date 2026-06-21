@@ -429,6 +429,7 @@ Notas de respuesta:
  | Método | Ruta | Descripción |
  |--------|------|-------------|
  | `GET` | `/api/scorers` | Listar tabla histórica de goleadores de todos los mundiales con filtros y paginación |
+ | `GET` | `/api/scorers/:playerId` | Obtener los datos personales y todos los goles válidos de un goleador |
 
 Parámetros soportados para `/api/scorers`:
 
@@ -445,6 +446,18 @@ Notas de respuesta:
 - `team.code`, `listTeams` y `confederationCode` se normalizan a mayúsculas.
 - La respuesta expone `fullName`, `team`, `goals`, `listTeams` y `confederationCode`.
 - `team.name` corresponde al nombre localizado de la selección principal según `Accept-Language`, con fallback a `teams.name`.
+
+Para `/api/scorers/:playerId`:
+
+- `playerId` debe ser un identificador positivo.
+- La respuesta es un objeto directo, sin paginación.
+- `championships` conserva el orden configurado en el jugador.
+- `teams` usa un array de `SimpleTeam`, conserva el orden configurado y respeta `Accept-Language`.
+- `goals` contiene todos los goles válidos del jugador, excluye autogoles y conserva el mismo contrato y orden que `/api/players/:playerId/goals`.
+- `hosts` y `opponentTeam` respetan `Accept-Language`.
+- Los arrays sin datos se serializan como `[]`.
+- Un jugador existente sin goles responde `200 OK` con `goals: []`.
+- Un jugador inexistente responde `404 Not Found`.
 
 Ejemplo de respuesta:
 
@@ -470,6 +483,43 @@ Ejemplo de respuesta:
     "hasNext": false,
     "hasPrevious": false
   }
+}
+```
+
+Ejemplo de detalle:
+
+```json
+{
+  "id": 1524,
+  "firstName": "Lionel",
+  "lastName": "Messi",
+  "position": "FW",
+  "championships": [2006, 2010, 2014, 2018, 2022],
+  "teams": [
+    {
+      "code": "ARG",
+      "name": "Argentina"
+    }
+  ],
+  "goals": [
+    {
+      "year": 2022,
+      "hosts": [
+        {
+          "code": "QAT",
+          "name": "Catar"
+        }
+      ],
+      "matchDate": "2022-12-18",
+      "opponentTeam": {
+        "code": "FRA",
+        "name": "Francia"
+      },
+      "minuteRegular": 23,
+      "penalty": true,
+      "stage": "final"
+    }
+  ]
 }
 ```
 
@@ -661,6 +711,11 @@ curl -H "API-Version: 1" "http://localhost:8080/api/scorers?page=1&size=10"
 **Filtrar tabla histórica de goleadores**
 ```bash
 curl -H "API-Version: 1" "http://localhost:8080/api/scorers?name=messi&teamCode=ARG&confederationCode=CONMEBOL"
+```
+
+**Obtener detalle de un goleador**
+```bash
+curl -H "API-Version: 1" -H "Accept-Language: es" "http://localhost:8080/api/scorers/1524"
 ```
 
 **Listar campeonatos mundiales (orden cronológico ascendente)**

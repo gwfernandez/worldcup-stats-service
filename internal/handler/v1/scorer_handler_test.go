@@ -29,6 +29,14 @@ func (m *MockScorerService) List(ctx context.Context, filter domain.ScorerFilter
 	return args.Get(0).(*domain.ScorerListResponse), args.Error(1)
 }
 
+func (m *MockScorerService) GetByID(ctx context.Context, playerID int64, language string) (*domain.ScorerDetail, error) {
+	args := m.Called(ctx, playerID, language)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*domain.ScorerDetail), args.Error(1)
+}
+
 func setupScorerRouter(svc *MockScorerService) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	r := gin.Default()
@@ -44,9 +52,9 @@ func TestScorerHandler_List(t *testing.T) {
 		r := setupScorerRouter(svc)
 		expected := &domain.ScorerListResponse{
 			Data: []domain.Scorer{{
-				PlayerID:          10,
-				FullName:          "Lionel Messi",
-				Team:              domain.SimpleTeam{Code: "ARG", Name: "Argentina"},
+				PlayerID: 10,
+				FullName: "Lionel Messi",
+				Team:     domain.SimpleTeam{Code: "ARG", Name: "Argentina"},
 
 				Goals:             13,
 				ListTeams:         []string{"ARG"},
@@ -189,6 +197,95 @@ func TestScorerHandler_List(t *testing.T) {
 
 		assert.Equal(t, http.StatusInternalServerError, w.Code)
 		assert.JSONEq(t, `{"error":"failed to retrieve scorers"}`, w.Body.String())
+		svc.AssertExpectations(t)
+	})
+}
+
+func TestScorerHandler_GetByID(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		svc := new(MockScorerService)
+		r := setupScorerRouter(svc)
+		position := "FW"
+		expected := &domain.ScorerDetail{
+			ID:            1524,
+			FirstName:     "Lionel",
+			LastName:      "Messi",
+			Position:      &position,
+			Championships: []int32{2006, 2022},
+			Teams:         []domain.SimpleTeam{{Code: "ARG", Name: "Argentina"}},
+			Goals:         []domain.Goal{},
+		}
+		svc.On("GetByID", mock.Anything, int64(1524), "en").Return(expected, nil)
+
+		req, _ := http.NewRequest(http.MethodGet, "/api/scorers/1524", nil)
+		req.Header.Set("Accept-Language", "en")
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		assert.Equal(t, "1", w.Header().Get("API-Version-Used"))
+		assert.JSONEq(t, `{
+			"id": 1524,
+			"firstName": "Lionel",
+			"lastName": "Messi",
+			"position": "FW",
+			"championships": [2006, 2022],
+			"teams": [{"code": "ARG", "name": "Argentina"}],
+			"goals": []
+		}`, w.Body.String())
+		svc.AssertExpectations(t)
+	})
+
+	t.Run("bad request non numeric player id", func(t *testing.T) {
+		svc := new(MockScorerService)
+		r := setupScorerRouter(svc)
+
+		req, _ := http.NewRequest(http.MethodGet, "/api/scorers/abc", nil)
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+		assert.JSONEq(t, `{"error":"invalid playerId parameter"}`, w.Body.String())
+		svc.AssertNotCalled(t, "GetByID", mock.Anything, mock.Anything, mock.Anything)
+	})
+
+	t.Run("bad request non positive player id", func(t *testing.T) {
+		svc := new(MockScorerService)
+		r := setupScorerRouter(svc)
+
+		req, _ := http.NewRequest(http.MethodGet, "/api/scorers/0", nil)
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+		assert.JSONEq(t, `{"error":"invalid playerId parameter"}`, w.Body.String())
+	})
+
+	t.Run("not found", func(t *testing.T) {
+		svc := new(MockScorerService)
+		r := setupScorerRouter(svc)
+		svc.On("GetByID", mock.Anything, int64(999), "es").Return(nil, domain.ErrNotFound)
+
+		req, _ := http.NewRequest(http.MethodGet, "/api/scorers/999", nil)
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusNotFound, w.Code)
+		assert.JSONEq(t, `{"error":"resource not found"}`, w.Body.String())
+		svc.AssertExpectations(t)
+	})
+
+	t.Run("internal error", func(t *testing.T) {
+		svc := new(MockScorerService)
+		r := setupScorerRouter(svc)
+		svc.On("GetByID", mock.Anything, int64(1524), "es").Return(nil, errors.New("db error"))
+
+		req, _ := http.NewRequest(http.MethodGet, "/api/scorers/1524", nil)
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusInternalServerError, w.Code)
+		assert.JSONEq(t, `{"error":"failed to retrieve scorer"}`, w.Body.String())
 		svc.AssertExpectations(t)
 	})
 }

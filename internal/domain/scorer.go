@@ -25,3 +25,14 @@ type ScorerListResponse struct {
 	Data       []Scorer       `json:"data"`
 	Pagination PaginationInfo `json:"pagination"`
 }
+
+// ScorerDetail represents a scorer with personal data and all valid goals.
+type ScorerDetail struct {
+	ID            int64        `json:"id"`
+	FirstName     string       `json:"firstName"`
+	LastName      string       `json:"lastName"`
+	Position      *string      `json:"position"`
+	Championships []int32      `json:"championships"`
+	Teams         []SimpleTeam `json:"teams"`
+	Goals         []Goal       `json:"goals"`
+}

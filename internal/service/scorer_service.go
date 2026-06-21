@@ -67,6 +67,37 @@ func (s *scorerService) List(ctx context.Context, filter domain.ScorerFilter) (*
 	}, nil
 }
 
+// GetByID returns a scorer with personal data and all valid goals.
+func (s *scorerService) GetByID(ctx context.Context, playerID int64, language string) (*domain.ScorerDetail, error) {
+	if playerID < 1 {
+		return nil, fmt.Errorf("%w: playerId must be greater than or equal to 1", domain.ErrInvalidInput)
+	}
+
+	scorer, err := s.repo.GetByID(ctx, playerID)
+	if err != nil {
+		return nil, err
+	}
+	if scorer == nil {
+		return nil, fmt.Errorf("%w: scorer with playerId %d not found", domain.ErrNotFound, playerID)
+	}
+
+	if scorer.Championships == nil {
+		scorer.Championships = make([]int32, 0)
+	}
+	if scorer.Teams == nil {
+		scorer.Teams = make([]domain.SimpleTeam, 0)
+	}
+	if scorer.Goals == nil {
+		scorer.Goals = make([]domain.Goal, 0)
+	}
+
+	if err := s.hydrateScorerDetail(ctx, scorer, language); err != nil {
+		return nil, err
+	}
+
+	return scorer, nil
+}
+
 func (s *scorerService) hydrateScorers(ctx context.Context, scorers []domain.Scorer, language string) error {
 	for i := range scorers {
 		name, err := s.resolveTeamName(ctx, scorers[i].Team.Code, language)
@@ -75,6 +106,37 @@ func (s *scorerService) hydrateScorers(ctx context.Context, scorers []domain.Sco
 		}
 		scorers[i].Team.Name = name
 	}
+	return nil
+}
+
+func (s *scorerService) hydrateScorerDetail(ctx context.Context, scorer *domain.ScorerDetail, language string) error {
+	for i := range scorer.Teams {
+		name, err := s.resolveTeamName(ctx, scorer.Teams[i].Code, language)
+		if err != nil {
+			return err
+		}
+		scorer.Teams[i].Name = name
+	}
+
+	for i := range scorer.Goals {
+		if scorer.Goals[i].Hosts == nil {
+			scorer.Goals[i].Hosts = make([]domain.SimpleTeam, 0)
+		}
+		for j := range scorer.Goals[i].Hosts {
+			name, err := s.resolveTeamName(ctx, scorer.Goals[i].Hosts[j].Code, language)
+			if err != nil {
+				return err
+			}
+			scorer.Goals[i].Hosts[j].Name = name
+		}
+
+		name, err := s.resolveTeamName(ctx, scorer.Goals[i].OpponentTeam.Code, language)
+		if err != nil {
+			return err
+		}
+		scorer.Goals[i].OpponentTeam.Name = name
+	}
+
 	return nil
 }
 

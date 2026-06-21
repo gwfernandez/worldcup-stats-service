@@ -2,8 +2,11 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"strings"
 
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jendrix/worldcup-stats-service/db/sqlc"
 	"github.com/jendrix/worldcup-stats-service/internal/domain"
 )
@@ -47,6 +50,45 @@ func (r *scorerRepository) List(ctx context.Context, filter domain.ScorerFilter)
 	}
 
 	return scorers, total, nil
+}
+
+// GetByID retrieves a scorer with personal data and all valid goals.
+func (r *scorerRepository) GetByID(ctx context.Context, playerID int64) (*domain.ScorerDetail, error) {
+	player, err := r.queries.GetScorerByPlayerID(ctx, playerID)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	rows, err := r.queries.ListScorerGoalsByPlayer(ctx, pgtype.Int8{Int64: playerID, Valid: true})
+	if err != nil {
+		return nil, err
+	}
+
+	goals := make([]domain.Goal, len(rows))
+	for i, row := range rows {
+		goals[i] = toGoalDomainFromFields(
+			row.Year,
+			row.HostCodes,
+			row.MatchDate,
+			row.OpponentTeamCode,
+			row.MinuteRegular,
+			row.Penalty,
+			row.Stage,
+		)
+	}
+
+	return &domain.ScorerDetail{
+		ID:            player.ID,
+		FirstName:     player.FirstName,
+		LastName:      player.LastName,
+		Position:      nonEmptyStringPtr(enumString(player.Position)),
+		Championships: player.ListChampionships,
+		Teams:         toSimpleTeams(uppercaseSlice(player.ListTeams)),
+		Goals:         goals,
+	}, nil
 }
 
 func toScorerDomain(row sqlc.ListScorersRow) domain.Scorer {

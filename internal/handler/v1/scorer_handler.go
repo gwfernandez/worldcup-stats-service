@@ -26,6 +26,7 @@ func (h *ScorerHandler) RegisterRoutes(rg *gin.RouterGroup) {
 	scorers := rg.Group("/scorers")
 	{
 		scorers.GET("", h.List)
+		scorers.GET("/:playerId", h.GetByID)
 	}
 }
 
@@ -48,6 +49,31 @@ func (h *ScorerHandler) List(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, scorers)
+}
+
+// GetByID godoc
+// @Summary Get scorer personal data and all valid goals
+// @Produce json
+// @Param playerId path int true "Player ID"
+// @Router /api/scorers/{playerId} [get]
+func (h *ScorerHandler) GetByID(c *gin.Context) {
+	playerID, err := strconv.ParseInt(c.Param("playerId"), 10, 64)
+	if err != nil || playerID < 1 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid playerId parameter"})
+		return
+	}
+
+	scorer, err := h.service.GetByID(c.Request.Context(), playerID, resolveLanguage(c.Request))
+	if err != nil {
+		if errors.Is(err, domain.ErrNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to retrieve scorer"})
+		return
+	}
+
+	c.JSON(http.StatusOK, scorer)
 }
 
 func parseScorerFilter(c *gin.Context) (domain.ScorerFilter, error) {

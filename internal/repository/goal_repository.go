@@ -47,14 +47,34 @@ func (r *goalRepository) ListByPlayer(ctx context.Context, filter domain.GoalFil
 }
 
 func toGoalDomain(row sqlc.ListGoalsByPlayerRow) domain.Goal {
+	return toGoalDomainFromFields(
+		row.Year,
+		row.HostCodes,
+		row.MatchDate,
+		row.OpponentTeamCode,
+		row.MinuteRegular,
+		row.Penalty,
+		row.Stage,
+	)
+}
+
+func toGoalDomainFromFields(
+	year int32,
+	hostCodes []string,
+	matchDate pgtype.Date,
+	opponentTeamCode string,
+	minuteRegular int32,
+	penalty pgtype.Bool,
+	stage interface{},
+) domain.Goal {
 	return domain.Goal{
-		Year:          row.Year,
-		Hosts:         toSimpleTeams(row.HostCodes),
-		MatchDate:     datePtr(row.MatchDate),
-		OpponentTeam:  domain.SimpleTeam{Code: strings.ToUpper(row.OpponentTeamCode)},
-		MinuteRegular: row.MinuteRegular,
-		Penalty:       boolPtr(row.Penalty),
-		Stage:         nonEmptyStringPtr(enumString(row.Stage)),
+		Year:          year,
+		Hosts:         toSimpleTeams(hostCodes),
+		MatchDate:     datePtr(matchDate),
+		OpponentTeam:  domain.SimpleTeam{Code: strings.ToUpper(opponentTeamCode)},
+		MinuteRegular: minuteRegular,
+		Penalty:       boolPtr(penalty),
+		Stage:         nonEmptyStringPtr(enumString(stage)),
 	}
 }
 
