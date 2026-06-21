@@ -35,6 +35,7 @@ func (q *Queries) CountGoalsByPlayer(ctx context.Context, arg CountGoalsByPlayer
 const listGoalsByPlayer = `-- name: ListGoalsByPlayer :many
 SELECT
     g.year,
+    c.host_codes,
     m.match_date,
     (CASE
         WHEN g.team_condition = 'home' THEN m.away_team_code
@@ -45,6 +46,7 @@ SELECT
     COALESCE(m.stage::text, '') AS stage
 FROM goals g
 INNER JOIN matches m ON g.match_id = m.id
+INNER JOIN championships c ON c.year = g.year
 WHERE g.player_id = $1
     AND g.own_goal = FALSE
     AND ($2::int = 0 OR g.year = $2)
@@ -61,6 +63,7 @@ type ListGoalsByPlayerParams struct {
 
 type ListGoalsByPlayerRow struct {
 	Year             int32
+	HostCodes        []string
 	MatchDate        pgtype.Date
 	OpponentTeamCode string
 	MinuteRegular    int32
@@ -84,6 +87,7 @@ func (q *Queries) ListGoalsByPlayer(ctx context.Context, arg ListGoalsByPlayerPa
 		var i ListGoalsByPlayerRow
 		if err := rows.Scan(
 			&i.Year,
+			&i.HostCodes,
 			&i.MatchDate,
 			&i.OpponentTeamCode,
 			&i.MinuteRegular,

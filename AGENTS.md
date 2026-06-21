@@ -289,6 +289,7 @@ Parámetros soportados:
 Notas de respuesta:
 
 - Excluye autogoles y ordena por fecha, minuto regular e identificador de gol.
+- `hosts` usa un array de `SimpleTeam`, conserva el orden configurado para la edición y respeta `Accept-Language`.
 - `opponentTeam` usa `SimpleTeam`, normaliza el código a mayúsculas y respeta `Accept-Language`.
 - `matchDate`, `penalty` y `stage` conservan `null` cuando no existe un valor en la base.
 - Sin resultados responde `200 OK` con `data: []` y metadata de paginación.

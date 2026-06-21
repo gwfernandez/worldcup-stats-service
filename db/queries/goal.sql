@@ -1,6 +1,7 @@
 -- name: ListGoalsByPlayer :many
 SELECT
     g.year,
+    c.host_codes,
     m.match_date,
     (CASE
         WHEN g.team_condition = 'home' THEN m.away_team_code
@@ -11,6 +12,7 @@ SELECT
     COALESCE(m.stage::text, '') AS stage
 FROM goals g
 INNER JOIN matches m ON g.match_id = m.id
+INNER JOIN championships c ON c.year = g.year
 WHERE g.player_id = sqlc.arg(player_id)
     AND g.own_goal = FALSE
     AND (sqlc.arg(year)::int = 0 OR g.year = sqlc.arg(year))

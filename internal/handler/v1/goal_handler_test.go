@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/gin-gonic/gin"
@@ -47,6 +48,7 @@ func TestGoalHandler_List(t *testing.T) {
 		expected := &domain.GoalListResponse{
 			Data: []domain.Goal{{
 				Year:          2018,
+				Hosts:         []domain.SimpleTeam{{Code: "RUS", Name: "Russia"}},
 				MatchDate:     &matchDate,
 				OpponentTeam:  domain.SimpleTeam{Code: "ISL", Name: "Iceland"},
 				MinuteRegular: 64,
@@ -68,6 +70,7 @@ func TestGoalHandler_List(t *testing.T) {
 		assert.JSONEq(t, `{
 			"data": [{
 				"year": 2018,
+				"hosts": [{"code": "RUS", "name": "Russia"}],
 				"matchDate": "2018-06-16",
 				"opponentTeam": {"code": "ISL", "name": "Iceland"},
 				"minuteRegular": 64,
@@ -83,6 +86,9 @@ func TestGoalHandler_List(t *testing.T) {
 				"hasPrevious": true
 			}
 		}`, w.Body.String())
+		body := w.Body.String()
+		assert.Less(t, strings.Index(body, `"year"`), strings.Index(body, `"hosts"`))
+		assert.Less(t, strings.Index(body, `"hosts"`), strings.Index(body, `"matchDate"`))
 		svc.AssertExpectations(t)
 	})
 
@@ -92,6 +98,7 @@ func TestGoalHandler_List(t *testing.T) {
 		expected := &domain.GoalListResponse{
 			Data: []domain.Goal{{
 				Year:          1930,
+				Hosts:         []domain.SimpleTeam{},
 				OpponentTeam:  domain.SimpleTeam{Code: "USA", Name: "Estados Unidos"},
 				MinuteRegular: 10,
 			}},
@@ -108,6 +115,7 @@ func TestGoalHandler_List(t *testing.T) {
 		assert.JSONEq(t, `{
 			"data": [{
 				"year": 1930,
+				"hosts": [],
 				"matchDate": null,
 				"opponentTeam": {"code": "USA", "name": "Estados Unidos"},
 				"minuteRegular": 10,

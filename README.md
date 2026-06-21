@@ -490,6 +490,7 @@ Notas de respuesta:
 
 - Se excluyen los autogoles.
 - Los resultados se ordenan por `matchDate` ascendente, `minuteRegular` ascendente e identificador de gol.
+- `hosts` expone los anfitriones de la edición como un array de `SimpleTeam`, conserva el orden configurado y respeta `Accept-Language`.
 - `opponentTeam` usa la estructura `SimpleTeam`; su código se normaliza a mayúsculas y su nombre respeta `Accept-Language`.
 - `matchDate`, `penalty` y `stage` conservan `null` cuando el dato no está disponible.
 - Si no hay resultados, responde `200 OK` con `data: []` y metadata de paginación.
@@ -501,6 +502,12 @@ Ejemplo de respuesta:
   "data": [
     {
       "year": 2018,
+      "hosts": [
+        {
+          "code": "RUS",
+          "name": "Rusia"
+        }
+      ],
       "matchDate": "2018-06-16",
       "opponentTeam": {
         "code": "ISL",

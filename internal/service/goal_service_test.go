@@ -28,21 +28,29 @@ func (m *mockGoalRepository) ListByPlayer(ctx context.Context, filter domain.Goa
 func TestGoalService_ListByPlayer(t *testing.T) {
 	ctx := context.Background()
 
-	t.Run("success hydrates opponent and builds pagination", func(t *testing.T) {
+	t.Run("success hydrates hosts and opponent and builds pagination", func(t *testing.T) {
 		repo := new(mockGoalRepository)
 		resolver := new(mockTeamNameResolver)
 		svc := service.NewGoalService(repo, resolver)
 		filter := domain.GoalFilter{PlayerID: 1524, Year: 2018, Language: "es", Page: 1, Size: 2}
 		goals := []domain.Goal{
-			{Year: 2018, OpponentTeam: domain.SimpleTeam{Code: "ISL"}, MinuteRegular: 64},
-			{Year: 2018, OpponentTeam: domain.SimpleTeam{Code: "CRO"}, MinuteRegular: 80},
+			{Year: 2018, Hosts: []domain.SimpleTeam{{Code: "RUS"}}, OpponentTeam: domain.SimpleTeam{Code: "ISL"}, MinuteRegular: 64},
+			{Year: 2018, Hosts: []domain.SimpleTeam{{Code: "KOR"}, {Code: "JPN"}}, OpponentTeam: domain.SimpleTeam{Code: "CRO"}, MinuteRegular: 80},
 		}
 		repo.On("ListByPlayer", ctx, filter).Return(goals, int64(3), nil)
+		resolver.On("Resolve", ctx, "RUS", "es").Return("Rusia", nil).Once()
+		resolver.On("Resolve", ctx, "KOR", "es").Return("Corea del Sur", nil).Once()
+		resolver.On("Resolve", ctx, "JPN", "es").Return("Japón", nil).Once()
 		resolver.On("Resolve", ctx, "ISL", "es").Return("Islandia", nil).Once()
 		resolver.On("Resolve", ctx, "CRO", "es").Return("Croacia", nil).Once()
 
 		result, err := svc.ListByPlayer(ctx, filter)
 		require.NoError(t, err)
+		assert.Equal(t, "Rusia", result.Data[0].Hosts[0].Name)
+		assert.Equal(t, []domain.SimpleTeam{
+			{Code: "KOR", Name: "Corea del Sur"},
+			{Code: "JPN", Name: "Japón"},
+		}, result.Data[1].Hosts)
 		assert.Equal(t, "Islandia", result.Data[0].OpponentTeam.Name)
 		assert.Equal(t, "Croacia", result.Data[1].OpponentTeam.Name)
 		assert.Equal(t, 1, result.Pagination.Page)
@@ -70,6 +78,24 @@ func TestGoalService_ListByPlayer(t *testing.T) {
 		assert.False(t, result.Pagination.HasNext)
 		assert.True(t, result.Pagination.HasPrevious)
 		repo.AssertExpectations(t)
+	})
+
+	t.Run("nil hosts become empty array", func(t *testing.T) {
+		repo := new(mockGoalRepository)
+		resolver := new(mockTeamNameResolver)
+		svc := service.NewGoalService(repo, resolver)
+		filter := domain.GoalFilter{PlayerID: 10, Language: "es", Page: 1, Size: 20}
+		repo.On("ListByPlayer", ctx, filter).Return([]domain.Goal{{
+			OpponentTeam: domain.SimpleTeam{Code: "ARG"},
+		}}, int64(1), nil)
+		resolver.On("Resolve", ctx, "ARG", "es").Return("Argentina", nil).Once()
+
+		result, err := svc.ListByPlayer(ctx, filter)
+		require.NoError(t, err)
+		assert.NotNil(t, result.Data[0].Hosts)
+		assert.Empty(t, result.Data[0].Hosts)
+		repo.AssertExpectations(t)
+		resolver.AssertExpectations(t)
 	})
 
 	for _, tc := range []struct {
@@ -112,6 +138,24 @@ func TestGoalService_ListByPlayer(t *testing.T) {
 		filter := domain.GoalFilter{PlayerID: 10, Language: "en", Page: 1, Size: 20}
 		repo.On("ListByPlayer", ctx, filter).Return([]domain.Goal{{OpponentTeam: domain.SimpleTeam{Code: "ARG"}}}, int64(1), nil)
 		resolver.On("Resolve", ctx, "ARG", "en").Return("", errors.New("cache error")).Once()
+
+		result, err := svc.ListByPlayer(ctx, filter)
+		assert.Error(t, err)
+		assert.Nil(t, result)
+		repo.AssertExpectations(t)
+		resolver.AssertExpectations(t)
+	})
+
+	t.Run("host resolver error", func(t *testing.T) {
+		repo := new(mockGoalRepository)
+		resolver := new(mockTeamNameResolver)
+		svc := service.NewGoalService(repo, resolver)
+		filter := domain.GoalFilter{PlayerID: 10, Language: "en", Page: 1, Size: 20}
+		repo.On("ListByPlayer", ctx, filter).Return([]domain.Goal{{
+			Hosts:        []domain.SimpleTeam{{Code: "USA"}},
+			OpponentTeam: domain.SimpleTeam{Code: "ARG"},
+		}}, int64(1), nil)
+		resolver.On("Resolve", ctx, "USA", "en").Return("", errors.New("cache error")).Once()
 
 		result, err := svc.ListByPlayer(ctx, filter)
 		assert.Error(t, err)
