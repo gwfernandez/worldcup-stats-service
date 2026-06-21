@@ -518,9 +518,9 @@ func TestChampionshipRepository_ListScorersByYear(t *testing.T) {
 			WithArgs(int32(1930), "guille", "ARG").
 			WillReturnRows(countRows)
 
-		rows := mock.NewRows([]string{"full_name", "team_code", "goals"}).
-			AddRow("Guillermo Stabile", "arg", int32(8)).
-			AddRow("Carlos Peucelle", "arg", int32(3))
+		rows := mock.NewRows([]string{"player_id", "full_name", "team_code", "goals"}).
+			AddRow(int64(10), "Guillermo Stabile", "arg", int32(8)).
+			AddRow(int64(11), "Carlos Peucelle", "arg", int32(3))
 
 		mock.ExpectQuery(`^-- name: ListChampionshipScorersByYear :many.*`).
 			WithArgs(int32(1930), "guille", "ARG", int32(10), int32(10)).
@@ -531,10 +531,12 @@ func TestChampionshipRepository_ListScorersByYear(t *testing.T) {
 		assert.Equal(t, int64(2), total)
 		require.Len(t, result, 2)
 		assert.Equal(t, domain.ChampionshipScorer{
+			PlayerID: 10,
 			FullName: "Guillermo Stabile",
 			Team:     domain.SimpleTeam{Code: "ARG"},
 			Goals:    8,
 		}, result[0])
+		assert.Equal(t, int64(11), result[1].PlayerID)
 		assert.Equal(t, "ARG", result[1].Team.Code)
 
 		assert.NoError(t, mock.ExpectationsWereMet())

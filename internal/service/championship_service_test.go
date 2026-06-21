@@ -504,8 +504,8 @@ func TestChampionshipService_ListScorersByYear(t *testing.T) {
 		filter := domain.ChampionshipScorerFilter{Year: 1930, TeamCode: "ARG", Page: 1, Size: 10}
 
 		expected := []domain.ChampionshipScorer{
-			{FullName: "Guillermo Stabile", Team: domain.SimpleTeam{Code: "ARG"}, Goals: 8},
-			{FullName: "Carlos Peucelle", Team: domain.SimpleTeam{Code: "ARG"}, Goals: 3},
+			{PlayerID: 10, FullName: "Guillermo Stabile", Team: domain.SimpleTeam{Code: "ARG"}, Goals: 8},
+			{PlayerID: 11, FullName: "Carlos Peucelle", Team: domain.SimpleTeam{Code: "ARG"}, Goals: 3},
 		}
 		mockRepo.On("ListScorersByYear", ctx, filter).Return(expected, int64(13), nil)
 		mockRepo.On("ListTeamTranslations", ctx).Return([]domain.TeamTranslation{

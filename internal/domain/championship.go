@@ -88,6 +88,7 @@ type ChampionshipStadiumFilter struct {
 
 // ChampionshipScorer represents a player scorer in a championship edition.
 type ChampionshipScorer struct {
+	PlayerID int64      `json:"playerId"`
 	FullName string     `json:"fullName"`
 	Team     SimpleTeam `json:"team"`
 	Goals    int32      `json:"goals"`

@@ -35,6 +35,7 @@ func TestScorerService_List(t *testing.T) {
 		input := domain.ScorerFilter{Name: "messi", TeamCode: "arg", ConfederationCode: "conmebol", Page: 1, Size: 10}
 		expectedFilter := domain.ScorerFilter{Name: "messi", TeamCode: "ARG", ConfederationCode: "CONMEBOL", Page: 1, Size: 10}
 		expected := []domain.Scorer{{
+			PlayerID:          10,
 			FullName:          "Lionel Messi",
 			Team:              domain.SimpleTeam{Code: "ARG"},
 			Goals:             13,

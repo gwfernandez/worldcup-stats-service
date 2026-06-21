@@ -254,6 +254,7 @@ WHERE css.year = $1
 
 -- name: ListChampionshipScorersByYear :many
 SELECT
+    p.id AS player_id,
     TRIM(CONCAT_WS(' ', NULLIF(p.first_name, ''), NULLIF(p.last_name, '')))::text AS full_name,
     ss.team_code,
     ss.goals

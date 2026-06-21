@@ -2,6 +2,7 @@ package domain
 
 // Scorer represents a player in the historical scorers table.
 type Scorer struct {
+	PlayerID          int64      `json:"playerId"`
 	FullName          string     `json:"fullName"`
 	Team              SimpleTeam `json:"team"`
 	Goals             int32      `json:"goals"`

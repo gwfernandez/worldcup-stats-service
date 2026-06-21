@@ -27,9 +27,9 @@ func TestScorerRepository_List(t *testing.T) {
 			WithArgs("messi", "ARG", "CONMEBOL").
 			WillReturnRows(countRows)
 
-		rows := mock.NewRows([]string{"full_name", "team_code", "goals", "list_teams", "confederation_code"}).
-			AddRow("Lionel Messi", "arg", int32(13), []string{"arg"}, "conmebol").
-			AddRow("Gabriel Batistuta", "arg", int32(10), []string{"arg"}, "conmebol")
+		rows := mock.NewRows([]string{"player_id", "full_name", "team_code", "goals", "list_teams", "confederation_code"}).
+			AddRow(int64(10), "Lionel Messi", "arg", int32(13), []string{"arg"}, "conmebol").
+			AddRow(int64(11), "Gabriel Batistuta", "arg", int32(10), []string{"arg"}, "conmebol")
 		mock.ExpectQuery(`^-- name: ListScorers :many.*`).
 			WithArgs("messi", "ARG", "CONMEBOL", int32(10), int32(10)).
 			WillReturnRows(rows)
@@ -38,12 +38,14 @@ func TestScorerRepository_List(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, int64(11), total)
 		require.Len(t, result, 2)
+		assert.Equal(t, int64(10), result[0].PlayerID)
 		assert.Equal(t, "Lionel Messi", result[0].FullName)
 		assert.Equal(t, "ARG", result[0].Team.Code)
 		assert.Empty(t, result[0].Team.Name)
 		assert.Equal(t, int32(13), result[0].Goals)
 		assert.Equal(t, []string{"ARG"}, result[0].ListTeams)
 		assert.Equal(t, "CONMEBOL", result[0].ConfederationCode)
+		assert.Equal(t, int64(11), result[1].PlayerID)
 		assert.Equal(t, "Gabriel Batistuta", result[1].FullName)
 		assert.NoError(t, mock.ExpectationsWereMet())
 	})

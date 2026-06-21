@@ -51,6 +51,7 @@ func (r *scorerRepository) List(ctx context.Context, filter domain.ScorerFilter)
 
 func toScorerDomain(row sqlc.ListScorersRow) domain.Scorer {
 	return domain.Scorer{
+		PlayerID:          row.PlayerID,
 		FullName:          row.FullName,
 		Team:              domain.SimpleTeam{Code: strings.ToUpper(row.TeamCode)},
 		Goals:             row.Goals,

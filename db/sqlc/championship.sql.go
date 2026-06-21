@@ -268,6 +268,7 @@ func (q *Queries) GetChampionshipByYear(ctx context.Context, year int32) (GetCha
 
 const listChampionshipScorersByYear = `-- name: ListChampionshipScorersByYear :many
 SELECT
+    p.id AS player_id,
     TRIM(CONCAT_WS(' ', NULLIF(p.first_name, ''), NULLIF(p.last_name, '')))::text AS full_name,
     ss.team_code,
     ss.goals
@@ -294,6 +295,7 @@ type ListChampionshipScorersByYearParams struct {
 }
 
 type ListChampionshipScorersByYearRow struct {
+	PlayerID int64
 	FullName string
 	TeamCode string
 	Goals    int32
@@ -314,7 +316,12 @@ func (q *Queries) ListChampionshipScorersByYear(ctx context.Context, arg ListCha
 	var items []ListChampionshipScorersByYearRow
 	for rows.Next() {
 		var i ListChampionshipScorersByYearRow
-		if err := rows.Scan(&i.FullName, &i.TeamCode, &i.Goals); err != nil {
+		if err := rows.Scan(
+			&i.PlayerID,
+			&i.FullName,
+			&i.TeamCode,
+			&i.Goals,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
