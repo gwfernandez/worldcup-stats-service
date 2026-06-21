@@ -110,13 +110,13 @@ GIN_MODE=debug   # usar "release" en producción
 | Jugador | `players` | Jugadores participantes |
 | Plantel | `squads` | Relación de jugadores por selección y mundial |
 | Estadísticas de Plantel | `squads_stats` | Estadísticas de jugadores por selección y mundial |
+| Gol | `goals` | Goles por partido y jugador |
 
 ### Planificadas
 
 | Entidad | Tabla | Descripción |
 |---------|-------|-------------|
 | Selección | `teams` | Selecciones nacionales participantes |
-| Gol | `goals` | Goles por partido y jugador |
 
 ---
 
@@ -272,6 +272,26 @@ Parámetros soportados:
 - `confederationCode`: filtro por igualdad exacta sobre el código de confederación. La API normaliza el valor a mayúsculas.
 - `page`: número de página (base 1, por defecto `1`).
 - `size`: tamaño de página (por defecto `20`, máximo `100`).
+
+### Goles por jugador `/api/players/:playerId/goals`
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| `GET` | `/api/players/:playerId/goals` | Listar goles válidos de un jugador con filtro opcional por Mundial y paginación |
+
+Parámetros soportados:
+
+- `playerId`: identificador positivo del jugador informado en la ruta.
+- `year`: filtro opcional por año del Mundial; debe ser un entero positivo.
+- `page`: número de página (base 1, por defecto `1`).
+- `size`: tamaño de página (por defecto `20`, máximo `100`).
+
+Notas de respuesta:
+
+- Excluye autogoles y ordena por fecha, minuto regular e identificador de gol.
+- `opponentTeam` usa `SimpleTeam`, normaliza el código a mayúsculas y respeta `Accept-Language`.
+- `matchDate`, `penalty` y `stage` conservan `null` cuando no existe un valor en la base.
+- Sin resultados responde `200 OK` con `data: []` y metadata de paginación.
 
 ### Campeonatos `/api/championships`
 
