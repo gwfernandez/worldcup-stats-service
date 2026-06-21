@@ -189,7 +189,7 @@ Idiomas soportados inicialmente:
 
 Cuando falta una traducción para el idioma solicitado, la API responde el valor base almacenado en la tabla principal. Para confederaciones, el campo `confederations.name` funciona como fallback en español; para selecciones, el fallback es `teams.name`.
 
-Actualmente el header `Accept-Language` localiza nombres de confederaciones y nombres de selecciones en los endpoints que los exponen o filtran: `/api/confederations`, `/api/teams`, `/api/champions`, `/api/standings`, `/api/championships` y `/api/championships/:year/teams`.
+Actualmente el header `Accept-Language` localiza nombres de confederaciones y nombres de selecciones en los endpoints que los exponen o filtran: `/api/confederations`, `/api/teams`, `/api/champions`, `/api/standings`, `/api/scorers`, `/api/players/:playerId/goals`, `/api/championships` y `/api/championships/:year/teams`.
 
 **Ejemplo:** `Accept-Language: en`
 
@@ -460,6 +460,55 @@ Ejemplo de respuesta:
       "goals": 13,
       "listTeams": ["ARG"],
       "confederationCode": "CONMEBOL"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "size": 20,
+    "totalElements": 1,
+    "totalPages": 1,
+    "hasNext": false,
+    "hasPrevious": false
+  }
+}
+```
+
+### Goles por Jugador
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| `GET` | `/api/players/:playerId/goals` | Listar goles válidos de un jugador con filtro opcional por Mundial y paginación |
+
+Parámetros soportados:
+
+- `playerId`: identificador positivo del jugador informado en la ruta.
+- `year`: año opcional del Mundial; debe ser un entero positivo.
+- `page`: número de página (base 1, por defecto `1`).
+- `size`: tamaño de página (por defecto `20`, máximo `100`).
+
+Notas de respuesta:
+
+- Se excluyen los autogoles.
+- Los resultados se ordenan por `matchDate` ascendente, `minuteRegular` ascendente e identificador de gol.
+- `opponentTeam` usa la estructura `SimpleTeam`; su código se normaliza a mayúsculas y su nombre respeta `Accept-Language`.
+- `matchDate`, `penalty` y `stage` conservan `null` cuando el dato no está disponible.
+- Si no hay resultados, responde `200 OK` con `data: []` y metadata de paginación.
+
+Ejemplo de respuesta:
+
+```json
+{
+  "data": [
+    {
+      "year": 2018,
+      "matchDate": "2018-06-16",
+      "opponentTeam": {
+        "code": "ISL",
+        "name": "Islandia"
+      },
+      "minuteRegular": 64,
+      "penalty": true,
+      "stage": "group_stage"
     }
   ],
   "pagination": {

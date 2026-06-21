@@ -94,6 +94,24 @@ type ConfederationTranslation struct {
 	Name              string
 }
 
+type Goal struct {
+	ID             int64
+	Year           int32
+	MatchID        pgtype.Int8
+	PlayerID       pgtype.Int8
+	TeamCode       string
+	TeamCondition  interface{}
+	ShirtNumber    int32
+	MinuteRegular  int32
+	MinuteStoppage int32
+	PeriodType     interface{}
+	PeriodHalf     interface{}
+	PeriodStoppage interface{}
+	Penalty        pgtype.Bool
+	OwnGoal        pgtype.Bool
+	RefID          pgtype.Text
+}
+
 type Manager struct {
 	ID          int64
 	FirstName   pgtype.Text
