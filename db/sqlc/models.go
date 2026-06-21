@@ -147,15 +147,17 @@ type Match struct {
 }
 
 type Player struct {
-	ID          int64
-	FirstName   pgtype.Text
-	LastName    pgtype.Text
-	Nationality pgtype.Text
-	BirthDate   pgtype.Date
-	DeathDate   pgtype.Date
-	Wikipedia   pgtype.Text
-	RefID       pgtype.Text
-	ListTeams   []string
+	ID                int64
+	FirstName         pgtype.Text
+	LastName          pgtype.Text
+	Nationality       pgtype.Text
+	BirthDate         pgtype.Date
+	DeathDate         pgtype.Date
+	Wikipedia         pgtype.Text
+	RefID             pgtype.Text
+	Position          interface{}
+	ListChampionships []int32
+	ListTeams         []string
 }
 
 type PlayersStat struct {

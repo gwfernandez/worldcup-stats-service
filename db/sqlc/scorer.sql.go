@@ -7,6 +7,8 @@ package sqlc
 
 import (
 	"context"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const countScorers = `-- name: CountScorers :one
@@ -35,6 +37,99 @@ func (q *Queries) CountScorers(ctx context.Context, arg CountScorersParams) (int
 	var count int64
 	err := row.Scan(&count)
 	return count, err
+}
+
+const getScorerByPlayerID = `-- name: GetScorerByPlayerID :one
+SELECT
+    p.id,
+    COALESCE(p.first_name, '')::text AS first_name,
+    COALESCE(p.last_name, '')::text AS last_name,
+    COALESCE(p.position::text, '') AS position,
+    p.list_championships,
+    p.list_teams
+FROM players p
+WHERE p.id = $1
+`
+
+type GetScorerByPlayerIDRow struct {
+	ID                int64
+	FirstName         string
+	LastName          string
+	Position          interface{}
+	ListChampionships []int32
+	ListTeams         []string
+}
+
+func (q *Queries) GetScorerByPlayerID(ctx context.Context, playerID int64) (GetScorerByPlayerIDRow, error) {
+	row := q.db.QueryRow(ctx, getScorerByPlayerID, playerID)
+	var i GetScorerByPlayerIDRow
+	err := row.Scan(
+		&i.ID,
+		&i.FirstName,
+		&i.LastName,
+		&i.Position,
+		&i.ListChampionships,
+		&i.ListTeams,
+	)
+	return i, err
+}
+
+const listScorerGoalsByPlayer = `-- name: ListScorerGoalsByPlayer :many
+SELECT
+    g.year,
+    c.host_codes,
+    m.match_date,
+    (CASE
+        WHEN g.team_condition = 'home' THEN m.away_team_code
+        ELSE m.home_team_code
+    END)::text AS opponent_team_code,
+    g.minute_regular,
+    g.penalty,
+    COALESCE(m.stage::text, '') AS stage
+FROM goals g
+INNER JOIN matches m ON g.match_id = m.id
+INNER JOIN championships c ON c.year = g.year
+WHERE g.player_id = $1
+    AND g.own_goal = FALSE
+ORDER BY m.match_date ASC NULLS LAST, g.minute_regular ASC, g.id ASC
+`
+
+type ListScorerGoalsByPlayerRow struct {
+	Year             int32
+	HostCodes        []string
+	MatchDate        pgtype.Date
+	OpponentTeamCode string
+	MinuteRegular    int32
+	Penalty          pgtype.Bool
+	Stage            interface{}
+}
+
+func (q *Queries) ListScorerGoalsByPlayer(ctx context.Context, playerID pgtype.Int8) ([]ListScorerGoalsByPlayerRow, error) {
+	rows, err := q.db.Query(ctx, listScorerGoalsByPlayer, playerID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListScorerGoalsByPlayerRow
+	for rows.Next() {
+		var i ListScorerGoalsByPlayerRow
+		if err := rows.Scan(
+			&i.Year,
+			&i.HostCodes,
+			&i.MatchDate,
+			&i.OpponentTeamCode,
+			&i.MinuteRegular,
+			&i.Penalty,
+			&i.Stage,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const listScorers = `-- name: ListScorers :many

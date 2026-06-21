@@ -264,6 +264,7 @@ Notas de respuesta:
 | Método | Ruta | Descripción |
 |--------|------|-------------|
 | `GET` | `/api/scorers` | Listar tabla histórica de goleadores de todos los mundiales con filtros y paginación |
+| `GET` | `/api/scorers/:playerId` | Obtener datos personales y todos los goles válidos de un goleador |
 
 Parámetros soportados:
 
@@ -272,6 +273,17 @@ Parámetros soportados:
 - `confederationCode`: filtro por igualdad exacta sobre el código de confederación. La API normaliza el valor a mayúsculas.
 - `page`: número de página (base 1, por defecto `1`).
 - `size`: tamaño de página (por defecto `20`, máximo `100`).
+
+Notas para `/api/scorers/:playerId`:
+
+- `playerId` debe ser un identificador positivo.
+- La respuesta es un objeto directo y no utiliza paginación ni filtros.
+- `championships` conserva el orden configurado para el jugador.
+- `teams`, `hosts` y `opponentTeam` usan `SimpleTeam` y respetan `Accept-Language`.
+- `goals` excluye autogoles y mantiene el contrato y orden de `/api/players/:playerId/goals`.
+- Los arrays sin datos se serializan como `[]`.
+- Un jugador existente sin goles responde `200 OK` con `goals: []`.
+- Un jugador inexistente responde `404 Not Found`.
 
 ### Goles por jugador `/api/players/:playerId/goals`
 

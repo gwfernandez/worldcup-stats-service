@@ -4,7 +4,10 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/pashagolub/pgxmock/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -85,6 +88,131 @@ func TestScorerRepository_List(t *testing.T) {
 		assert.Error(t, err)
 		assert.Nil(t, result)
 		assert.Equal(t, int64(0), total)
+		assert.NoError(t, mock.ExpectationsWereMet())
+	})
+}
+
+func TestScorerRepository_GetByID(t *testing.T) {
+	t.Run("success preserves order and maps goals", func(t *testing.T) {
+		mock, err := pgxmock.NewPool()
+		require.NoError(t, err)
+		defer mock.Close()
+
+		repo := repository.NewScorerRepository(mock)
+		matchDate := pgtype.Date{Time: time.Date(2022, 12, 18, 0, 0, 0, 0, time.UTC), Valid: true}
+
+		playerRows := mock.NewRows([]string{"id", "first_name", "last_name", "position", "list_championships", "list_teams"}).
+			AddRow(int64(1524), "Lionel", "Messi", "FW", []int32{2006, 2010, 2022}, []string{"arg", "fcb"})
+		mock.ExpectQuery(`^-- name: GetScorerByPlayerID :one.*`).
+			WithArgs(int64(1524)).
+			WillReturnRows(playerRows)
+
+		goalRows := mock.NewRows([]string{
+			"year", "host_codes", "match_date", "opponent_team_code",
+			"minute_regular", "penalty", "stage",
+		}).AddRow(
+			int32(2022), []string{"qat"}, matchDate, "fra",
+			int32(23), pgtype.Bool{Bool: true, Valid: true}, "final",
+		)
+		mock.ExpectQuery(`^-- name: ListScorerGoalsByPlayer :many.*`).
+			WithArgs(pgtype.Int8{Int64: 1524, Valid: true}).
+			WillReturnRows(goalRows)
+
+		result, err := repo.GetByID(context.Background(), 1524)
+		require.NoError(t, err)
+		require.NotNil(t, result)
+		assert.Equal(t, int64(1524), result.ID)
+		assert.Equal(t, "Lionel", result.FirstName)
+		assert.Equal(t, "Messi", result.LastName)
+		require.NotNil(t, result.Position)
+		assert.Equal(t, "FW", *result.Position)
+		assert.Equal(t, []int32{2006, 2010, 2022}, result.Championships)
+		assert.Equal(t, []domain.SimpleTeam{{Code: "ARG"}, {Code: "FCB"}}, result.Teams)
+		require.Len(t, result.Goals, 1)
+		assert.Equal(t, int32(2022), result.Goals[0].Year)
+		assert.Equal(t, []domain.SimpleTeam{{Code: "QAT"}}, result.Goals[0].Hosts)
+		assert.Equal(t, "FRA", result.Goals[0].OpponentTeam.Code)
+		assert.Equal(t, "2022-12-18", *result.Goals[0].MatchDate)
+		assert.Equal(t, "final", *result.Goals[0].Stage)
+		assert.NoError(t, mock.ExpectationsWereMet())
+	})
+
+	t.Run("nullable position and no goals", func(t *testing.T) {
+		mock, err := pgxmock.NewPool()
+		require.NoError(t, err)
+		defer mock.Close()
+
+		repo := repository.NewScorerRepository(mock)
+		playerRows := mock.NewRows([]string{"id", "first_name", "last_name", "position", "list_championships", "list_teams"}).
+			AddRow(int64(7), "Juan", "Pérez", "", []int32{}, []string{})
+		mock.ExpectQuery(`^-- name: GetScorerByPlayerID :one.*`).
+			WithArgs(int64(7)).
+			WillReturnRows(playerRows)
+		mock.ExpectQuery(`^-- name: ListScorerGoalsByPlayer :many.*`).
+			WithArgs(pgtype.Int8{Int64: 7, Valid: true}).
+			WillReturnRows(mock.NewRows([]string{
+				"year", "host_codes", "match_date", "opponent_team_code",
+				"minute_regular", "penalty", "stage",
+			}))
+
+		result, err := repo.GetByID(context.Background(), 7)
+		require.NoError(t, err)
+		require.NotNil(t, result)
+		assert.Nil(t, result.Position)
+		assert.Empty(t, result.Goals)
+		assert.NoError(t, mock.ExpectationsWereMet())
+	})
+
+	t.Run("player not found", func(t *testing.T) {
+		mock, err := pgxmock.NewPool()
+		require.NoError(t, err)
+		defer mock.Close()
+
+		repo := repository.NewScorerRepository(mock)
+		mock.ExpectQuery(`^-- name: GetScorerByPlayerID :one.*`).
+			WithArgs(int64(999)).
+			WillReturnError(pgx.ErrNoRows)
+
+		result, err := repo.GetByID(context.Background(), 999)
+		assert.NoError(t, err)
+		assert.Nil(t, result)
+		assert.NoError(t, mock.ExpectationsWereMet())
+	})
+
+	t.Run("database error retrieving player", func(t *testing.T) {
+		mock, err := pgxmock.NewPool()
+		require.NoError(t, err)
+		defer mock.Close()
+
+		repo := repository.NewScorerRepository(mock)
+		mock.ExpectQuery(`^-- name: GetScorerByPlayerID :one.*`).
+			WithArgs(int64(1524)).
+			WillReturnError(errors.New("db error"))
+
+		result, err := repo.GetByID(context.Background(), 1524)
+		assert.Error(t, err)
+		assert.Nil(t, result)
+		assert.NoError(t, mock.ExpectationsWereMet())
+	})
+
+	t.Run("database error retrieving goals", func(t *testing.T) {
+		mock, err := pgxmock.NewPool()
+		require.NoError(t, err)
+		defer mock.Close()
+
+		repo := repository.NewScorerRepository(mock)
+		playerRows := mock.NewRows([]string{"id", "first_name", "last_name", "position", "list_championships", "list_teams"}).
+			AddRow(int64(1524), "Lionel", "Messi", "FW", []int32{2022}, []string{"arg"})
+		mock.ExpectQuery(`^-- name: GetScorerByPlayerID :one.*`).
+			WithArgs(int64(1524)).
+			WillReturnRows(playerRows)
+		mock.ExpectQuery(`^-- name: ListScorerGoalsByPlayer :many.*`).
+			WithArgs(pgtype.Int8{Int64: 1524, Valid: true}).
+			WillReturnError(errors.New("db error"))
+
+		result, err := repo.GetByID(context.Background(), 1524)
+		assert.Error(t, err)
+		assert.Nil(t, result)
 		assert.NoError(t, mock.ExpectationsWereMet())
 	})
 }
