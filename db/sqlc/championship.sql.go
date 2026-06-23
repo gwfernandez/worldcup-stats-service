@@ -38,6 +38,26 @@ func (q *Queries) CountChampionshipScorersByYear(ctx context.Context, arg CountC
 	return count, err
 }
 
+const countChampionshipSquadByYearAndTeam = `-- name: CountChampionshipSquadByYearAndTeam :one
+SELECT COUNT(*)
+FROM squads s
+INNER JOIN players p ON s.player_id = p.id
+WHERE s.year = $1
+    AND s.team_code = $2
+`
+
+type CountChampionshipSquadByYearAndTeamParams struct {
+	Year     int32
+	TeamCode string
+}
+
+func (q *Queries) CountChampionshipSquadByYearAndTeam(ctx context.Context, arg CountChampionshipSquadByYearAndTeamParams) (int64, error) {
+	row := q.db.QueryRow(ctx, countChampionshipSquadByYearAndTeam, arg.Year, arg.TeamCode)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const countChampionshipStadiumsByYear = `-- name: CountChampionshipStadiumsByYear :one
 SELECT COUNT(*)
 FROM championships_stadiums_stats css
@@ -321,6 +341,67 @@ func (q *Queries) ListChampionshipScorersByYear(ctx context.Context, arg ListCha
 			&i.FullName,
 			&i.TeamCode,
 			&i.Goals,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listChampionshipSquadByYearAndTeam = `-- name: ListChampionshipSquadByYearAndTeam :many
+SELECT
+    p.id AS player_id,
+    COALESCE(p.first_name, '')::text AS first_name,
+    COALESCE(p.last_name, '')::text AS last_name,
+    s.position,
+    s.shirt_number
+FROM squads s
+INNER JOIN players p ON s.player_id = p.id
+WHERE s.year = $1
+    AND s.team_code = $2
+ORDER BY s.position ASC, p.last_name ASC, p.first_name ASC, p.id ASC
+LIMIT $4 OFFSET $3
+`
+
+type ListChampionshipSquadByYearAndTeamParams struct {
+	Year        int32
+	TeamCode    string
+	OffsetValue int32
+	LimitValue  int32
+}
+
+type ListChampionshipSquadByYearAndTeamRow struct {
+	PlayerID    int64
+	FirstName   string
+	LastName    string
+	Position    pgtype.Text
+	ShirtNumber pgtype.Int4
+}
+
+func (q *Queries) ListChampionshipSquadByYearAndTeam(ctx context.Context, arg ListChampionshipSquadByYearAndTeamParams) ([]ListChampionshipSquadByYearAndTeamRow, error) {
+	rows, err := q.db.Query(ctx, listChampionshipSquadByYearAndTeam,
+		arg.Year,
+		arg.TeamCode,
+		arg.OffsetValue,
+		arg.LimitValue,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListChampionshipSquadByYearAndTeamRow
+	for rows.Next() {
+		var i ListChampionshipSquadByYearAndTeamRow
+		if err := rows.Scan(
+			&i.PlayerID,
+			&i.FirstName,
+			&i.LastName,
+			&i.Position,
+			&i.ShirtNumber,
 		); err != nil {
 			return nil, err
 		}

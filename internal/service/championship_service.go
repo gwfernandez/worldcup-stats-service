@@ -174,6 +174,41 @@ func (s *championshipService) ListScorersByYear(ctx context.Context, filter doma
 	}, nil
 }
 
+// ListSquadByYearAndTeam returns a paginated list of squad players for a team in a championship year.
+func (s *championshipService) ListSquadByYearAndTeam(ctx context.Context, filter domain.ChampionshipSquadFilter) (*domain.ChampionshipSquadListResponse, error) {
+	if filter.Page < 1 {
+		return nil, fmt.Errorf("%w: page must be greater than or equal to 1", domain.ErrInvalidInput)
+	}
+	if filter.Size < 1 || filter.Size > 100 {
+		return nil, fmt.Errorf("%w: size must be between 1 and 100", domain.ErrInvalidInput)
+	}
+
+	data, totalElements, err := s.repo.ListSquadByYearAndTeam(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+	totalPages := int(math.Ceil(float64(totalElements) / float64(filter.Size)))
+	if totalElements == 0 {
+		totalPages = 0
+	}
+
+	if data == nil {
+		data = make([]domain.ChampionshipSquadPlayer, 0)
+	}
+
+	return &domain.ChampionshipSquadListResponse{
+		Data: data,
+		Pagination: domain.PaginationInfo{
+			Page:          filter.Page,
+			Size:          filter.Size,
+			TotalElements: totalElements,
+			TotalPages:    totalPages,
+			HasNext:       filter.Page < totalPages,
+			HasPrevious:   filter.Page > 1,
+		},
+	}, nil
+}
+
 // ListStandingsByYear returns a paginated list of standings for a championship year.
 func (s *championshipService) ListStandingsByYear(ctx context.Context, filter domain.ChampionshipStandingFilter) (*domain.ChampionshipStandingListResponse, error) {
 	if filter.Page < 1 {

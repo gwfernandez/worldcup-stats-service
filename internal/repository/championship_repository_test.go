@@ -586,6 +586,94 @@ func TestChampionshipRepository_ListScorersByYear(t *testing.T) {
 	})
 }
 
+func TestChampionshipRepository_ListSquadByYearAndTeam(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		mock, err := pgxmock.NewPool()
+		require.NoError(t, err)
+		defer mock.Close()
+
+		repo := repository.NewChampionshipRepository(mock)
+		filter := domain.ChampionshipSquadFilter{
+			Year:     1930,
+			TeamCode: "ARG",
+			Page:     2,
+			Size:     10,
+		}
+
+		countRows := mock.NewRows([]string{"count"}).AddRow(int64(13))
+		mock.ExpectQuery(`^-- name: CountChampionshipSquadByYearAndTeam :one.*`).
+			WithArgs(int32(1930), "ARG").
+			WillReturnRows(countRows)
+
+		rows := mock.NewRows([]string{"player_id", "first_name", "last_name", "position", "shirt_number"}).
+			AddRow(int64(10), "Guillermo", "Stabile", pgtype.Text{String: "forward", Valid: true}, pgtype.Int4{Int32: 10, Valid: true}).
+			AddRow(int64(11), "Carlos", "Peucelle", pgtype.Text{Valid: false}, pgtype.Int4{Valid: false})
+
+		mock.ExpectQuery(`^-- name: ListChampionshipSquadByYearAndTeam :many.*`).
+			WithArgs(int32(1930), "ARG", int32(10), int32(10)).
+			WillReturnRows(rows)
+
+		result, total, err := repo.ListSquadByYearAndTeam(context.Background(), filter)
+		assert.NoError(t, err)
+		assert.Equal(t, int64(13), total)
+		require.Len(t, result, 2)
+		assert.Equal(t, int64(10), result[0].PlayerID)
+		assert.Equal(t, "Guillermo", result[0].FirstName)
+		assert.Equal(t, "Stabile", result[0].LastName)
+		require.NotNil(t, result[0].Position)
+		assert.Equal(t, "forward", *result[0].Position)
+		require.NotNil(t, result[0].ShirtNumber)
+		assert.Equal(t, int32(10), *result[0].ShirtNumber)
+		assert.Nil(t, result[1].Position)
+		assert.Nil(t, result[1].ShirtNumber)
+
+		assert.NoError(t, mock.ExpectationsWereMet())
+	})
+
+	t.Run("db error on count", func(t *testing.T) {
+		mock, err := pgxmock.NewPool()
+		require.NoError(t, err)
+		defer mock.Close()
+
+		repo := repository.NewChampionshipRepository(mock)
+		filter := domain.ChampionshipSquadFilter{Year: 1930, TeamCode: "ARG", Page: 1, Size: 10}
+
+		mock.ExpectQuery(`^-- name: CountChampionshipSquadByYearAndTeam :one.*`).
+			WithArgs(int32(1930), "ARG").
+			WillReturnError(errors.New("db error"))
+
+		result, total, err := repo.ListSquadByYearAndTeam(context.Background(), filter)
+		assert.Error(t, err)
+		assert.Nil(t, result)
+		assert.Equal(t, int64(0), total)
+		assert.NoError(t, mock.ExpectationsWereMet())
+	})
+
+	t.Run("db error on list", func(t *testing.T) {
+		mock, err := pgxmock.NewPool()
+		require.NoError(t, err)
+		defer mock.Close()
+
+		repo := repository.NewChampionshipRepository(mock)
+		filter := domain.ChampionshipSquadFilter{Year: 1930, TeamCode: "ARG", Page: 1, Size: 10}
+
+		countRows := mock.NewRows([]string{"count"}).AddRow(int64(13))
+		mock.ExpectQuery(`^-- name: CountChampionshipSquadByYearAndTeam :one.*`).
+			WithArgs(int32(1930), "ARG").
+			WillReturnRows(countRows)
+
+		mock.ExpectQuery(`^-- name: ListChampionshipSquadByYearAndTeam :many.*`).
+			WithArgs(int32(1930), "ARG", int32(0), int32(10)).
+			WillReturnError(errors.New("db error"))
+
+		result, total, err := repo.ListSquadByYearAndTeam(context.Background(), filter)
+		assert.Error(t, err)
+		assert.Nil(t, result)
+		assert.Equal(t, int64(0), total)
+		assert.NoError(t, mock.ExpectationsWereMet())
+	})
+}
+
 func TestChampionshipRepository_GetByYear(t *testing.T) {
 	t.Run("success with stats", func(t *testing.T) {
 		mock, err := pgxmock.NewPool()
