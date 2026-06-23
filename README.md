@@ -588,6 +588,7 @@ Ejemplo de respuesta:
  | `GET` | `/api/championships/:year/fixture` | Obtener fixture completo de una edición por año |
  | `GET` | `/api/championships/:year/teams` | Listar selecciones participantes de una edición con filtros y paginación |
  | `GET` | `/api/championships/:year/scorers` | Listar goleadores de una edición con filtros y paginación |
+ | `GET` | `/api/championships/:year/squads/:teamCode` | Listar jugadores de una selección en una edición con paginación |
  | `GET` | `/api/championships/:year/stadiums` | Listar estadios utilizados en una edición con filtros y paginación |
  | `GET` | `/api/championships/:year/standings` | Listar tabla de posiciones de una edición con paginación |
 
@@ -642,6 +643,22 @@ Notas de respuesta:
 - Los resultados se ordenan por `goals` descendente y `fullName` ascendente.
 - `fullName` y `team` se exponen en `camelCase`; `team.code` se normaliza a mayúsculas.
 - `team.name` corresponde al nombre localizado de la selección según `Accept-Language`, con fallback a `teams.name`.
+
+Parámetros soportados para `/api/championships/:year/squads/:teamCode`:
+
+- `year`: año del Mundial informado en la ruta; debe ser numérico.
+- `teamCode`: código unificado de la selección informado en la ruta, normalizado a mayúsculas.
+- `page`: número de página (base 1, por defecto `1`).
+- `size`: tamaño de página (por defecto `20`, máximo `100`).
+
+Notas de respuesta:
+
+- Si `:year` no es numérico, responde `400 Bad Request` con `{"error":"invalid year parameter"}`.
+- Si no hay jugadores asociados para `:year` y `:teamCode`, responde `200 OK` con `data: []` y metadata de paginación.
+- Los resultados se ordenan por `position` ascendente, `lastName` ascendente y `firstName` ascendente.
+- La respuesta expone `playerId`, `firstName`, `lastName`, `position` y `shirtNumber`.
+- `position` se obtiene de `squads.position`.
+- `position` y `shirtNumber` conservan `null` cuando no existe un valor en la base.
 
 Parámetros soportados para `/api/championships/:year/stadiums`:
 

@@ -275,6 +275,37 @@ func (r *championshipRepository) ListScorersByYear(ctx context.Context, filter d
 	return scorers, total, nil
 }
 
+// ListSquadByYearAndTeam retrieves a paginated list of squad players for a team in a championship year.
+func (r *championshipRepository) ListSquadByYearAndTeam(ctx context.Context, filter domain.ChampionshipSquadFilter) ([]domain.ChampionshipSquadPlayer, int64, error) {
+	total, err := r.queries.CountChampionshipSquadByYearAndTeam(ctx, sqlc.CountChampionshipSquadByYearAndTeamParams{
+		Year:     int32(filter.Year),
+		TeamCode: filter.TeamCode,
+	})
+	if err != nil {
+		return nil, 0, err
+	}
+
+	limit := int32(filter.Size)
+	offset := int32((filter.Page - 1) * filter.Size)
+
+	rows, err := r.queries.ListChampionshipSquadByYearAndTeam(ctx, sqlc.ListChampionshipSquadByYearAndTeamParams{
+		Year:        int32(filter.Year),
+		TeamCode:    filter.TeamCode,
+		OffsetValue: offset,
+		LimitValue:  limit,
+	})
+	if err != nil {
+		return nil, 0, err
+	}
+
+	players := make([]domain.ChampionshipSquadPlayer, len(rows))
+	for i, row := range rows {
+		players[i] = toChampionshipSquadPlayerDomain(row)
+	}
+
+	return players, total, nil
+}
+
 // ListStandingsByYear retrieves a paginated list of standings for a championship year.
 func (r *championshipRepository) ListStandingsByYear(ctx context.Context, filter domain.ChampionshipStandingFilter) ([]domain.ChampionshipStanding, int64, error) {
 	total, err := r.queries.CountChampionshipStandingsByYear(ctx, int32(filter.Year))
@@ -423,6 +454,26 @@ func toChampionshipScorerDomain(row sqlc.ListChampionshipScorersByYearRow) domai
 		FullName: row.FullName,
 		Team:     domain.SimpleTeam{Code: strings.ToUpper(row.TeamCode)},
 		Goals:    row.Goals,
+	}
+}
+
+func toChampionshipSquadPlayerDomain(row sqlc.ListChampionshipSquadByYearAndTeamRow) domain.ChampionshipSquadPlayer {
+	var position *string
+	if row.Position.Valid {
+		position = &row.Position.String
+	}
+
+	var shirtNumber *int32
+	if row.ShirtNumber.Valid {
+		shirtNumber = &row.ShirtNumber.Int32
+	}
+
+	return domain.ChampionshipSquadPlayer{
+		PlayerID:    row.PlayerID,
+		FirstName:   row.FirstName,
+		LastName:    row.LastName,
+		Position:    position,
+		ShirtNumber: shirtNumber,
 	}
 }
 

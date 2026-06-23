@@ -104,6 +104,23 @@ type ChampionshipScorerFilter struct {
 	Size     int
 }
 
+// ChampionshipSquadPlayer represents a player registered in a championship squad.
+type ChampionshipSquadPlayer struct {
+	PlayerID    int64   `json:"playerId"`
+	FirstName   string  `json:"firstName"`
+	LastName    string  `json:"lastName"`
+	Position    *string `json:"position"`
+	ShirtNumber *int32  `json:"shirtNumber"`
+}
+
+// ChampionshipSquadFilter represents filters for listing a team's squad in a championship.
+type ChampionshipSquadFilter struct {
+	Year     int
+	TeamCode string
+	Page     int
+	Size     int
+}
+
 // ChampionshipStanding represents a team standing in a championship edition.
 type ChampionshipStanding struct {
 	Team           SimpleTeam `json:"team"`
@@ -151,6 +168,12 @@ type ChampionshipStadiumListResponse struct {
 type ChampionshipScorerListResponse struct {
 	Data       []ChampionshipScorer `json:"data"`
 	Pagination PaginationInfo       `json:"pagination"`
+}
+
+// ChampionshipSquadListResponse represents the JSON response for listing championship squad players.
+type ChampionshipSquadListResponse struct {
+	Data       []ChampionshipSquadPlayer `json:"data"`
+	Pagination PaginationInfo            `json:"pagination"`
 }
 
 // ChampionshipStandingListResponse represents the JSON response for listing championship standings.

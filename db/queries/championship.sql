@@ -283,3 +283,24 @@ WHERE ss.year = $1
         OR LOWER(p.last_name) LIKE '%' || LOWER($2) || '%'
     )
     AND ($3::text = '' OR ss.team_code = $3);
+
+-- name: ListChampionshipSquadByYearAndTeam :many
+SELECT
+    p.id AS player_id,
+    COALESCE(p.first_name, '')::text AS first_name,
+    COALESCE(p.last_name, '')::text AS last_name,
+    s.position,
+    s.shirt_number
+FROM squads s
+INNER JOIN players p ON s.player_id = p.id
+WHERE s.year = sqlc.arg(year)
+    AND s.team_code = sqlc.arg(team_code)
+ORDER BY s.position ASC, p.last_name ASC, p.first_name ASC, p.id ASC
+LIMIT sqlc.arg(limit_value) OFFSET sqlc.arg(offset_value);
+
+-- name: CountChampionshipSquadByYearAndTeam :one
+SELECT COUNT(*)
+FROM squads s
+INNER JOIN players p ON s.player_id = p.id
+WHERE s.year = sqlc.arg(year)
+    AND s.team_code = sqlc.arg(team_code);

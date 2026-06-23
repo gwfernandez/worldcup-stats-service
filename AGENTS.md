@@ -315,8 +315,25 @@ Notas de respuesta:
 | `GET` | `/api/championships/:year/fixture` | Obtener fixture completo de una edición por año |
 | `GET` | `/api/championships/:year/teams` | Listar selecciones participantes de una edición con filtros |
 | `GET` | `/api/championships/:year/scorers` | Listar goleadores de una edición con filtros |
+| `GET` | `/api/championships/:year/squads/:teamCode` | Listar jugadores de una selección en una edición con paginación |
 | `GET` | `/api/championships/:year/stadiums` | Listar estadios utilizados de una edición con filtros |
 | `GET` | `/api/championships/:year/standings` | Listar tabla de posiciones de una edición con paginación |
+
+Parámetros soportados para `/api/championships/:year/squads/:teamCode`:
+
+- `year`: año del Mundial informado en la ruta; debe ser numérico.
+- `teamCode`: código unificado de la selección informado en la ruta, normalizado a mayúsculas.
+- `page`: número de página (base 1, por defecto `1`).
+- `size`: tamaño de página (por defecto `20`, máximo `100`).
+
+Notas de respuesta:
+
+- Devuelve `data` como array de jugadores y metadata `pagination`.
+- La respuesta expone `playerId`, `firstName`, `lastName`, `position` y `shirtNumber`.
+- `position` se obtiene de `squads.position`.
+- `position` y `shirtNumber` conservan `null` cuando no existe un valor en la base.
+- Los resultados se ordenan por `position`, `lastName` y `firstName` ascendentes.
+- Sin resultados responde `200 OK` con `data: []` y metadata de paginación.
 
 ---
 
