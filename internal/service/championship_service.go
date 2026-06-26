@@ -139,6 +139,50 @@ func (s *championshipService) ListStadiumsByYear(ctx context.Context, filter dom
 	}, nil
 }
 
+// ListStadiumMatchesByYearAndStadium returns a paginated list of matches played in a stadium.
+func (s *championshipService) ListStadiumMatchesByYearAndStadium(ctx context.Context, filter domain.ChampionshipStadiumMatchFilter) (*domain.ChampionshipStadiumMatchListResponse, error) {
+	if filter.Year < 1 {
+		return nil, fmt.Errorf("%w: year must be greater than or equal to 1", domain.ErrInvalidInput)
+	}
+	if filter.StadiumID < 1 {
+		return nil, fmt.Errorf("%w: stadiumId must be greater than or equal to 1", domain.ErrInvalidInput)
+	}
+	if filter.Page < 1 {
+		return nil, fmt.Errorf("%w: page must be greater than or equal to 1", domain.ErrInvalidInput)
+	}
+	if filter.Size < 1 || filter.Size > 100 {
+		return nil, fmt.Errorf("%w: size must be between 1 and 100", domain.ErrInvalidInput)
+	}
+
+	data, totalElements, err := s.repo.ListStadiumMatchesByYearAndStadium(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+	totalPages := int(math.Ceil(float64(totalElements) / float64(filter.Size)))
+	if totalElements == 0 {
+		totalPages = 0
+	}
+
+	if data == nil {
+		data = make([]domain.ChampionshipStadiumMatch, 0)
+	}
+	if err := s.hydrateChampionshipStadiumMatches(ctx, data, filter.Language); err != nil {
+		return nil, err
+	}
+
+	return &domain.ChampionshipStadiumMatchListResponse{
+		Data: data,
+		Pagination: domain.PaginationInfo{
+			Page:          filter.Page,
+			Size:          filter.Size,
+			TotalElements: totalElements,
+			TotalPages:    totalPages,
+			HasNext:       filter.Page < totalPages,
+			HasPrevious:   filter.Page > 1,
+		},
+	}, nil
+}
+
 // ListScorersByYear returns a paginated and filtered list of scorers for a championship year.
 func (s *championshipService) ListScorersByYear(ctx context.Context, filter domain.ChampionshipScorerFilter) (*domain.ChampionshipScorerListResponse, error) {
 	if filter.Page < 1 {
@@ -337,6 +381,34 @@ func (s *championshipService) hydrateChampionshipStadiums(ctx context.Context, s
 			return err
 		}
 		stadiums[i].Country.Name = name
+	}
+	return nil
+}
+
+func (s *championshipService) hydrateChampionshipStadiumMatches(ctx context.Context, matches []domain.ChampionshipStadiumMatch, language string) error {
+	for i := range matches {
+		if matches[i].Hosts == nil {
+			matches[i].Hosts = make([]domain.SimpleTeam, 0)
+		}
+		for j := range matches[i].Hosts {
+			name, err := s.resolveTeamName(ctx, matches[i].Hosts[j].Code, language)
+			if err != nil {
+				return err
+			}
+			matches[i].Hosts[j].Name = name
+		}
+
+		homeName, err := s.resolveTeamName(ctx, matches[i].HomeTeam.Code, language)
+		if err != nil {
+			return err
+		}
+		matches[i].HomeTeam.Name = homeName
+
+		awayName, err := s.resolveTeamName(ctx, matches[i].AwayTeam.Code, language)
+		if err != nil {
+			return err
+		}
+		matches[i].AwayTeam.Name = awayName
 	}
 	return nil
 }

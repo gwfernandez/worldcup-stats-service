@@ -58,6 +58,14 @@ func (m *MockChampionshipRepository) ListStadiumsByYear(ctx context.Context, fil
 	return args.Get(0).([]domain.ChampionshipStadium), args.Get(1).(int64), args.Error(2)
 }
 
+func (m *MockChampionshipRepository) ListStadiumMatchesByYearAndStadium(ctx context.Context, filter domain.ChampionshipStadiumMatchFilter) ([]domain.ChampionshipStadiumMatch, int64, error) {
+	args := m.Called(ctx, filter)
+	if args.Get(0) == nil {
+		return nil, args.Get(1).(int64), args.Error(2)
+	}
+	return args.Get(0).([]domain.ChampionshipStadiumMatch), args.Get(1).(int64), args.Error(2)
+}
+
 func (m *MockChampionshipRepository) ListScorersByYear(ctx context.Context, filter domain.ChampionshipScorerFilter) ([]domain.ChampionshipScorer, int64, error) {
 	args := m.Called(ctx, filter)
 	if args.Get(0) == nil {
@@ -508,6 +516,127 @@ func TestChampionshipService_ListStadiumsByYear(t *testing.T) {
 	})
 }
 
+func TestChampionshipService_ListStadiumMatchesByYearAndStadium(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("success", func(t *testing.T) {
+		mockRepo := new(MockChampionshipRepository)
+		resolver := new(mockTeamNameResolver)
+		svc := service.NewChampionshipService(mockRepo, resolver)
+		filter := domain.ChampionshipStadiumMatchFilter{Year: 1930, StadiumID: 1, Language: "es", Page: 1, Size: 10}
+
+		expected := []domain.ChampionshipStadiumMatch{{
+			Year:                   1930,
+			Hosts:                  []domain.SimpleTeam{{Code: "URU"}},
+			Stage:                  stringPtr("final"),
+			GroupCode:              nil,
+			MatchDate:              stringPtr("1930-07-30"),
+			MatchTime:              stringPtr("15:30:00"),
+			HomeTeam:               domain.SimpleTeam{Code: "URU"},
+			HomeTeamScore:          int32Ptr(4),
+			HomeTeamScorePenalties: nil,
+			AwayTeam:               domain.SimpleTeam{Code: "ARG"},
+			AwayTeamScore:          int32Ptr(2),
+			AwayTeamScorePenalties: nil,
+		}}
+		mockRepo.On("ListStadiumMatchesByYearAndStadium", ctx, filter).Return(expected, int64(11), nil)
+		resolver.On("Resolve", ctx, "URU", "es").Return("Uruguay", nil).Twice()
+		resolver.On("Resolve", ctx, "ARG", "es").Return("Argentina", nil)
+
+		res, err := svc.ListStadiumMatchesByYearAndStadium(ctx, filter)
+		assert.NoError(t, err)
+		require.NotNil(t, res)
+		require.Len(t, res.Data, 1)
+		assert.Equal(t, []domain.SimpleTeam{{Code: "URU", Name: "Uruguay"}}, res.Data[0].Hosts)
+		assert.Equal(t, domain.SimpleTeam{Code: "URU", Name: "Uruguay"}, res.Data[0].HomeTeam)
+		assert.Equal(t, domain.SimpleTeam{Code: "ARG", Name: "Argentina"}, res.Data[0].AwayTeam)
+		assert.Equal(t, 1, res.Pagination.Page)
+		assert.Equal(t, 10, res.Pagination.Size)
+		assert.Equal(t, int64(11), res.Pagination.TotalElements)
+		assert.Equal(t, 2, res.Pagination.TotalPages)
+		assert.True(t, res.Pagination.HasNext)
+		assert.False(t, res.Pagination.HasPrevious)
+		mockRepo.AssertExpectations(t)
+		resolver.AssertExpectations(t)
+	})
+
+	t.Run("empty response", func(t *testing.T) {
+		mockRepo := new(MockChampionshipRepository)
+		svc := service.NewChampionshipService(mockRepo)
+		filter := domain.ChampionshipStadiumMatchFilter{Year: 1930, StadiumID: 99, Page: 1, Size: 20}
+
+		mockRepo.On("ListStadiumMatchesByYearAndStadium", ctx, filter).Return(nil, int64(0), nil)
+
+		res, err := svc.ListStadiumMatchesByYearAndStadium(ctx, filter)
+		assert.NoError(t, err)
+		require.NotNil(t, res)
+		assert.Empty(t, res.Data)
+		assert.NotNil(t, res.Data)
+		assert.Equal(t, 0, res.Pagination.TotalPages)
+		assert.False(t, res.Pagination.HasNext)
+		assert.False(t, res.Pagination.HasPrevious)
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("invalid year", func(t *testing.T) {
+		svc := service.NewChampionshipService(new(MockChampionshipRepository))
+		res, err := svc.ListStadiumMatchesByYearAndStadium(ctx, domain.ChampionshipStadiumMatchFilter{Year: 0, StadiumID: 1, Page: 1, Size: 20})
+		assert.Error(t, err)
+		assert.True(t, errors.Is(err, domain.ErrInvalidInput))
+		assert.Nil(t, res)
+	})
+
+	t.Run("invalid stadium id", func(t *testing.T) {
+		svc := service.NewChampionshipService(new(MockChampionshipRepository))
+		res, err := svc.ListStadiumMatchesByYearAndStadium(ctx, domain.ChampionshipStadiumMatchFilter{Year: 1930, StadiumID: 0, Page: 1, Size: 20})
+		assert.Error(t, err)
+		assert.True(t, errors.Is(err, domain.ErrInvalidInput))
+		assert.Nil(t, res)
+	})
+
+	t.Run("invalid pagination", func(t *testing.T) {
+		svc := service.NewChampionshipService(new(MockChampionshipRepository))
+		res, err := svc.ListStadiumMatchesByYearAndStadium(ctx, domain.ChampionshipStadiumMatchFilter{Year: 1930, StadiumID: 1, Page: 1, Size: 101})
+		assert.Error(t, err)
+		assert.True(t, errors.Is(err, domain.ErrInvalidInput))
+		assert.Nil(t, res)
+	})
+
+	t.Run("resolver error", func(t *testing.T) {
+		mockRepo := new(MockChampionshipRepository)
+		resolver := new(mockTeamNameResolver)
+		svc := service.NewChampionshipService(mockRepo, resolver)
+		filter := domain.ChampionshipStadiumMatchFilter{Year: 1930, StadiumID: 1, Language: "es", Page: 1, Size: 20}
+		data := []domain.ChampionshipStadiumMatch{{
+			Hosts:    []domain.SimpleTeam{{Code: "URU"}},
+			HomeTeam: domain.SimpleTeam{Code: "URU"},
+			AwayTeam: domain.SimpleTeam{Code: "ARG"},
+		}}
+
+		mockRepo.On("ListStadiumMatchesByYearAndStadium", ctx, filter).Return(data, int64(1), nil)
+		resolver.On("Resolve", ctx, "URU", "es").Return("", errors.New("resolver error"))
+
+		res, err := svc.ListStadiumMatchesByYearAndStadium(ctx, filter)
+		assert.Error(t, err)
+		assert.Nil(t, res)
+		mockRepo.AssertExpectations(t)
+		resolver.AssertExpectations(t)
+	})
+
+	t.Run("repository error", func(t *testing.T) {
+		mockRepo := new(MockChampionshipRepository)
+		svc := service.NewChampionshipService(mockRepo)
+		filter := domain.ChampionshipStadiumMatchFilter{Year: 1930, StadiumID: 1, Page: 1, Size: 20}
+
+		mockRepo.On("ListStadiumMatchesByYearAndStadium", ctx, filter).Return(nil, int64(0), errors.New("db error"))
+
+		res, err := svc.ListStadiumMatchesByYearAndStadium(ctx, filter)
+		assert.Error(t, err)
+		assert.Nil(t, res)
+		mockRepo.AssertExpectations(t)
+	})
+}
+
 func TestChampionshipService_ListScorersByYear(t *testing.T) {
 	ctx := context.Background()
 
@@ -809,5 +938,9 @@ func TestChampionshipService_GetByYear(t *testing.T) {
 }
 
 func stringPtr(value string) *string {
+	return &value
+}
+
+func int32Ptr(value int32) *int32 {
 	return &value
 }

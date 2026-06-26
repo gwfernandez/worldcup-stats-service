@@ -252,6 +252,34 @@ INNER JOIN stadiums s ON s.id = css.stadium_id
 WHERE css.year = $1
     AND ($2::text = '' OR LOWER(s.name) LIKE '%' || LOWER($2) || '%');
 
+-- name: ListChampionshipStadiumMatchesByYearAndStadium :many
+SELECT
+    m.year,
+    c.host_codes,
+    COALESCE(m.stage::text, '')::text AS stage,
+    m.group_code,
+    m.match_date,
+    m.match_time,
+    m.home_team_code,
+    m.home_team_score,
+    m.home_team_score_penalties,
+    m.away_team_code,
+    m.away_team_score,
+    m.away_team_score_penalties
+FROM matches m
+INNER JOIN championships c ON c.year = m.year
+WHERE m.year = sqlc.arg(year)
+    AND m.stadium_id = sqlc.arg(stadium_id)
+ORDER BY m.match_date ASC, m.match_time ASC, m.id ASC
+LIMIT sqlc.arg(limit_value) OFFSET sqlc.arg(offset_value);
+
+-- name: CountChampionshipStadiumMatchesByYearAndStadium :one
+SELECT COUNT(*)
+FROM matches m
+INNER JOIN championships c ON c.year = m.year
+WHERE m.year = sqlc.arg(year)
+    AND m.stadium_id = sqlc.arg(stadium_id);
+
 -- name: ListChampionshipScorersByYear :many
 SELECT
     p.id AS player_id,

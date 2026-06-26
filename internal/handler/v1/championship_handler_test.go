@@ -53,6 +53,14 @@ func (m *MockChampionshipService) ListStadiumsByYear(ctx context.Context, filter
 	return args.Get(0).(*domain.ChampionshipStadiumListResponse), args.Error(1)
 }
 
+func (m *MockChampionshipService) ListStadiumMatchesByYearAndStadium(ctx context.Context, filter domain.ChampionshipStadiumMatchFilter) (*domain.ChampionshipStadiumMatchListResponse, error) {
+	args := m.Called(ctx, filter)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*domain.ChampionshipStadiumMatchListResponse), args.Error(1)
+}
+
 func (m *MockChampionshipService) ListScorersByYear(ctx context.Context, filter domain.ChampionshipScorerFilter) (*domain.ChampionshipScorerListResponse, error) {
 	args := m.Called(ctx, filter)
 	if args.Get(0) == nil {
@@ -846,6 +854,162 @@ func TestChampionshipHandler_ListStadiumsByYear(t *testing.T) {
 	})
 }
 
+func TestChampionshipHandler_ListStadiumMatchesByYearAndStadium(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		svc := new(MockChampionshipService)
+		r := setupChampionshipRouter(svc)
+
+		expected := &domain.ChampionshipStadiumMatchListResponse{
+			Data: []domain.ChampionshipStadiumMatch{{
+				Year:                   1930,
+				Hosts:                  []domain.SimpleTeam{{Code: "URU", Name: "Uruguay"}},
+				Stage:                  testStringPtr("final"),
+				GroupCode:              nil,
+				MatchDate:              testStringPtr("1930-07-30"),
+				MatchTime:              testStringPtr("15:30:00"),
+				HomeTeam:               domain.SimpleTeam{Code: "URU", Name: "Uruguay"},
+				HomeTeamScore:          testInt32Ptr(4),
+				HomeTeamScorePenalties: nil,
+				AwayTeam:               domain.SimpleTeam{Code: "ARG", Name: "Argentina"},
+				AwayTeamScore:          testInt32Ptr(2),
+				AwayTeamScorePenalties: nil,
+			}},
+			Pagination: domain.PaginationInfo{
+				Page:          2,
+				Size:          10,
+				TotalElements: 11,
+				TotalPages:    2,
+				HasPrevious:   true,
+			},
+		}
+
+		svc.On("ListStadiumMatchesByYearAndStadium", mock.Anything, domain.ChampionshipStadiumMatchFilter{
+			Year:      1930,
+			StadiumID: 1,
+			Language:  "en",
+			Page:      2,
+			Size:      10,
+		}).Return(expected, nil)
+
+		req, _ := http.NewRequest(http.MethodGet, "/api/championships/1930/stadiums/1?page=2&size=10", nil)
+		req.Header.Set("Accept-Language", "en")
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		assert.Equal(t, "1", w.Header().Get("API-Version-Used"))
+		assert.JSONEq(t, `{
+			"data": [{
+				"year": 1930,
+				"hosts": [{
+					"code": "URU",
+					"name": "Uruguay"
+				}],
+				"stage": "final",
+				"groupCode": null,
+				"matchDate": "1930-07-30",
+				"matchTime": "15:30:00",
+				"homeTeam": {
+					"code": "URU",
+					"name": "Uruguay"
+				},
+				"homeTeamScore": 4,
+				"homeTeamScorePenalties": null,
+				"awayTeam": {
+					"code": "ARG",
+					"name": "Argentina"
+				},
+				"awayTeamScore": 2,
+				"awayTeamScorePenalties": null
+			}],
+			"pagination": {
+				"page": 2,
+				"size": 10,
+				"totalElements": 11,
+				"totalPages": 2,
+				"hasNext": false,
+				"hasPrevious": true
+			}
+		}`, w.Body.String())
+		svc.AssertExpectations(t)
+	})
+
+	t.Run("invalid year", func(t *testing.T) {
+		svc := new(MockChampionshipService)
+		r := setupChampionshipRouter(svc)
+
+		req, _ := http.NewRequest(http.MethodGet, "/api/championships/abc/stadiums/1", nil)
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+		assert.JSONEq(t, `{"error":"invalid year parameter"}`, w.Body.String())
+	})
+
+	t.Run("invalid stadium id", func(t *testing.T) {
+		svc := new(MockChampionshipService)
+		r := setupChampionshipRouter(svc)
+
+		req, _ := http.NewRequest(http.MethodGet, "/api/championships/1930/stadiums/0", nil)
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+		assert.JSONEq(t, `{"error":"invalid stadiumId parameter"}`, w.Body.String())
+	})
+
+	t.Run("invalid page", func(t *testing.T) {
+		svc := new(MockChampionshipService)
+		r := setupChampionshipRouter(svc)
+
+		req, _ := http.NewRequest(http.MethodGet, "/api/championships/1930/stadiums/1?page=0", nil)
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+		assert.JSONEq(t, `{"error":"invalid page parameter"}`, w.Body.String())
+	})
+
+	t.Run("invalid size", func(t *testing.T) {
+		svc := new(MockChampionshipService)
+		r := setupChampionshipRouter(svc)
+
+		req, _ := http.NewRequest(http.MethodGet, "/api/championships/1930/stadiums/1?size=101", nil)
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+		assert.JSONEq(t, `{"error":"invalid size parameter"}`, w.Body.String())
+	})
+
+	t.Run("service invalid input error", func(t *testing.T) {
+		svc := new(MockChampionshipService)
+		r := setupChampionshipRouter(svc)
+
+		svc.On("ListStadiumMatchesByYearAndStadium", mock.Anything, mock.Anything).Return(nil, domain.ErrInvalidInput)
+
+		req, _ := http.NewRequest(http.MethodGet, "/api/championships/1930/stadiums/1", nil)
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+	})
+
+	t.Run("service internal error", func(t *testing.T) {
+		svc := new(MockChampionshipService)
+		r := setupChampionshipRouter(svc)
+
+		svc.On("ListStadiumMatchesByYearAndStadium", mock.Anything, mock.Anything).Return(nil, errors.New("db error"))
+
+		req, _ := http.NewRequest(http.MethodGet, "/api/championships/1930/stadiums/1", nil)
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusInternalServerError, w.Code)
+		assert.JSONEq(t, `{"error":"failed to retrieve championship stadium matches"}`, w.Body.String())
+	})
+}
+
 func TestChampionshipHandler_List(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		svc := new(MockChampionshipService)
@@ -963,6 +1127,14 @@ func TestChampionshipHandler_List(t *testing.T) {
 
 		assert.Equal(t, http.StatusInternalServerError, w.Code)
 	})
+}
+
+func testStringPtr(value string) *string {
+	return &value
+}
+
+func testInt32Ptr(value int32) *int32 {
+	return &value
 }
 
 func TestChampionshipHandler_GetByYear(t *testing.T) {

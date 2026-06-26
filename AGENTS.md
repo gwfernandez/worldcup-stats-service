@@ -317,6 +317,7 @@ Notas de respuesta:
 | `GET` | `/api/championships/:year/scorers` | Listar goleadores de una edición con filtros |
 | `GET` | `/api/championships/:year/squads/:teamCode` | Listar jugadores de una selección en una edición con paginación |
 | `GET` | `/api/championships/:year/stadiums` | Listar estadios utilizados de una edición con filtros |
+| `GET` | `/api/championships/:year/stadiums/:stadiumId` | Listar partidos jugados en un estadio durante una edición con paginación |
 | `GET` | `/api/championships/:year/standings` | Listar tabla de posiciones de una edición con paginación |
 
 Parámetros soportados para `/api/championships/:year/squads/:teamCode`:
@@ -349,6 +350,24 @@ Notas de respuesta:
 - `country` usa `SimpleTeam`, se obtiene de `stadiums.country` y respeta `Accept-Language`.
 - Si el estadio no tiene país cargado, `country` se serializa como `null`.
 - Los resultados se ordenan por `matchesPlayed` descendente y `name` ascendente.
+- Sin resultados responde `200 OK` con `data: []` y metadata de paginación.
+
+Parámetros soportados para `/api/championships/:year/stadiums/:stadiumId`:
+
+- `year`: año del Mundial informado en la ruta; debe ser numérico positivo.
+- `stadiumId`: identificador del estadio informado en la ruta; debe ser numérico positivo.
+- `page`: número de página (base 1, por defecto `1`).
+- `size`: tamaño de página (por defecto `20`, máximo `100`).
+
+Notas de respuesta:
+
+- Devuelve `data` como array de partidos y metadata `pagination`.
+- La respuesta expone `year`, `hosts`, `stage`, `groupCode`, `matchDate`, `matchTime`, `homeTeam`, `homeTeamScore`, `homeTeamScorePenalties`, `awayTeam`, `awayTeamScore` y `awayTeamScorePenalties`.
+- `hosts`, `homeTeam` y `awayTeam` usan `SimpleTeam` y respetan `Accept-Language`.
+- `hosts` se obtiene de `championships.host_codes`, conserva el orden configurado para la edición y normaliza los códigos a mayúsculas.
+- `homeTeam.code` y `awayTeam.code` se normalizan a mayúsculas.
+- `stage`, `groupCode`, `matchDate`, `matchTime`, scores y penales conservan `null` cuando no existe un valor en la base.
+- Los resultados se ordenan por `matchDate`, `matchTime` e identificador interno de partido ascendentes.
 - Sin resultados responde `200 OK` con `data: []` y metadata de paginación.
 
 ---

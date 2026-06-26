@@ -58,6 +58,26 @@ func (q *Queries) CountChampionshipSquadByYearAndTeam(ctx context.Context, arg C
 	return count, err
 }
 
+const countChampionshipStadiumMatchesByYearAndStadium = `-- name: CountChampionshipStadiumMatchesByYearAndStadium :one
+SELECT COUNT(*)
+FROM matches m
+INNER JOIN championships c ON c.year = m.year
+WHERE m.year = $1
+    AND m.stadium_id = $2
+`
+
+type CountChampionshipStadiumMatchesByYearAndStadiumParams struct {
+	Year      int32
+	StadiumID pgtype.Int8
+}
+
+func (q *Queries) CountChampionshipStadiumMatchesByYearAndStadium(ctx context.Context, arg CountChampionshipStadiumMatchesByYearAndStadiumParams) (int64, error) {
+	row := q.db.QueryRow(ctx, countChampionshipStadiumMatchesByYearAndStadium, arg.Year, arg.StadiumID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const countChampionshipStadiumsByYear = `-- name: CountChampionshipStadiumsByYear :one
 SELECT COUNT(*)
 FROM championships_stadiums_stats css
@@ -402,6 +422,88 @@ func (q *Queries) ListChampionshipSquadByYearAndTeam(ctx context.Context, arg Li
 			&i.LastName,
 			&i.Position,
 			&i.ShirtNumber,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listChampionshipStadiumMatchesByYearAndStadium = `-- name: ListChampionshipStadiumMatchesByYearAndStadium :many
+SELECT
+    m.year,
+    c.host_codes,
+    COALESCE(m.stage::text, '')::text AS stage,
+    m.group_code,
+    m.match_date,
+    m.match_time,
+    m.home_team_code,
+    m.home_team_score,
+    m.home_team_score_penalties,
+    m.away_team_code,
+    m.away_team_score,
+    m.away_team_score_penalties
+FROM matches m
+INNER JOIN championships c ON c.year = m.year
+WHERE m.year = $1
+    AND m.stadium_id = $2
+ORDER BY m.match_date ASC, m.match_time ASC, m.id ASC
+LIMIT $4 OFFSET $3
+`
+
+type ListChampionshipStadiumMatchesByYearAndStadiumParams struct {
+	Year        int32
+	StadiumID   pgtype.Int8
+	OffsetValue int32
+	LimitValue  int32
+}
+
+type ListChampionshipStadiumMatchesByYearAndStadiumRow struct {
+	Year                   int32
+	HostCodes              []string
+	Stage                  string
+	GroupCode              pgtype.Text
+	MatchDate              pgtype.Date
+	MatchTime              pgtype.Time
+	HomeTeamCode           string
+	HomeTeamScore          pgtype.Int4
+	HomeTeamScorePenalties pgtype.Int4
+	AwayTeamCode           string
+	AwayTeamScore          pgtype.Int4
+	AwayTeamScorePenalties pgtype.Int4
+}
+
+func (q *Queries) ListChampionshipStadiumMatchesByYearAndStadium(ctx context.Context, arg ListChampionshipStadiumMatchesByYearAndStadiumParams) ([]ListChampionshipStadiumMatchesByYearAndStadiumRow, error) {
+	rows, err := q.db.Query(ctx, listChampionshipStadiumMatchesByYearAndStadium,
+		arg.Year,
+		arg.StadiumID,
+		arg.OffsetValue,
+		arg.LimitValue,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListChampionshipStadiumMatchesByYearAndStadiumRow
+	for rows.Next() {
+		var i ListChampionshipStadiumMatchesByYearAndStadiumRow
+		if err := rows.Scan(
+			&i.Year,
+			&i.HostCodes,
+			&i.Stage,
+			&i.GroupCode,
+			&i.MatchDate,
+			&i.MatchTime,
+			&i.HomeTeamCode,
+			&i.HomeTeamScore,
+			&i.HomeTeamScorePenalties,
+			&i.AwayTeamCode,
+			&i.AwayTeamScore,
+			&i.AwayTeamScorePenalties,
 		); err != nil {
 			return nil, err
 		}
