@@ -189,7 +189,7 @@ Idiomas soportados inicialmente:
 
 Cuando falta una traducción para el idioma solicitado, la API responde el valor base almacenado en la tabla principal. Para confederaciones, el campo `confederations.name` funciona como fallback en español; para selecciones, el fallback es `teams.name`.
 
-Actualmente el header `Accept-Language` localiza nombres de confederaciones y nombres de selecciones en los endpoints que los exponen o filtran: `/api/confederations`, `/api/teams`, `/api/champions`, `/api/standings`, `/api/scorers`, `/api/players/:playerId/goals`, `/api/championships` y `/api/championships/:year/teams`.
+Actualmente el header `Accept-Language` localiza nombres de confederaciones y nombres de selecciones en los endpoints que los exponen o filtran: `/api/confederations`, `/api/teams`, `/api/champions`, `/api/standings`, `/api/scorers`, `/api/players/:playerId/goals`, `/api/championships`, `/api/championships/:year/teams` y `/api/championships/:year/stadiums`.
 
 **Ejemplo:** `Accept-Language: en`
 
@@ -671,7 +671,9 @@ Notas de respuesta:
 - Si `:year` no es numérico, responde `400 Bad Request` con `{"error":"invalid year parameter"}`.
 - Si `:year` es numérico pero no tiene estadios asociados, responde `200 OK` con `data: []` y metadata de paginación.
 - Los resultados se ordenan por `matchesPlayed` descendente y `name` ascendente.
-- La respuesta expone `year`, `id`, `name`, `cityName`, `capacity` y `matchesPlayed`.
+- La respuesta expone `id`, `name`, `cityName`, `country`, `capacity` y `matchesPlayed`.
+- `country` usa la estructura `SimpleTeam`, se obtiene de `stadiums.country` y respeta `Accept-Language`.
+- Si el estadio no tiene país cargado, `country` se serializa como `null`.
 
 Parámetros soportados para `/api/championships/:year/standings`:
 

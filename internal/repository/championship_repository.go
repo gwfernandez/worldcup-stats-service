@@ -438,11 +438,17 @@ func toChampionshipTeamDomainFromFields(year int32, teamCode string, confederati
 }
 
 func toChampionshipStadiumDomain(row sqlc.ListChampionshipStadiumsByYearRow) domain.ChampionshipStadium {
+	countryCode := strings.ToUpper(strings.TrimSpace(row.CountryCode))
+	var country *domain.SimpleTeam
+	if countryCode != "" {
+		country = &domain.SimpleTeam{Code: countryCode}
+	}
+
 	return domain.ChampionshipStadium{
-		Year:          int(row.Year),
 		ID:            row.ID,
 		Name:          row.Name,
 		CityName:      row.CityName,
+		Country:       country,
 		Capacity:      row.Capacity,
 		MatchesPlayed: row.MatchesPlayed,
 	}

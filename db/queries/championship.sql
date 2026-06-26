@@ -232,10 +232,10 @@ WHERE ct.year = $1;
 
 -- name: ListChampionshipStadiumsByYear :many
 SELECT
-    css.year,
     s.id,
     s.name,
     COALESCE(s.city_name, '')::text AS city_name,
+    COALESCE(s.country, '')::text AS country_code,
     COALESCE(s.capacity, 0)::integer AS capacity,
     css.matches_played
 FROM championships_stadiums_stats css

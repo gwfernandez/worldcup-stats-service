@@ -402,19 +402,23 @@ func TestChampionshipService_ListStadiumsByYear(t *testing.T) {
 
 	t.Run("success", func(t *testing.T) {
 		mockRepo := new(MockChampionshipRepository)
-		svc := service.NewChampionshipService(mockRepo)
-		filter := domain.ChampionshipStadiumFilter{Year: 1930, Name: "centenario", Page: 1, Size: 10}
+		resolver := new(mockTeamNameResolver)
+		svc := service.NewChampionshipService(mockRepo, resolver)
+		filter := domain.ChampionshipStadiumFilter{Year: 1930, Name: "centenario", Language: "es", Page: 1, Size: 10}
 
 		expected := []domain.ChampionshipStadium{
-			{Year: 1930, ID: 1, Name: "Estadio Centenario", CityName: "Montevideo", Capacity: 90000, MatchesPlayed: 10},
-			{Year: 1930, ID: 2, Name: "Estadio Pocitos", CityName: "Montevideo", Capacity: 1000, MatchesPlayed: 2},
+			{ID: 1, Name: "Estadio Centenario", CityName: "Montevideo", Country: &domain.SimpleTeam{Code: "URU"}, Capacity: 90000, MatchesPlayed: 10},
+			{ID: 2, Name: "Estadio Pocitos", CityName: "Montevideo", Country: nil, Capacity: 1000, MatchesPlayed: 2},
 		}
 		mockRepo.On("ListStadiumsByYear", ctx, filter).Return(expected, int64(13), nil)
+		resolver.On("Resolve", ctx, "URU", "es").Return("Uruguay", nil)
 
 		res, err := svc.ListStadiumsByYear(ctx, filter)
 		assert.NoError(t, err)
 		require.NotNil(t, res)
 		assert.Len(t, res.Data, 2)
+		assert.Equal(t, &domain.SimpleTeam{Code: "URU", Name: "Uruguay"}, res.Data[0].Country)
+		assert.Nil(t, res.Data[1].Country)
 		assert.Equal(t, 1, res.Pagination.Page)
 		assert.Equal(t, 10, res.Pagination.Size)
 		assert.Equal(t, int64(13), res.Pagination.TotalElements)
@@ -422,6 +426,7 @@ func TestChampionshipService_ListStadiumsByYear(t *testing.T) {
 		assert.True(t, res.Pagination.HasNext)
 		assert.False(t, res.Pagination.HasPrevious)
 		mockRepo.AssertExpectations(t)
+		resolver.AssertExpectations(t)
 	})
 
 	t.Run("empty response", func(t *testing.T) {
