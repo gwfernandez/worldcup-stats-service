@@ -415,10 +415,10 @@ func (q *Queries) ListChampionshipSquadByYearAndTeam(ctx context.Context, arg Li
 
 const listChampionshipStadiumsByYear = `-- name: ListChampionshipStadiumsByYear :many
 SELECT
-    css.year,
     s.id,
     s.name,
     COALESCE(s.city_name, '')::text AS city_name,
+    COALESCE(s.country, '')::text AS country_code,
     COALESCE(s.capacity, 0)::integer AS capacity,
     css.matches_played
 FROM championships_stadiums_stats css
@@ -437,10 +437,10 @@ type ListChampionshipStadiumsByYearParams struct {
 }
 
 type ListChampionshipStadiumsByYearRow struct {
-	Year          int32
 	ID            int64
 	Name          string
 	CityName      string
+	CountryCode   string
 	Capacity      int32
 	MatchesPlayed int32
 }
@@ -460,10 +460,10 @@ func (q *Queries) ListChampionshipStadiumsByYear(ctx context.Context, arg ListCh
 	for rows.Next() {
 		var i ListChampionshipStadiumsByYearRow
 		if err := rows.Scan(
-			&i.Year,
 			&i.ID,
 			&i.Name,
 			&i.CityName,
+			&i.CountryCode,
 			&i.Capacity,
 			&i.MatchesPlayed,
 		); err != nil {

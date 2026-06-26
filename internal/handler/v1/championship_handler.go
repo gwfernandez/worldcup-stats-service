@@ -124,6 +124,7 @@ func (h *ChampionshipHandler) ListStadiumsByYear(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	filter.Language = resolveLanguage(c.Request)
 
 	response, err := h.service.ListStadiumsByYear(c.Request.Context(), filter)
 	if err != nil {

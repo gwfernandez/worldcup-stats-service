@@ -701,10 +701,10 @@ func TestChampionshipHandler_ListStadiumsByYear(t *testing.T) {
 
 		expected := &domain.ChampionshipStadiumListResponse{
 			Data: []domain.ChampionshipStadium{{
-				Year:          1930,
 				ID:            1,
 				Name:          "Estadio Centenario",
 				CityName:      "Montevideo",
+				Country:       &domain.SimpleTeam{Code: "URU", Name: "Uruguay"},
 				Capacity:      90000,
 				MatchesPlayed: 10,
 			}},
@@ -717,13 +717,15 @@ func TestChampionshipHandler_ListStadiumsByYear(t *testing.T) {
 		}
 
 		svc.On("ListStadiumsByYear", mock.Anything, domain.ChampionshipStadiumFilter{
-			Year: 1930,
-			Name: "centenario",
-			Page: 1,
-			Size: 20,
+			Year:     1930,
+			Name:     "centenario",
+			Language: "en",
+			Page:     1,
+			Size:     20,
 		}).Return(expected, nil)
 
 		req, _ := http.NewRequest(http.MethodGet, "/api/championships/1930/stadiums?name=centenario", nil)
+		req.Header.Set("Accept-Language", "en")
 		w := httptest.NewRecorder()
 		r.ServeHTTP(w, req)
 
@@ -731,10 +733,13 @@ func TestChampionshipHandler_ListStadiumsByYear(t *testing.T) {
 		assert.Equal(t, "1", w.Header().Get("API-Version-Used"))
 		assert.JSONEq(t, `{
 			"data": [{
-				"year": 1930,
 				"id": 1,
 				"name": "Estadio Centenario",
 				"cityName": "Montevideo",
+				"country": {
+					"code": "URU",
+					"name": "Uruguay"
+				},
 				"capacity": 90000,
 				"matchesPlayed": 10
 			}],
@@ -763,9 +768,10 @@ func TestChampionshipHandler_ListStadiumsByYear(t *testing.T) {
 		}
 
 		svc.On("ListStadiumsByYear", mock.Anything, domain.ChampionshipStadiumFilter{
-			Year: 2026,
-			Page: 2,
-			Size: 100,
+			Year:     2026,
+			Language: "es",
+			Page:     2,
+			Size:     100,
 		}).Return(expected, nil)
 
 		req, _ := http.NewRequest(http.MethodGet, "/api/championships/2026/stadiums?page=2&size=100", nil)

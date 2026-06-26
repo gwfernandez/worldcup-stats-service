@@ -335,6 +335,22 @@ Notas de respuesta:
 - Los resultados se ordenan por `position`, `lastName` y `firstName` ascendentes.
 - Sin resultados responde `200 OK` con `data: []` y metadata de paginación.
 
+Parámetros soportados para `/api/championships/:year/stadiums`:
+
+- `year`: año del Mundial informado en la ruta; debe ser numérico.
+- `name`: búsqueda por nombre de estadio, case-insensitive y por contiene.
+- `page`: número de página (base 1, por defecto `1`).
+- `size`: tamaño de página (por defecto `20`, máximo `100`).
+
+Notas de respuesta:
+
+- Devuelve `data` como array de estadios y metadata `pagination`.
+- La respuesta expone `id`, `name`, `cityName`, `country`, `capacity` y `matchesPlayed`.
+- `country` usa `SimpleTeam`, se obtiene de `stadiums.country` y respeta `Accept-Language`.
+- Si el estadio no tiene país cargado, `country` se serializa como `null`.
+- Los resultados se ordenan por `matchesPlayed` descendente y `name` ascendente.
+- Sin resultados responde `200 OK` con `data: []` y metadata de paginación.
+
 ---
 
 ## Decisiones de diseño
