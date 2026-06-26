@@ -13,6 +13,7 @@ type ChampionshipRepository interface {
 	ListTeamTranslations(ctx context.Context) ([]domain.TeamTranslation, error)
 	ListTeamsByYear(ctx context.Context, filter domain.ChampionshipTeamFilter) ([]domain.ChampionshipTeam, int64, error)
 	ListStadiumsByYear(ctx context.Context, filter domain.ChampionshipStadiumFilter) ([]domain.ChampionshipStadium, int64, error)
+	ListStadiumMatchesByYearAndStadium(ctx context.Context, filter domain.ChampionshipStadiumMatchFilter) ([]domain.ChampionshipStadiumMatch, int64, error)
 	ListScorersByYear(ctx context.Context, filter domain.ChampionshipScorerFilter) ([]domain.ChampionshipScorer, int64, error)
 	ListSquadByYearAndTeam(ctx context.Context, filter domain.ChampionshipSquadFilter) ([]domain.ChampionshipSquadPlayer, int64, error)
 	ListStandingsByYear(ctx context.Context, filter domain.ChampionshipStandingFilter) ([]domain.ChampionshipStanding, int64, error)

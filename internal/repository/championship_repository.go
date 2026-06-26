@@ -242,6 +242,37 @@ func (r *championshipRepository) ListStadiumsByYear(ctx context.Context, filter 
 	return stadiums, total, nil
 }
 
+// ListStadiumMatchesByYearAndStadium retrieves a paginated list of matches played in a stadium.
+func (r *championshipRepository) ListStadiumMatchesByYearAndStadium(ctx context.Context, filter domain.ChampionshipStadiumMatchFilter) ([]domain.ChampionshipStadiumMatch, int64, error) {
+	total, err := r.queries.CountChampionshipStadiumMatchesByYearAndStadium(ctx, sqlc.CountChampionshipStadiumMatchesByYearAndStadiumParams{
+		Year:      int32(filter.Year),
+		StadiumID: pgtype.Int8{Int64: filter.StadiumID, Valid: true},
+	})
+	if err != nil {
+		return nil, 0, err
+	}
+
+	limit := int32(filter.Size)
+	offset := int32((filter.Page - 1) * filter.Size)
+
+	rows, err := r.queries.ListChampionshipStadiumMatchesByYearAndStadium(ctx, sqlc.ListChampionshipStadiumMatchesByYearAndStadiumParams{
+		Year:        int32(filter.Year),
+		StadiumID:   pgtype.Int8{Int64: filter.StadiumID, Valid: true},
+		LimitValue:  limit,
+		OffsetValue: offset,
+	})
+	if err != nil {
+		return nil, 0, err
+	}
+
+	matches := make([]domain.ChampionshipStadiumMatch, len(rows))
+	for i, row := range rows {
+		matches[i] = toChampionshipStadiumMatchDomain(row)
+	}
+
+	return matches, total, nil
+}
+
 // ListScorersByYear retrieves a paginated list of scorers for a championship year.
 func (r *championshipRepository) ListScorersByYear(ctx context.Context, filter domain.ChampionshipScorerFilter) ([]domain.ChampionshipScorer, int64, error) {
 	total, err := r.queries.CountChampionshipScorersByYear(ctx, sqlc.CountChampionshipScorersByYearParams{
@@ -454,6 +485,23 @@ func toChampionshipStadiumDomain(row sqlc.ListChampionshipStadiumsByYearRow) dom
 	}
 }
 
+func toChampionshipStadiumMatchDomain(row sqlc.ListChampionshipStadiumMatchesByYearAndStadiumRow) domain.ChampionshipStadiumMatch {
+	return domain.ChampionshipStadiumMatch{
+		Year:                   row.Year,
+		Hosts:                  toSimpleTeams(uppercaseSlice(row.HostCodes)),
+		Stage:                  stringPtr(row.Stage),
+		GroupCode:              textPtr(row.GroupCode),
+		MatchDate:              datePtr(row.MatchDate),
+		MatchTime:              timePtr(row.MatchTime),
+		HomeTeam:               domain.SimpleTeam{Code: strings.ToUpper(row.HomeTeamCode)},
+		HomeTeamScore:          int4Ptr(row.HomeTeamScore),
+		HomeTeamScorePenalties: int4Ptr(row.HomeTeamScorePenalties),
+		AwayTeam:               domain.SimpleTeam{Code: strings.ToUpper(row.AwayTeamCode)},
+		AwayTeamScore:          int4Ptr(row.AwayTeamScore),
+		AwayTeamScorePenalties: int4Ptr(row.AwayTeamScorePenalties),
+	}
+}
+
 func toChampionshipScorerDomain(row sqlc.ListChampionshipScorersByYearRow) domain.ChampionshipScorer {
 	return domain.ChampionshipScorer{
 		PlayerID: row.PlayerID,
@@ -517,4 +565,11 @@ func uppercaseSlice(slice []string) []string {
 		res[i] = strings.ToUpper(val)
 	}
 	return res
+}
+
+func stringPtr(value string) *string {
+	if value == "" {
+		return nil
+	}
+	return &value
 }

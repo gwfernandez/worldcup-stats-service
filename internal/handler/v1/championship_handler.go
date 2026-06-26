@@ -30,6 +30,7 @@ func (h *ChampionshipHandler) RegisterRoutes(rg *gin.RouterGroup) {
 		championships.GET("/:year", h.GetByYear)
 		championships.GET("/:year/teams", h.ListTeamsByYear)
 		championships.GET("/:year/stadiums", h.ListStadiumsByYear)
+		championships.GET("/:year/stadiums/:stadiumId", h.ListStadiumMatchesByYearAndStadium)
 		championships.GET("/:year/scorers", h.ListScorersByYear)
 		championships.GET("/:year/squads/:teamCode", h.ListSquadByYearAndTeam)
 		championships.GET("/:year/standings", h.ListStandingsByYear)
@@ -133,6 +134,33 @@ func (h *ChampionshipHandler) ListStadiumsByYear(c *gin.Context) {
 			return
 		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to retrieve championship stadiums"})
+		return
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
+// ListStadiumMatchesByYearAndStadium godoc
+// @Summary List matches played in a stadium for a championship year with pagination
+// @Produce json
+// @Param year path int true "Championship Year"
+// @Param stadiumId path int true "Stadium ID"
+// @Router /api/championships/{year}/stadiums/{stadiumId} [get]
+func (h *ChampionshipHandler) ListStadiumMatchesByYearAndStadium(c *gin.Context) {
+	filter, err := parseChampionshipStadiumMatchFilter(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	filter.Language = resolveLanguage(c.Request)
+
+	response, err := h.service.ListStadiumMatchesByYearAndStadium(c.Request.Context(), filter)
+	if err != nil {
+		if errors.Is(err, domain.ErrInvalidInput) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to retrieve championship stadium matches"})
 		return
 	}
 
@@ -333,6 +361,50 @@ func parseChampionshipStadiumFilter(c *gin.Context) (domain.ChampionshipStadiumF
 	}
 	if filter.Size < 1 || filter.Size > maxSize {
 		return domain.ChampionshipStadiumFilter{}, errors.New("invalid size parameter")
+	}
+
+	return filter, nil
+}
+
+func parseChampionshipStadiumMatchFilter(c *gin.Context) (domain.ChampionshipStadiumMatchFilter, error) {
+	year, err := strconv.Atoi(c.Param("year"))
+	if err != nil || year < 1 {
+		return domain.ChampionshipStadiumMatchFilter{}, errors.New("invalid year parameter")
+	}
+
+	stadiumID, err := strconv.ParseInt(c.Param("stadiumId"), 10, 64)
+	if err != nil || stadiumID < 1 {
+		return domain.ChampionshipStadiumMatchFilter{}, errors.New("invalid stadiumId parameter")
+	}
+
+	filter := domain.ChampionshipStadiumMatchFilter{
+		Year:      year,
+		StadiumID: stadiumID,
+		Page:      defaultPage,
+		Size:      defaultSize,
+	}
+
+	if rawPage := c.Query("page"); rawPage != "" {
+		page, err := strconv.Atoi(rawPage)
+		if err != nil {
+			return domain.ChampionshipStadiumMatchFilter{}, errors.New("invalid page parameter")
+		}
+		filter.Page = page
+	}
+
+	if rawSize := c.Query("size"); rawSize != "" {
+		size, err := strconv.Atoi(rawSize)
+		if err != nil {
+			return domain.ChampionshipStadiumMatchFilter{}, errors.New("invalid size parameter")
+		}
+		filter.Size = size
+	}
+
+	if filter.Page < 1 {
+		return domain.ChampionshipStadiumMatchFilter{}, errors.New("invalid page parameter")
+	}
+	if filter.Size < 1 || filter.Size > maxSize {
+		return domain.ChampionshipStadiumMatchFilter{}, errors.New("invalid size parameter")
 	}
 
 	return filter, nil

@@ -12,6 +12,7 @@ type ChampionshipService interface {
 	GetByYear(ctx context.Context, year int, language string) (*domain.Championship, error)
 	ListTeamsByYear(ctx context.Context, filter domain.ChampionshipTeamFilter) (*domain.ChampionshipTeamListResponse, error)
 	ListStadiumsByYear(ctx context.Context, filter domain.ChampionshipStadiumFilter) (*domain.ChampionshipStadiumListResponse, error)
+	ListStadiumMatchesByYearAndStadium(ctx context.Context, filter domain.ChampionshipStadiumMatchFilter) (*domain.ChampionshipStadiumMatchListResponse, error)
 	ListScorersByYear(ctx context.Context, filter domain.ChampionshipScorerFilter) (*domain.ChampionshipScorerListResponse, error)
 	ListSquadByYearAndTeam(ctx context.Context, filter domain.ChampionshipSquadFilter) (*domain.ChampionshipSquadListResponse, error)
 	ListStandingsByYear(ctx context.Context, filter domain.ChampionshipStandingFilter) (*domain.ChampionshipStandingListResponse, error)

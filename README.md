@@ -189,7 +189,7 @@ Idiomas soportados inicialmente:
 
 Cuando falta una traducción para el idioma solicitado, la API responde el valor base almacenado en la tabla principal. Para confederaciones, el campo `confederations.name` funciona como fallback en español; para selecciones, el fallback es `teams.name`.
 
-Actualmente el header `Accept-Language` localiza nombres de confederaciones y nombres de selecciones en los endpoints que los exponen o filtran: `/api/confederations`, `/api/teams`, `/api/champions`, `/api/standings`, `/api/scorers`, `/api/players/:playerId/goals`, `/api/championships`, `/api/championships/:year/teams` y `/api/championships/:year/stadiums`.
+Actualmente el header `Accept-Language` localiza nombres de confederaciones y nombres de selecciones en los endpoints que los exponen o filtran: `/api/confederations`, `/api/teams`, `/api/champions`, `/api/standings`, `/api/scorers`, `/api/players/:playerId/goals`, `/api/championships`, `/api/championships/:year/teams`, `/api/championships/:year/stadiums` y `/api/championships/:year/stadiums/:stadiumId`.
 
 **Ejemplo:** `Accept-Language: en`
 
@@ -590,6 +590,7 @@ Ejemplo de respuesta:
  | `GET` | `/api/championships/:year/scorers` | Listar goleadores de una edición con filtros y paginación |
  | `GET` | `/api/championships/:year/squads/:teamCode` | Listar jugadores de una selección en una edición con paginación |
  | `GET` | `/api/championships/:year/stadiums` | Listar estadios utilizados en una edición con filtros y paginación |
+ | `GET` | `/api/championships/:year/stadiums/:stadiumId` | Listar partidos jugados en un estadio durante una edición con paginación |
  | `GET` | `/api/championships/:year/standings` | Listar tabla de posiciones de una edición con paginación |
 
 Parámetros soportados para `/api/championships`:
@@ -674,6 +675,24 @@ Notas de respuesta:
 - La respuesta expone `id`, `name`, `cityName`, `country`, `capacity` y `matchesPlayed`.
 - `country` usa la estructura `SimpleTeam`, se obtiene de `stadiums.country` y respeta `Accept-Language`.
 - Si el estadio no tiene país cargado, `country` se serializa como `null`.
+
+Parámetros soportados para `/api/championships/:year/stadiums/:stadiumId`:
+
+- `year`: año del Mundial informado en la ruta; debe ser numérico positivo.
+- `stadiumId`: identificador del estadio informado en la ruta; debe ser numérico positivo.
+- `page`: número de página (base 1, por defecto `1`).
+- `size`: tamaño de página (por defecto `20`, máximo `100`).
+
+Notas de respuesta:
+
+- Si `:year` no es numérico positivo, responde `400 Bad Request` con `{"error":"invalid year parameter"}`.
+- Si `:stadiumId` no es numérico positivo, responde `400 Bad Request` con `{"error":"invalid stadiumId parameter"}`.
+- Si no hay partidos asociados para `:year` y `:stadiumId`, responde `200 OK` con `data: []` y metadata de paginación.
+- Los resultados se ordenan por `matchDate` ascendente, con desempates por `matchTime` e identificador interno del partido.
+- La respuesta expone `year`, `hosts`, `stage`, `groupCode`, `matchDate`, `matchTime`, `homeTeam`, `homeTeamScore`, `homeTeamScorePenalties`, `awayTeam`, `awayTeamScore` y `awayTeamScorePenalties`.
+- `hosts`, `homeTeam` y `awayTeam` usan la estructura `SimpleTeam`; sus nombres respetan `Accept-Language`.
+- `hosts` se obtiene de `championships.host_codes`, conserva el orden configurado para la edición y normaliza los códigos a mayúsculas.
+- `stage`, `groupCode`, `matchDate`, `matchTime`, scores y penales conservan `null` cuando no existe un valor en la base.
 
 Parámetros soportados para `/api/championships/:year/standings`:
 

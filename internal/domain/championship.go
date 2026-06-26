@@ -87,6 +87,31 @@ type ChampionshipStadiumFilter struct {
 	Size     int
 }
 
+// ChampionshipStadiumMatch represents a match played in a stadium during a championship.
+type ChampionshipStadiumMatch struct {
+	Year                   int32        `json:"year"`
+	Hosts                  []SimpleTeam `json:"hosts"`
+	Stage                  *string      `json:"stage"`
+	GroupCode              *string      `json:"groupCode"`
+	MatchDate              *string      `json:"matchDate"`
+	MatchTime              *string      `json:"matchTime"`
+	HomeTeam               SimpleTeam   `json:"homeTeam"`
+	HomeTeamScore          *int32       `json:"homeTeamScore"`
+	HomeTeamScorePenalties *int32       `json:"homeTeamScorePenalties"`
+	AwayTeam               SimpleTeam   `json:"awayTeam"`
+	AwayTeamScore          *int32       `json:"awayTeamScore"`
+	AwayTeamScorePenalties *int32       `json:"awayTeamScorePenalties"`
+}
+
+// ChampionshipStadiumMatchFilter represents filters for listing stadium matches in a championship.
+type ChampionshipStadiumMatchFilter struct {
+	Year      int
+	StadiumID int64
+	Language  string
+	Page      int
+	Size      int
+}
+
 // ChampionshipScorer represents a player scorer in a championship edition.
 type ChampionshipScorer struct {
 	PlayerID int64      `json:"playerId"`
@@ -163,6 +188,12 @@ type ChampionshipTeamListResponse struct {
 type ChampionshipStadiumListResponse struct {
 	Data       []ChampionshipStadium `json:"data"`
 	Pagination PaginationInfo        `json:"pagination"`
+}
+
+// ChampionshipStadiumMatchListResponse represents the JSON response for listing stadium matches.
+type ChampionshipStadiumMatchListResponse struct {
+	Data       []ChampionshipStadiumMatch `json:"data"`
+	Pagination PaginationInfo             `json:"pagination"`
 }
 
 // ChampionshipScorerListResponse represents the JSON response for listing championship scorers.
